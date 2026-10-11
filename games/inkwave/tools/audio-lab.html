@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>INKWAVE Audio Lab</title>
+<link rel="icon" href="data:,">
+<script type="importmap">{"imports":{"three":"../vendor/three/build/three.module.js","three/addons/":"../vendor/three/jsm/"}}</script>
+<style>
+@font-face { font-family: 'Rubik'; src: url('../assets/fonts/Rubik-latin.woff2') format('woff2'); font-weight: 400 900; }
+@font-face { font-family: 'Titan One'; src: url('../assets/fonts/TitanOne-latin.woff2') format('woff2'); }
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --line: #e3e6eb; --text: #14171c; --muted: #6a7280; --chip: #eef0f4;
+  --accent: #ff8a14; --accent2: #2f5bff; --on: #18b877; --warn: #e5484d; --btn: #f3f4f7; --btnh: #e8eaef;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1014; --panel: #161920; --line: #262a33; --text: #e9ecf1; --muted: #8b93a1; --chip: #1f232b;
+    --btn: #1d2129; --btnh: #262b35; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1014; --panel: #161920; --line: #262a33; --text: #e9ecf1; --muted: #8b93a1; --chip: #1f232b;
+  --btn: #1d2129; --btnh: #262b35; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 Rubik, system-ui, sans-serif; }
+header { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center;
+  padding: 12px 20px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+h1 { font: 22px 'Titan One', Rubik, sans-serif; margin: 0; letter-spacing: 0.5px; }
+h1 span { color: var(--accent); }
+h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 0 0 10px; font-weight: 700; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; padding: 16px 20px 40px; max-width: 1500px; margin: 0 auto; }
+@media (max-width: 1000px) { main { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+.grid { display: flex; flex-wrap: wrap; gap: 6px; }
+button { font: inherit; font-weight: 600; font-size: 13px; color: var(--text); background: var(--btn); border: 1px solid var(--line);
+  border-radius: 8px; padding: 7px 10px; cursor: pointer; transition: background .12s, transform .06s; user-select: none; }
+button:hover { background: var(--btnh); }
+button:active, button.flash { transform: scale(0.96); }
+button.primary { background: var(--accent); color: #fff; border-color: transparent; }
+button.on { background: var(--on); color: #fff; border-color: transparent; }
+button.loop::after { content: ' ⟳'; opacity: .6; }
+.chip { display: inline-flex; gap: 6px; align-items: center; padding: 4px 10px; border-radius: 999px; background: var(--chip); color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.chip b { color: var(--text); font-weight: 600; }
+label.sl { display: grid; grid-template-columns: 64px 1fr 44px; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+label.sl output { text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.vols { display: flex; gap: 14px; flex-wrap: wrap; }
+.vols label.sl { width: 210px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.group { margin-bottom: 14px; }
+.group:last-child { margin-bottom: 0; }
+.loops { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.loopc { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: grid; gap: 6px; }
+.loopc .row { justify-content: space-between; }
+.tracks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.tracks button { text-align: left; display: grid; gap: 2px; }
+.tracks button small { color: inherit; opacity: .7; font-weight: 400; font-size: 11px; }
+canvas { width: 100%; aspect-ratio: 1; border-radius: 10px; background: var(--chip); display: block; touch-action: none; }
+.meter { height: 8px; border-radius: 4px; background: var(--chip); overflow: hidden; position: relative; }
+.meter i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, var(--on), var(--accent) 75%, var(--warn)); }
+.hint { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+select { font: inherit; background: var(--btn); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px; }
+#status b.run { color: var(--on); }
+#nowplaying { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<header>
+  <h1>INKWAVE <span>Audio Lab</span></h1>
+  <button id="start" class="primary">Start audio</button>
+  <span class="chip" id="status">ctx <b>off</b></span>
+  <div class="vols" id="vols"></div>
+  <button id="duck">Duck music</button>
+  <button id="stopall">Stop all (Esc)</button>
+</header>
+<main>
+  <section>
+    <div class="panel">
+      <h2>Music</h2>
+      <div class="tracks" id="tracks"></div>
+      <div class="row" style="margin-top:12px">
+        <label class="sl" style="flex:1;min-width:240px">Intensity<input id="intensity" type="range" min="0" max="1" step="0.01" value="1"><output>1.00</output></label>
+        <label class="sl" style="flex:1;min-width:240px">Fade s<input id="fade" type="range" min="0" max="4" step="0.1" value="1"><output>1.0</output></label>
+      </div>
+      <p class="hint" id="nowplaying">—</p>
+    </div>
+    <div class="panel">
+      <h2>One-shots</h2>
+      <div class="row" style="margin-bottom:12px">
+        <label class="sl" style="width:230px">Volume<input id="osvol" type="range" min="0" max="1.5" step="0.01" value="1"><output>1.00</output></label>
+        <label class="sl" style="width:230px">Pitch<input id="ospitch" type="range" min="0.5" max="2" step="0.01" value="1"><output>1.00</output></label>
+      </div>
+      <div id="sfx"></div>
+      <p class="hint">Click = 2D. Shift-click = 3D at the moving source. Hold to repeat at 10/s (stress / hit-marker feel).</p>
+    </div>
+    <div class="panel">
+      <h2>Loops</h2>
+      <div class="loops" id="loops"></div>
+    </div>
+  </section>
+  <aside>
+    <div class="panel">
+      <h2>3D panning</h2>
+      <canvas id="radar" width="600" height="600"></canvas>
+      <div style="display:grid;gap:8px;margin-top:10px">
+        <div class="row"><button id="orbit">Orbit</button><span class="chip" id="dist">d <b>0.0 m</b></span><span class="chip">listener faces <b>up (−Z)</b></span></div>
+        <label class="sl">Radius<input id="radius" type="range" min="1" max="60" step="0.5" value="8"><output>8.0</output></label>
+        <label class="sl">Speed<input id="speed" type="range" min="0" max="3" step="0.05" value="0.6"><output>0.60</output></label>
+        <div class="row">
+          <select id="pulseName"></select>
+          <label class="sl" style="grid-template-columns:48px 1fr 40px;flex:1">Every<input id="pulseEvery" type="range" min="0.1" max="2" step="0.05" value="0.6"><output>0.60</output></label>
+          <button id="pulse">Pulse</button>
+        </div>
+      </div>
+      <p class="hint">Drag the orange dot. Loops with “3D” follow it. Inverse distance, ref 3 m, rolloff 1.2, max 60 m, HRTF + air-absorption low-pass.</p>
+    </div>
+    <div class="panel">
+      <h2>Output</h2>
+      <div style="display:grid;gap:6px">
+        <div class="row"><span class="chip" style="width:62px">peak</span><div class="meter" style="flex:1"><i id="mPeak"></i></div></div>
+        <div class="row"><span class="chip" style="width:62px">rms</span><div class="meter" style="flex:1"><i id="mRms"></i></div></div>
+        <canvas id="scope" width="600" height="160" style="aspect-ratio:auto;height:80px"></canvas>
+      </div>
+    </div>
+  </aside>
+</main>
+<script type="module" src="./audio-lab.js"></script>
+</body>
+</html>

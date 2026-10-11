@@ -1,0 +1,213 @@
+import { clsx } from 'clsx';
+import type { CellComponentProps } from 'react-window';
+import type { MapFilters } from '@pillage-first/types/models/map-filters';
+import type { MapMarker } from '@pillage-first/types/models/map-marker';
+import type { Preferences } from '@pillage-first/types/models/preferences';
+import { decodeGraphicsProperty } from '@pillage-first/utils/map';
+import { BorderIndicator } from 'app/(game)/(village-slug)/components/border-indicator';
+import {
+  BORDER_TILES_OASIS_VARIANTS,
+  type useMap,
+} from 'app/(game)/(village-slug)/hooks/use-map';
+import type { useReputations } from 'app/(game)/(village-slug)/hooks/use-reputations';
+import { Icon } from 'app/components/icon';
+import { getOasisBonusIconType } from 'app/components/icons/utils/icons';
+import cellStyles from './cell.module.scss';
+
+type Tile = ReturnType<typeof useMap>['map'][0];
+
+type CellBaseProps = {
+  map: Tile[];
+  gridSize: number;
+  mapFilters: MapFilters;
+  magnification: number;
+  preferences: Preferences;
+  mapMarkersByTileId: ReadonlyMap<MapMarker['tileId'], MapMarker>;
+  createMapMarker: (args: {
+    tileId: number;
+    description: string;
+    color: MapMarker['color'];
+  }) => void;
+  deleteMapMarker: (args: { tileId: number }) => void;
+  onClick: (tileId: number) => void;
+  getReputation: ReturnType<typeof useReputations>['getReputation'];
+};
+
+const wheatFields = new Set(['00018', '11115', '3339']);
+
+type CellIconsProps = CellBaseProps & {
+  tile: NonNullable<Tile>;
+};
+
+const CellIcons = (props: CellIconsProps) => {
+  const { tile, mapFilters, magnification, mapMarkersByTileId } = props;
+  const { shouldShowOasisIcons, shouldShowWheatFields } = mapFilters;
+
+  const marker = mapMarkersByTileId.get(tile.id);
+
+  const tileIconClasses = clsx(
+    cellStyles['tile-icon'],
+    cellStyles[`tile-icon-magnification-${magnification}`],
+  );
+
+  const mapMarkerClasses = clsx(
+    'size-4 md:size-6',
+    cellStyles['map-marker'],
+    cellStyles[`map-marker-magnification-${magnification}`],
+  );
+
+  if (marker) {
+    return (
+      <Icon
+        className={mapMarkerClasses}
+        style={{ color: marker.color }}
+        type="mapMarker"
+        shouldShowTooltip={false}
+      />
+    );
+  }
+
+  if (
+    shouldShowWheatFields &&
+    tile.type === 'free' &&
+    wheatFields.has(tile.attributes.resourceFieldComposition)
+  ) {
+    return (
+      <BorderIndicator
+        className={tileIconClasses}
+        variant="yellow"
+      >
+        <Icon
+          type="wheat"
+          shouldShowTooltip={false}
+        />
+      </BorderIndicator>
+    );
+  }
+
+  if (
+    shouldShowOasisIcons &&
+    tile.type === 'oasis' &&
+    tile.attributes.bonusType !== null
+  ) {
+    const { oasisResource } = decodeGraphicsProperty(
+      tile.attributes.oasisGraphics,
+    );
+
+    return (
+      <BorderIndicator
+        className={tileIconClasses}
+        variant={tile.owner !== null ? 'red' : 'green'}
+      >
+        <Icon
+          type={getOasisBonusIconType(oasisResource, tile.attributes.bonusType)}
+          shouldShowTooltip={false}
+        />
+      </BorderIndicator>
+    );
+  }
+
+  return null;
+};
+
+const getTileClassNames = (
+  tile: NonNullable<Tile>,
+  getReputation: CellBaseProps['getReputation'],
+  magnification: number,
+  shouldShowFactionReputation: boolean,
+): string => {
+  if (tile.type === 'free' && tile.owner === null) {
+    const { resourceFieldComposition } = tile.attributes;
+    return clsx(
+      cellStyles.tile,
+      cellStyles[`unoccupied-tile-${resourceFieldComposition}`],
+    );
+  }
+
+  if (tile.type === 'free' && tile.owner !== null) {
+    const { faction } = tile.owner;
+    const reputationLevel =
+      faction === 'player' ? 'player' : getReputation(faction).reputationLevel;
+
+    return clsx(
+      cellStyles.tile,
+      cellStyles['occupied-tile'],
+      cellStyles[`occupied-tile-magnification-${magnification}`],
+      shouldShowFactionReputation &&
+        cellStyles[`occupied-tile-reputation-${reputationLevel}`],
+    );
+  }
+
+  if (tile.type === 'oasis') {
+    const { oasisResource, oasisGroup, oasisGroupPositions, variant } =
+      decodeGraphicsProperty(tile.attributes.oasisGraphics);
+
+    return clsx(
+      cellStyles.tile,
+      cellStyles[
+        `oasis-tile-${oasisResource}-${oasisGroup}-${oasisGroupPositions}-${variant}`
+      ],
+    );
+  }
+
+  return '';
+};
+
+export const Cell = ({
+  ariaAttributes,
+  style,
+  rowIndex,
+  columnIndex,
+  map,
+  gridSize,
+  mapFilters,
+  magnification,
+  onClick,
+  getReputation,
+  ...cellProps
+}: CellComponentProps<CellBaseProps>) => {
+  const tileIndex = gridSize * rowIndex + columnIndex;
+  const tileId = tileIndex + 1;
+
+  const tile = map[tileIndex];
+  const isBorderTile =
+    tile.type === 'oasis' &&
+    tile.attributes.bonusType === null &&
+    BORDER_TILES_OASIS_VARIANTS.has(tile.attributes.oasisGraphics);
+
+  const className = isBorderTile
+    ? clsx(
+        cellStyles.tile,
+        cellStyles[`border-tile-${tile.attributes.oasisGraphics}`],
+      )
+    : getTileClassNames(
+        tile,
+        getReputation,
+        magnification,
+        mapFilters.shouldShowFactionReputation,
+      );
+
+  return (
+    <button
+      {...ariaAttributes}
+      onClick={() => onClick(tileId)}
+      type="button"
+      style={style}
+      data-tile-id={tileId}
+      className={className}
+    >
+      {!isBorderTile && (
+        <CellIcons
+          tile={tile}
+          map={map}
+          gridSize={gridSize}
+          mapFilters={mapFilters}
+          magnification={magnification}
+          onClick={onClick}
+          getReputation={getReputation}
+          {...cellProps}
+        />
+      )}
+    </button>
+  );
+};

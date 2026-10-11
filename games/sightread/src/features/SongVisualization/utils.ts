@@ -1,0 +1,269 @@
+import { getPersistedSongSettings, setPersistedSongSettings } from '@/features/persist'
+import { gmInstruments, InstrumentName } from '@/features/synth'
+import { Hand, Song, SongConfig, SongMeasure, SongNote, Track, TrackSetting } from '@/types'
+import { clamp, mapValues } from '@/utils'
+import { parserInferHands } from '../parsers'
+import { isBlack, transposeMidi } from '../theory'
+import { GivenState } from './canvas-renderer'
+
+// TODO: Precompute and cache optimal font sizes and widths for the small, fixed set of note‐label strings (e.g. “A”–“G” or “Do”–“Ti”) outside of the per‐note render loop.
+//  - Build a tiny lookup (label → { fontPx, measuredWidth }), with a cache-bust on window size
+//  - In renderFallingNote, replace repeated getOptimalFontSize calls with O(1) lookups
+
+export function getSongRange(
+  song: { notes: SongNote[] } | undefined,
+  minNotes: number,
+  transpose = 0,
+) {
+  const notes = song?.notes ?? []
+  let startNote = transposeMidi(notes[0]?.midiNote ?? 21, transpose)
+  let endNote = transposeMidi(notes[0]?.midiNote ?? 108, transpose)
+
+  for (let { midiNote } of notes) {
+    const transposed = transposeMidi(midiNote, transpose)
+    startNote = Math.min(startNote, transposed)
+    endNote = Math.max(endNote, transposed)
+  }
+
+  // Ensure we show at least a minNotes just so it doesn't look ridiculous
+  const diff = endNote - startNote
+  if (diff < minNotes) {
+    const fix = Math.floor((minNotes - diff) / 2)
+    startNote -= fix
+    endNote += fix
+  }
+
+  startNote = clamp(startNote - 2, { min: 21, max: 107 })
+  endNote = clamp(endNote + 2, { min: startNote + 1, max: 108 })
+
+  // If the prev/next note is black, we need to include it as well.
+  // Since black notes are partially on the adjacent notes as well.
+  if (isBlack(startNote - 1) && startNote > 21) {
+    startNote--
+  }
+  if (isBlack(endNote + 1) && endNote < 108) {
+    endNote++
+  }
+
+  return { startNote, endNote }
+}
+
+export function getHandSettings(config: SongConfig | undefined) {
+  if (!config) {
+    return {}
+  }
+  return mapValues(config.tracks, (trackSetting) => {
+    return { hand: trackSetting.hand }
+  })
+}
+
+function getInstrument(track: Track): InstrumentName {
+  return track.program && track.program >= 0
+    ? gmInstruments[track.program]
+    : (((track.instrument || track.name) as InstrumentName) ?? gmInstruments[0])
+}
+
+export function getDefaultSongSettings(song?: Song): SongConfig {
+  const songConfig: SongConfig = {
+    left: true,
+    right: true,
+    waiting: false,
+    countdownEnabled: true,
+    transpose: 0,
+    loop: {
+      enabled: false,
+      range: { start: 0, end: song?.duration ?? 0 },
+    },
+    metronome: {
+      enabled: false,
+      volume: 0.6,
+      speed: 1,
+      emphasizeFirst: true,
+    },
+    noteLabels: 'none',
+    coloredNotes: false,
+    skipMissedNotes: false,
+    visualization: 'falling-notes',
+    tracks: {},
+  }
+  if (!song) {
+    return songConfig
+  }
+
+  const { left, right } = inferHands(song)
+  const tracks: { [id: number]: TrackSetting } = mapValues(song.tracks, (track, trackId) => {
+    const id = parseInt(trackId)
+    const hand = left === id ? 'left' : right === id ? 'right' : 'none'
+    return {
+      track,
+      hand: hand as any,
+      count: song.notes.filter((n) => n.track === id).length,
+      instrument: getInstrument(track),
+      sound: true,
+    }
+  })
+  songConfig.tracks = tracks
+  return songConfig
+}
+
+export function getSongSettings(file: string, song: Song): SongConfig {
+  let persisted = getPersistedSongSettings(file)
+  const defaults = getDefaultSongSettings(song)
+  if (persisted) {
+    return {
+      ...defaults,
+      ...persisted,
+      countdownEnabled: persisted.countdownEnabled ?? defaults.countdownEnabled,
+      loop: {
+        ...defaults.loop,
+        ...persisted.loop,
+      },
+      metronome: {
+        ...defaults.metronome,
+        ...persisted.metronome,
+      },
+      tracks: { ...defaults.tracks, ...persisted.tracks },
+    }
+  }
+  setPersistedSongSettings(file, defaults)
+  return defaults
+}
+
+function inferHands(song: Song): { left?: number; right?: number } {
+  return parserInferHands(song)
+}
+
+export type CanvasItem = SongMeasure | SongNote
+
+export function getItemsInView<T>(
+  state: GivenState,
+  startPred: (elem: CanvasItem) => boolean,
+  endPred: (elem: CanvasItem) => boolean,
+): CanvasItem[] {
+  // First get the whole slice of contiguous notes that might be in view.
+  return getRange(state.items, startPred, endPred).filter((item) => {
+    // Filter out the notes that may have already clipped off screen.
+    // As well as non matching items
+    return startPred(item) && isMatchingHand(item, state)
+  })
+}
+
+/**
+ * Get the contiguous range starting from the first element that returns true from the startPred
+ * until the first element that fails the endPred.
+ */
+function getRange<T>(
+  array: T[],
+  startPred: (elem: T) => boolean,
+  endPred: (elem: T) => boolean,
+): T[] {
+  let start = array.findIndex(startPred)
+  if (start === -1) {
+    return []
+  }
+
+  let end = start + 1
+  for (; end < array.length && !endPred(array[end]); end++) {}
+
+  return array.slice(start, end)
+}
+
+function isMatchingHand(item: CanvasItem, state: GivenState) {
+  const { hand, hands } = state
+  switch (item.type) {
+    case 'measure':
+      return state.visualization === 'falling-notes'
+    case 'note':
+      const showLeft = hand === 'both' || hand === 'left'
+      if (showLeft && hands[item.track]?.hand === 'left') {
+        return true
+      }
+      const showRight = hand === 'both' || hand === 'right'
+      if (showRight && hands[item.track]?.hand === 'right') {
+        return true
+      }
+      return false
+  }
+}
+
+export type Viewport = { start: number; end: number }
+
+const mWidthCache: Record<string, number> = {}
+
+function getMWidthCacheKey(fontPx: number, len: number): string {
+  return `${fontPx}-${len}`
+}
+
+/**
+ * Find the largest font‐size (px) that fits within maxWidth via binary search.
+ * Actually doing this for each possible string is incredibly expensive, so
+ * We conservatively approximate with capital 'M's.
+ *
+ * Results are cached, with a key of <fontSize * len>
+ */
+export function getOptimalFontSize(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  font: string,
+  maxWidth: number,
+): { fontPx: number; measuredWidth: number } {
+  const len = text.length
+  let low = 1
+  let high = maxWidth
+  let bestPx = low
+  let bestWidth = 0
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2)
+    const key = getMWidthCacheKey(mid, len)
+
+    // measure (or lookup) width of “MMM…” at mid px
+    let width = mWidthCache[key]
+    if (width == null) {
+      ctx.font = `${mid}px ${font}`
+      width = ctx.measureText('M'.repeat(len)).width
+      mWidthCache[key] = width
+    }
+
+    if (width <= maxWidth) {
+      bestPx = mid
+      bestWidth = width
+      low = mid + 1
+    } else {
+      high = mid - 1
+    }
+  }
+
+  return { fontPx: bestPx, measuredWidth: bestWidth }
+}
+
+let fontSizeCache: { [px: number]: { [text: string]: { width: number; height: number } } } = {}
+export function getFontSize(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  fontPx: number,
+): { width: number; height: number } {
+  if (fontSizeCache[fontPx]?.[text]) {
+    return fontSizeCache[fontPx][text]
+  }
+
+  // Height is fontHeight as opposed to the height of the actual letter.
+  const metrics = ctx.measureText(text)
+  if (!fontSizeCache[fontPx]) {
+    fontSizeCache[fontPx] = {}
+  }
+  const size = {
+    width: metrics.width,
+    height: metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent,
+  }
+
+  // If height detection is unsupported, fallback to width of M character which is
+  // an approxmiation according to StackOverflow: https://stackoverflow.com/a/13318387
+  if (!size.height) {
+    size.height = ctx.measureText('M').width
+  }
+  fontSizeCache[fontPx][text] = size
+  return size
+}
+
+export const PIXELS_PER_SECOND = 225

@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Classic Minesweeper laid across the Strait of Hormuz. Clear the water, flag the mines, and survive the shipping lane.">
+  <meta name="theme-color" content="#0d7575">
+  <link rel="canonical" href="https://hormuz.pythonic.ninja/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="Hormuz Minesweeper">
+  <meta property="og:title" content="Hormuz Minesweeper">
+  <meta property="og:description" content="Classic Minesweeper laid across the Strait of Hormuz. Clear the water, flag the mines, and survive the shipping lane.">
+  <meta property="og:url" content="https://hormuz.pythonic.ninja/">
+  <meta property="og:image" content="https://hormuz.pythonic.ninja/og-preview.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Hormuz Minesweeper game board preview with a nautical map and Minesweeper cells across the Strait of Hormuz.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Hormuz Minesweeper">
+  <meta name="twitter:description" content="Classic Minesweeper laid across the Strait of Hormuz. Clear the water, flag the mines, and survive the shipping lane.">
+  <meta name="twitter:image" content="https://hormuz.pythonic.ninja/og-preview.jpg">
+  <meta name="twitter:image:alt" content="Hormuz Minesweeper game board preview with a nautical map and Minesweeper cells across the Strait of Hormuz.">
+  <title>Hormuz Minesweeper</title>
+  <style>
+    :root {
+      --chrome: #c0c0c0;
+      --chrome-light: #ffffff;
+      --chrome-mid: #dfdfdf;
+      --chrome-dark: #808080;
+      --chrome-deep: #404040;
+      --digit-red: #ff2a2a;
+      --digit-bg: #160000;
+      --panel-shadow:
+        inset 2px 2px 0 var(--chrome-light),
+        inset -2px -2px 0 var(--chrome-dark),
+        inset 1px 1px 0 var(--chrome-mid),
+        inset -1px -1px 0 #000000;
+      --panel-inset:
+        inset 2px 2px 0 var(--chrome-dark),
+        inset -2px -2px 0 var(--chrome-light),
+        inset 1px 1px 0 var(--chrome-deep),
+        inset -1px -1px 0 var(--chrome-mid);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 24%),
+        linear-gradient(180deg, #008080 0%, #0d7575 58%, #0b5f5f 100%);
+      color: #111111;
+      font-family: Tahoma, "MS Sans Serif", sans-serif;
+    }
+
+    .window {
+      width: min(96vw, 1140px);
+      background: var(--chrome);
+      box-shadow: var(--panel-shadow), 0 28px 52px rgba(0, 0, 0, 0.28);
+    }
+
+    .titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 7px 8px;
+      background: linear-gradient(90deg, #0a2a97 0%, #2e7dd7 100%);
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .titlebar-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .titlebar-actions span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      background: var(--chrome);
+      color: #111111;
+      font-size: 11px;
+      box-shadow: var(--panel-shadow);
+    }
+
+    .shell {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .hud,
+    .map-frame {
+      background: var(--chrome);
+      box-shadow: var(--panel-inset);
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: 112px 72px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+    }
+
+    .counter {
+      min-height: 64px;
+      padding: 10px 10px 6px;
+      background: var(--digit-bg);
+      color: var(--digit-red);
+      box-shadow: var(--panel-inset);
+      font-family: "Courier New", monospace;
+      font-size: 38px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.08em;
+      text-align: center;
+      user-select: none;
+    }
+
+    .reset {
+      width: 64px;
+      height: 64px;
+      padding: 0;
+      border: 0;
+      background: var(--chrome);
+      box-shadow: var(--panel-shadow);
+      cursor: pointer;
+    }
+
+    .reset:active {
+      box-shadow: var(--panel-inset);
+    }
+
+    .reset svg {
+      width: 72%;
+      height: 72%;
+      display: block;
+      margin: auto;
+    }
+
+    .status-panel {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+      align-content: center;
+    }
+
+    .status-text {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.04em;
+      color: #1a1a1a;
+    }
+
+    .status-note {
+      font-size: 13px;
+      color: #2c2c2c;
+    }
+
+    .map-frame {
+      padding: 8px;
+    }
+
+    .map-panel {
+      position: relative;
+      aspect-ratio: 12643 / 10050;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.04)),
+        url("map.svg") center / 100% 100% no-repeat;
+      box-shadow: inset 1px 1px 0 var(--chrome-dark), inset -1px -1px 0 var(--chrome-light);
+    }
+
+    .board {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+    }
+
+    .cell {
+      appearance: none;
+      border: 0;
+      margin: 0;
+      padding: 0;
+      min-width: 0;
+      min-height: 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      font: 700 clamp(12px, 1.2vw, 22px) / 1 Tahoma, "MS Sans Serif", sans-serif;
+      cursor: default;
+    }
+
+    .cell.blocked {
+      pointer-events: none;
+    }
+
+    .cell.playable.hidden {
+      background: rgba(192, 192, 192, 0.94);
+      box-shadow: var(--panel-shadow);
+      cursor: pointer;
+    }
+
+    .cell.playable.hidden:hover {
+      filter: brightness(1.04);
+    }
+
+    .cell.playable.hidden:active {
+      box-shadow: var(--panel-inset);
+      background: rgba(176, 176, 176, 0.96);
+    }
+
+    .board[data-touch-mode="flag"] .cell.playable.hidden {
+      cursor: crosshair;
+      box-shadow: var(--panel-shadow), inset 0 0 0 1px rgba(255, 42, 42, 0.3);
+    }
+
+    .cell.playable.revealed {
+      background: rgba(192, 192, 192, 0.38);
+      box-shadow: inset 1px 1px 0 rgba(110, 110, 110, 0.95);
+    }
+
+    .cell.playable.revealed.exploded {
+      background: rgba(211, 30, 30, 0.82);
+    }
+
+    .cell svg {
+      width: 70%;
+      height: 70%;
+      display: block;
+      pointer-events: none;
+    }
+
+    .digit {
+      display: inline-block;
+      transform: translateY(1px);
+    }
+
+    .digit-1 { color: #0000ff; }
+    .digit-2 { color: #007b00; }
+    .digit-3 { color: #ff0000; }
+    .digit-4 { color: #00007b; }
+    .digit-5 { color: #7b0000; }
+    .digit-6 { color: #007b7b; }
+    .digit-7 { color: #000000; }
+    .digit-8 { color: #7b7b7b; }
+
+    .github-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 1px 6px;
+      background: var(--chrome);
+      color: #111111;
+      font-size: 11px;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: var(--panel-shadow);
+    }
+
+    .github-link:hover {
+      filter: brightness(1.04);
+    }
+
+    .github-link:active {
+      box-shadow: var(--panel-inset);
+    }
+
+    .btn-wrap {
+      display: grid;
+      justify-items: center;
+      gap: 2px;
+    }
+
+    .btn-label {
+      display: none;
+      font-size: 10px;
+      font-weight: 700;
+      color: #555555;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    @media (pointer: coarse) {
+      .btn-label {
+        display: block;
+      }
+
+      .status-note {
+        display: none;
+      }
+    }
+
+    .flag-fab {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 50;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border: 0;
+      background: var(--chrome);
+      box-shadow: var(--panel-shadow), 0 4px 16px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .flag-fab-icon {
+      width: 28px;
+      height: 28px;
+      display: block;
+    }
+
+    .flag-fab-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .flag-fab-label {
+      font: 700 13px Tahoma, "MS Sans Serif", sans-serif;
+      color: #111111;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .flag-fab:active {
+      box-shadow: var(--panel-inset), 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .flag-fab.active {
+      box-shadow: var(--panel-inset), 0 2px 8px rgba(0, 0, 0, 0.2);
+      background: #e8d0d0;
+    }
+
+    @media (pointer: coarse) {
+      .flag-fab {
+        display: inline-flex;
+      }
+    }
+
+    .video-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .video-modal[hidden] {
+      display: none;
+    }
+
+    .video-modal-content {
+      background: var(--chrome);
+      box-shadow: var(--panel-shadow), 0 28px 52px rgba(0, 0, 0, 0.4);
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+      max-width: 94vw;
+    }
+
+    .video-modal-title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #1a1a1a;
+      text-align: center;
+    }
+
+    .video-modal-content iframe {
+      display: block;
+      max-width: 100%;
+      max-height: 60vh;
+    }
+
+    .video-modal-close {
+      width: auto;
+      height: auto;
+      padding: 8px 24px;
+      border: 0;
+      background: var(--chrome);
+      box-shadow: var(--panel-shadow);
+      font: 700 15px Tahoma, "MS Sans Serif", sans-serif;
+      cursor: pointer;
+    }
+
+    .video-modal-close:active {
+      box-shadow: var(--panel-inset);
+    }
+
+    @media (max-width: 880px) {
+      body {
+        padding: 12px;
+      }
+
+      .hud {
+        grid-template-columns: 1fr auto;
+      }
+
+      .status-panel {
+        grid-column: 1 / -1;
+        justify-items: center;
+        text-align: center;
+      }
+
+      .status-text {
+        font-size: 24px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      body {
+        padding: 4px;
+      }
+
+      .window {
+        width: 100vw;
+      }
+
+      .titlebar {
+        font-size: 13px;
+        padding: 5px 8px;
+      }
+
+      .titlebar-actions span {
+        display: none;
+      }
+
+      .shell {
+        padding: 6px;
+        gap: 6px;
+      }
+
+      .hud {
+        gap: 6px;
+        padding: 6px;
+      }
+
+      .counter {
+        min-height: 36px;
+        padding: 4px 8px 2px;
+        font-size: 24px;
+      }
+
+      .reset {
+        width: 36px;
+        height: 36px;
+      }
+
+      .btn-label {
+        font-size: 8px;
+      }
+
+      .status-panel {
+        grid-column: 1 / -1;
+      }
+
+      .status-text {
+        font-size: 16px;
+      }
+
+      .map-frame {
+        padding: 4px;
+      }
+
+      .cell {
+        font: 700 clamp(10px, 2.4vw, 18px) / 1 Tahoma, "MS Sans Serif", sans-serif;
+      }
+
+      .video-modal-content iframe {
+        width: 240px;
+        height: 427px;
+      }
+
+      .video-modal-title {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="window">
+    <div class="titlebar">
+      <span>Hormuz Minesweeper</span>
+      <div class="titlebar-actions">
+        <a class="github-link" href="https://github.com/PythonicNinja/hormuz-minesweeper" target="_blank" rel="noopener noreferrer" aria-label="Star on GitHub">
+          <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          Star
+        </a>
+        <span aria-hidden="true">&minus;</span>
+        <span aria-hidden="true">&#9633;</span>
+        <span aria-hidden="true">&times;</span>
+      </div>
+    </div>
+
+    <div class="shell">
+      <section class="hud" aria-label="Game status">
+        <div class="counter" id="mine-counter">000</div>
+        <div class="btn-wrap">
+          <button class="reset" id="reset-button" type="button" aria-label="Reset game"></button>
+          <span class="btn-label">reset</span>
+        </div>
+        <div class="status-panel">
+          <div class="status-text" id="status-text">READY to start winning!!!</div>
+          <div class="status-note" id="status-note">Left-click reveal. Right-click flag. Double-click chord. Mines only spawn on water.</div>
+        </div>
+      </section>
+
+      <section class="map-frame">
+        <div class="map-panel">
+          <div class="board" id="board" aria-label="Minesweeper board"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <button class="flag-fab" id="flag-toggle" type="button" aria-label="Toggle flag mode">
+    <span class="flag-fab-icon" id="flag-fab-icon">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <line x1="12" y1="1.8" x2="12" y2="22.2" stroke="#000000" stroke-width="1.4" />
+        <line x1="1.8" y1="12" x2="22.2" y2="12" stroke="#000000" stroke-width="1.4" />
+        <line x1="4.1" y1="4.1" x2="19.9" y2="19.9" stroke="#000000" stroke-width="1.4" />
+        <line x1="19.9" y1="4.1" x2="4.1" y2="19.9" stroke="#000000" stroke-width="1.4" />
+        <circle cx="12" cy="12" r="5.1" fill="#000000" />
+        <circle cx="10.2" cy="9.8" r="1.7" fill="#ffffff" />
+      </svg>
+    </span>
+    <span class="flag-fab-label" id="flag-toggle-label">dig mode</span>
+  </button>
+
+  <div class="video-modal" id="video-modal" hidden>
+    <div class="video-modal-content">
+      <div class="video-modal-title" id="video-modal-title"></div>
+      <iframe id="video-frame" width="315" height="560"
+        src="" frameborder="0"
+        allow="autoplay; encrypted-media" allowfullscreen
+        playsinline></iframe>
+      <button class="video-modal-close" id="video-modal-close" type="button">Another win?</button>
+    </div>
+  </div>
+
+  <script src="index.js"></script>
+<script src="../__i18n.js"></script></body>
+</html>

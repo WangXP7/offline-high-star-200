@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+    Rewritecond %{HTTP_HOST} !^(achtungkurve\.com) [NC,OR]
+    RewriteCond %{HTTPS} !=on
+    RewriteRule (.*) https://achtungkurve.com$1 [R=301,L]
+</IfModule>
+
+<FilesMatch ".(png|ico|wav|mp3)$">
+	Header set Cache-Control "max-age=86400, public"
+</FilesMatch>

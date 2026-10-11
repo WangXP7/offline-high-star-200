@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "target": "es2024",
+        "module": "nodenext",
+        "resolveJsonModule": true,
+        "sourceMap": true,
+        "outDir": "./dist",
+        "noEmit": false,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "noImplicitAny": false,
+        "noImplicitThis": true,
+        "useDefineForClassFields": true,
+        "skipLibCheck": true,
+        "allowJs": true,
+        "types": ["node", "jasmine"]
+    },
+    "include": ["**/*.ts", "db/migrations/*.js", "config/**/*.json"]
+}

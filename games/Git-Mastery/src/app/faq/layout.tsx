@@ -1,0 +1,40 @@
+import type { Metadata } from "next";
+import { getPageUrl } from "~/lib/site";
+
+export const metadata: Metadata = {
+    title: "FAQ - Git Mastery | Interactive Git Learning Platform",
+    description:
+        "Frequently asked questions about Git Mastery, the interactive Git learning platform. Get answers about Git commands, troubleshooting, and learning resources.",
+    openGraph: {
+        title: "FAQ - Git Mastery",
+        description: "Frequently asked questions about Git Mastery and Git learning",
+        url: getPageUrl("/faq"),
+        siteName: "Git Mastery",
+        images: [
+            {
+                url: "/og-cover.jpg",
+                width: 1200,
+                height: 630,
+                alt: "Git Mastery FAQ",
+            },
+        ],
+        type: "website",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "FAQ - Git Mastery",
+        description: "Frequently asked questions about Git Mastery and Git learning",
+        images: ["/og-cover.jpg"],
+    },
+    alternates: {
+        canonical: "/faq",
+    },
+    robots: {
+        index: true,
+        follow: true,
+    },
+};
+
+export default function FAQLayout({ children }: { children: React.ReactNode }) {
+    return children;
+}

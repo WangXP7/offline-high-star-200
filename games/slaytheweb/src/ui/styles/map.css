@@ -1,0 +1,233 @@
+.MapContainer {
+	position: relative;
+	z-index: 500;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+.MapFooter {
+	align-self: flex-end;
+	text-align: right;
+	padding: 2rem;
+}
+
+slay-map {
+	--rows: 12;
+	--columns: 6;
+	--pathColor: chocolate;
+	--pathWidth: 1px;
+	--highlight: gold;
+	--nodeSize: 1.5em;
+
+	box-sizing: border-box;
+	display: grid;
+	margin: 0;
+	min-height: 125vh;
+	padding: 1em;
+	position: relative;
+	border-radius: 0.75rem;
+	background: hsl(120, 17.5%, 19%);
+
+	border: 2px groove var(--pathColor);
+	outline: 1px solid var(--pathColor);
+	outline-offset: -0.5rem;
+}
+
+slay-map-row {
+	display: grid;
+	grid-template-columns: repeat(var(--columns), 1fr);
+	/* grid-gap: 0.5em; */
+	align-items: center;
+	justify-items: center;
+	min-height: 10dvh;
+}
+
+slay-map-node {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: var(--nodeSize);
+	border: 3px dashed transparent;
+	position: relative;
+	z-index: 2;
+	border-radius: 50%;
+	transition:
+		opacity 250ms,
+		border-color 250ms;
+}
+
+slay-map-row:first-of-type,
+slay-map-row:last-of-type {
+	grid-template-columns: repeat(var(--rows), 1fr);
+}
+slay-map-row:first-of-type slay-map-node,
+slay-map-row:last-of-type slay-map-node {
+	grid-column-start: 4;
+	grid-column-end: 6;
+	transform: none !important;
+}
+
+/* Styles for maps you can navigate */
+slay-map-node {
+	/* All nodes are disabled by default */
+	pointer-events: none;
+	visibility: hidden;
+	width: 4rem;
+	height: 4rem;
+	background-color: var(--bg);
+}
+slay-map-node:hover {
+	border-color: var(--highlight);
+}
+slay-map-node[linked] {
+	visibility: visible;
+}
+slay-map-node[did-visit] {
+	/* border-color: hsla(0, 0%, 0%, 0.9); */
+	opacity: 0.666;
+}
+slay-map-node:not([did-visit]) {
+	opacity: 0.333;
+}
+slay-map-node[current][type] {
+	border-color: var(--highlight);
+	background-color: var(--bg);
+	opacity: 1;
+	z-index: 2;
+}
+slay-map-node[can-visit] {
+	pointer-events: auto;
+	opacity: 1;
+}
+slay-map-node[type]:hover {
+	/* border-color: hsla(0, 0%, 0%, 0.9); */
+	/*cursor: pointer;*/
+	cursor:
+		url(/images/cursors/point.png) 10 0,
+		auto;
+}
+slay-map-node > span {
+	transition: transform 300ms ease-in-out;
+	transform-origin: center;
+}
+slay-map-node[type]:hover > span {
+	transform: scale(1.3);
+	transition-duration: 100ms;
+}
+/* the map node-types (what happens in this node) */
+slay-map-node[node-type] span {
+	user-select: none;
+	-webkit-user-select: none;
+	/* min-height: 3em; */
+	/* min-width: 3em; */
+	border-radius: 50%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: var(--bg);
+}
+
+/* footstep to the bottom */
+slay-map-node[node-type="start"][current] span {
+	transform: rotate(180deg);
+}
+/* the start and end nodes */
+slay-map-node[node-type="start"],
+slay-map-node[node-type="boss"] {
+	/* font-size: 3rem; */
+	width: 10rem;
+	height: 10rem;
+}
+/* "Camp" */
+slay-map-node[node-type="C"] {
+	/* font-size: 3rem; */
+	/* border-style: dotted; */
+}
+/* "Monster" of normal level */
+slay-map-node[node-type="M"][current] {
+	/* background-color: lightgray; */
+}
+/* "Elite" monster*/
+slay-map-node[node-type="E"][current] {
+	/* background-color: red; */
+}
+/* "boss", the end level */
+slay-map-node[node-type="boss"] {
+	font-size: 5rem;
+	border-color: gold;
+	animation-name: nodeTypeBoss;
+	animation-duration: 3000ms;
+	animation-direction: alternate;
+	animation-iteration-count: infinite;
+	border-width: 0.5rem;
+}
+
+/* node-types with "emojis" */
+/*slay-map-node[node-type="C"],
+slay-map-node[node-type="M"],
+slay-map-node[node-type="E"] {}*/
+
+slay-map svg.paths {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+	pointer-events: none;
+}
+slay-map svg.paths line {
+	stroke: var(--pathColor);
+	stroke-width: var(--pathWidth);
+	stroke-dasharray: 0.2em;
+	stroke-dashoffset: 0;
+	/* opacity: 0.3; */
+	/* animation: mapLines 10s linear infinite; */
+}
+
+@keyframes mapLines {
+	from {
+		stroke-dashoffset: 0;
+	}
+	to {
+		stroke-dashoffset: -10%;
+	}
+}
+
+/* map animations */
+
+@keyframes nodeTypeM {
+	0% {
+		background-color: red;
+	}
+	100% {
+		background-color: blue;
+	}
+}
+
+@keyframes nodeTypeBoss {
+	0% {
+		border-color: gold;
+	}
+	100% {
+		border-color: cyan;
+	}
+}
+
+/* slay-map.debug slay-map-row { border-bottom: 1px solid rgba(0,0,0,0.2); } */
+slay-map.debug slay-map-node {
+	outline: 1px solid cyan;
+	border-radius: 0;
+	visibility: visible;
+}
+/* In debug mode, allow clicking all linked nodes (ignore room completion) */
+slay-map.debug slay-map-node[linked] {
+	pointer-events: auto;
+	visibility: visible;
+}
+/* slay-map.debug slay-map-node span { outline: 1px solid white; } */
+/* slay-map.debug slay-map-node[type] span { outline: 1px solid red; } */
+/* slay-map.debug slay-map-node[linked] span { outline: 1px solid red; } */
+/* slay-map.debug slay-map-node[current] span { outline: 1px solid var(--highlight); } */
+/* slay-map.debug slay-map-node[can-visit] { outline: 1px solid orange; } */

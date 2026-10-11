@@ -1,0 +1,211 @@
+bonus_resources:
+  - name: cattle
+    spawn_tiles:
+      - grass
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 3
+    set_chance: 0.05
+    min_temp: 32
+    max_temp: 90
+  - name: sheep
+    spawn_tiles:
+      - grass
+      - grass_hill
+      - plains
+      - plains_hill
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 3
+    set_chance: 0.05
+    min_temp: 0
+    max_temp: 90
+  # Civ 5 wheat grows on plains and flood plains. Flood plains only appear after rivers are laid,
+  # which is after resources, so generated maps put it on plains; presets can use floodplains.
+  - name: wheat
+    spawn_tiles:
+      - plains
+      - floodplains
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 3
+    set_chance: 0.05
+    min_temp: 20
+    max_temp: 90
+  - name: fish
+    spawn_tiles:
+      - freshwater
+      - shallow_ocean
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 4
+    set_chance: 0.1
+    min_temp: 0
+    max_temp: 100
+  - name: stone
+    spawn_tiles:
+      - grass
+      - grass_hill
+      - plains
+      - plains_hill
+      - tundra
+      - tundra_hill
+      - desert
+      - desert_hill
+      - snow
+      - snow_hill
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 2
+    set_chance: 0.1
+    min_temp: 0
+    max_temp: 100
+# reveal_tech hides a resource from a player until they research it, as Civ 5 does with its strategic
+# resources: the tile looks and yields like plain terrain to them, and nothing can be built on it.
+strategic_resources:
+  - name: horses
+    reveal_tech: Animal Husbandry
+    spawn_tiles:
+      - grass
+      - grass_hill
+      - plains
+      - plains_hill
+      - tundra
+      - tundra_hill
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 2
+    set_chance: 0.1
+    min_temp: 0
+    max_temp: 90
+  - name: iron
+    reveal_tech: Iron Working
+    spawn_tiles:
+      - grass
+      - grass_hill
+      - plains
+      - plains_hill
+      - tundra
+      - tundra_hill
+      - desert
+      - desert_hill
+      - snow
+      - snow_hill
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 3
+    set_chance: 0.05
+    min_temp: 0
+    max_temp: 100
+    spawn_on_additional_tile_types: true
+luxury_resources:
+  - name: citrus
+    spawn_tiles:
+      - jungle
+      - forest
+      - grass
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 1
+    set_chance: 0.1
+    min_temp: 60
+    max_temp: 100
+    spawn_on_additional_tile_types: true
+  - name: cotton
+    spawn_tiles:
+      - grass
+      - grass_hill
+      - plains
+      - plains_hill
+      - desert
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 1
+    set_chance: 0.1
+    min_temp: 70
+    max_temp: 100
+  - name: copper
+    spawn_tiles:
+      - grass
+      - grass_hill
+      - plains
+      - plains_hill
+      - tundra
+      - tundra_hill
+      - desert
+      - desert_hill
+      - snow
+      - snow_hill
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 2
+    set_chance: 0.1
+    min_temp: 0
+    max_temp: 100
+    spawn_on_additional_tile_types: true
+  - name: gold
+    spawn_tiles:
+      - grass
+      - grass_hill
+      - plains
+      - plains_hill
+      - tundra
+      - tundra_hill
+      - desert
+      - desert_hill
+      - snow
+      - snow_hill
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 2
+    set_chance: 0.1
+    min_temp: 0
+    max_temp: 100
+    spawn_on_additional_tile_types: true
+  - name: crab
+    spawn_tiles:
+      - freshwater
+      - shallow_ocean
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 2
+    set_chance: 0.05
+    min_temp: 0
+    max_temp: 100
+  - name: whales
+    spawn_tiles:
+      - shallow_ocean
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 2
+    set_chance: 0.05
+    min_temp: 0
+    max_temp: 100
+  - name: turtles
+    spawn_tiles:
+      - freshwater
+      - shallow_ocean
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 2
+    set_chance: 0.05
+    min_temp: 0
+    max_temp: 100
+  - name: pearls
+    spawn_tiles:
+      - shallow_ocean
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 2
+    set_chance: 0.05
+    min_temp: 30
+    max_temp: 100
+  - name: olives
+    spawn_tiles:
+      - grass
+    path_length: 1
+    min_tiles_set: 1
+    max_tiles_set: 2
+    set_chance: 0.05
+    min_temp: 60
+    max_temp: 90

@@ -1,0 +1,34 @@
+@import "variables.scss";
+
+footer {
+  position: absolute;
+  bottom: 0;
+
+  opacity: 0.8;
+  display: flex;
+
+  padding-bottom: 2em;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  a {
+    opacity: 0.5;
+    color: inherit;
+    &:hover {
+      opacity: 1;
+      text-decoration: underline;
+      color: white;
+    }
+  }
+
+  a + a {
+    margin-left: 1em;
+  }
+
+  // hide if screen height is low
+  @include low-height-screen {
+    display: none;
+  }
+}

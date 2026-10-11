@@ -1,0 +1,155 @@
+[
+  {
+    "file": "music/songs/arabesques.mid",
+    "title": "Arabesques - Claude Debussy",
+    "source": "builtin",
+    "id": "arabesques.mid",
+    "duration": 212,
+    "url": "https://musescore.com/user/37070508/scores/6607208",
+    "license": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  {
+    "file": "music/songs/canon-in-d.mid",
+    "title": "Canon in D - Johann Pachelbel",
+    "source": "builtin",
+    "id": "canon-in-d.mid",
+    "duration": 127,
+    "url": "https://musescore.com/user/3349846/scores/1376056",
+    "license": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  {
+    "file": "music/songs/clair-de-lune.mid",
+    "title": "Clair de Lune - Claude Debussy",
+    "source": "builtin",
+    "id": "clair-de-lune.mid",
+    "duration": 245,
+    "url": "https://musescore.com/user/36583375/scores/6502523",
+    "license": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  {
+    "file": "music/songs/fur-elise.mid",
+    "title": "Fur Elise - Ludwig van Beethoven",
+    "source": "builtin",
+    "id": "fur-elise.mid",
+    "duration": 148,
+    "url": "https://musescore.com/user/94627/scores/111107",
+    "license": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  {
+    "file": "music/songs/greensleeves.mid",
+    "title": "Greensleeves - Unknown",
+    "source": "builtin",
+    "id": "greensleeves.mid",
+    "duration": 73,
+    "url": "https://musescore.com/lonli_girl/scores/1951286",
+    "license": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  {
+    "file": "music/songs/gymnopedie-no1.mid",
+    "title": "Gymnopédie No.1 - Erik Satie",
+    "source": "builtin",
+    "id": "gymnopedie-no1.mid",
+    "duration": 184,
+    "url": "https://musescore.com/user/110059/scores/980686",
+    "license": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  {
+    "file": "music/songs/in-the-hall-of-the-mountain-king.mid",
+    "title": "In the Hall of the Mountain King - Edvard Grieg",
+    "source": "builtin",
+    "id": "in-the-hall-of-the-mountain-king.mid",
+    "duration": 97,
+    "url": "https://musescore.com/fortepiano11/scores/5009055",
+    "license": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  {
+    "file": "music/songs/la-cucaracha.mid",
+    "title": "La Cucaracha - Unknown",
+    "source": "builtin",
+    "id": "la-cucaracha.mid",
+    "duration": 46,
+    "url": "https://musescore.com/user/20144407/scores/4546239",
+    "license": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  {
+    "file": "music/songs/march-in-d-major.mid",
+    "title": "March in D Major - Johann Sebastian Bach",
+    "source": "builtin",
+    "id": "march-in-d-major.mid",
+    "duration": 73,
+    "url": "https://musescore.com/user/9292486/scores/2086206",
+    "license": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  {
+    "file": "music/songs/minuet-in-g-major.mid",
+    "title": "Minuet in G Major - Christian Petzold",
+    "source": "builtin",
+    "id": "minuet-in-g-major.mid",
+    "duration": 91,
+    "url": "https://musescore.com/user/9292486/scores/2086106",
+    "license": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  {
+    "file": "music/songs/moonlight-sonata.mid",
+    "title": "Moonlight Sonata - Ludwig van Beethoven",
+    "source": "builtin",
+    "id": "moonlight-sonata.mid",
+    "duration": 293,
+    "url": "https://musescore.com/user/32106469/scores/5924566",
+    "license": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  {
+    "file": "music/songs/ode-to-joy.mid",
+    "title": "Ode to Joy - Christian Petzold",
+    "source": "builtin",
+    "id": "ode-to-joy.mid",
+    "duration": 31,
+    "url": "https://musescore.com/user/20805137/scores/4603207",
+    "license": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  {
+    "file": "music/songs/sonata-no-11.mid",
+    "title": "Piano Sonata No. 11 - Wolfgang Amadeus Mozart",
+    "source": "builtin",
+    "id": "sonata-no-11.mid",
+    "duration": 53,
+    "url": "https://musescore.com/user/452226/scores/445346",
+    "license": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  {
+    "file": "music/songs/rondo-alla-turca.mid",
+    "title": "Rondo Alla Turca - Wolfgang Amadeus Mozart",
+    "source": "builtin",
+    "id": "rondo-alla-turca.mid",
+    "duration": 232,
+    "url": "https://musescore.com/user/938326/scores/1050521",
+    "license": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  {
+    "file": "music/songs/swan-lake.mid",
+    "title": "Swan Lake - Pyotr Ilyich Tchaikovsky",
+    "source": "builtin",
+    "id": "swan-lake.mid",
+    "duration": 49,
+    "url": "https://musescore.com/user/9292486/scores/2086106",
+    "license": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  {
+    "file": "music/songs/the-entertainer.mid",
+    "title": "The Entertainer - Scott Joplin",
+    "source": "builtin",
+    "id": "the-entertainer.mid",
+    "duration": 71,
+    "url": "https://musescore.com/arw-music/scores/98457",
+    "license": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  {
+    "file": "music/songs/twinkle-twinkle-little-star.mid",
+    "title": "Twinkle Twinkle Little Star",
+    "source": "builtin",
+    "id": "twinkle-twinkle-little-star.mid",
+    "duration": 23,
+    "url": "https://musescore.com/user/29786779/scores/5246287",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/"
+  }
+]

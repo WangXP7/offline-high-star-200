@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talha - Space Invaders Game</title>
+    <link rel="icon" href="https://i.ibb.co/M6KTWnf/pic.jpg" />
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="wrapper">
+      <div id="levelScreen" class="level-screen">
+        <div class="level-header">
+          <h1>Space Invaders</h1>
+          <button type="button" id="helpBtnLevel" class="help-btn" aria-label="How to play">?</button>
+        </div>
+        <p>Choose difficulty</p>
+        <div class="level-buttons">
+          <button type="button" data-level="easy" class="level-btn">
+            <span class="level-name">Easy</span>
+            <span class="level-desc">3×8 · slow · 3 lives</span>
+          </button>
+          <button type="button" data-level="medium" class="level-btn">
+            <span class="level-name">Medium</span>
+            <span class="level-desc">4×10 · medium · 3 lives</span>
+          </button>
+          <button type="button" data-level="hard" class="level-btn">
+            <span class="level-name">Hard</span>
+            <span class="level-desc">5×11 · fast · 2 lives</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="gameScreen" class="game-screen hidden">
+        <header class="header">
+          <h1>Space Invaders</h1>
+          <button type="button" id="helpBtnGame" class="help-btn" aria-label="How to play">?</button>
+          <span class="level-badge" id="levelBadge">Easy</span>
+          <div class="header-actions">
+            <span id="hud" class="hud">Score: 0 · Lives: 3</span>
+            <button type="button" id="changeLevelBtn" class="btn btn-ghost">Level</button>
+            <button type="button" id="newGameBtn" class="btn">New Game</button>
+          </div>
+        </header>
+        <canvas id="gameCanvas" width="480" height="560"></canvas>
+        <div class="touch-controls">
+          <button type="button" id="leftBtn" class="ctrl-btn">◀</button>
+          <button type="button" id="fireBtn" class="ctrl-btn fire">Fire</button>
+          <button type="button" id="rightBtn" class="ctrl-btn">▶</button>
+        </div>
+        <div id="resultOverlay" class="result-overlay hidden">
+          <div class="result-box">
+            <h2 id="resultTitle"></h2>
+            <p id="resultMsg"></p>
+            <div class="result-actions">
+              <button type="button" id="playAgainBtn" class="btn btn-large">Play Again</button>
+              <button type="button" id="changeLevelFromResultBtn" class="btn btn-ghost">Change Level</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="helpOverlay" class="help-overlay hidden">
+      <div class="help-modal">
+        <div class="help-header">
+          <h2>How to play</h2>
+          <button type="button" id="helpClose" class="help-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="help-body">
+          <p>Shoot all aliens before they reach you. Hide behind bunkers. Clear a wave to face a faster one.</p>
+          <ul>
+            <li>Move with Arrow keys or A/D (or on-screen buttons).</li>
+            <li>Shoot with Space or the Fire button.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

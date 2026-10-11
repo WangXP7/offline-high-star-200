@@ -1,0 +1,15 @@
+.vscode/
+test.py
+.venv*/
+
+# Local OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+
+# Generated verification artifacts
+output/
+star-cluster-arena-desktop/
+ball-modes-*.png
+*.log

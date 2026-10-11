@@ -1,0 +1,47 @@
+import { altoMain, anakiwa, atomicTangerine, bittersweet, celadon, chardonnay, coldPurple, emerald, halfBaked, lightGreen, lightOrchid, lightWisteria, nomad, periwinkle, saharaSand, turquoiseBlue } from "../colors";
+
+const level = {
+  path: "/community-level/732",
+  size: 16,
+  colorRegions: [
+    ["D", "D", "B", "D", "D", "D", "O", "G", "O", "I", "I", "D", "D", "D", "D", "E"],
+    ["B", "L", "L", "L", "B", "O", "G", "G", "G", "O", "B", "M", "M", "B", "B", "B"],
+    ["F", "D", "L", "D", "O", "K", "K", "G", "G", "G", "O", "D", "M", "D", "D", "E"],
+    ["F", "D", "B", "O", "G", "J", "K", "K", "K", "G", "G", "O", "B", "D", "D", "E"],
+    ["F", "D", "O", "G", "G", "C", "J", "J", "K", "K", "D", "G", "O", "D", "D", "E"],
+    ["F", "O", "G", "G", "K", "K", "C", "C", "J", "K", "C", "J", "K", "O", "D", "E"],
+    ["O", "G", "G", "K", "K", "J", "A", "A", "A", "C", "J", "K", "K", "G", "O", "E"],
+    ["G", "G", "G", "K", "J", "C", "A", "B", "A", "C", "J", "K", "G", "G", "G", "O"],
+    ["O", "G", "K", "K", "J", "C", "A", "A", "A", "J", "K", "K", "G", "G", "O", "E"],
+    ["D", "O", "K", "J", "C", "K", "J", "C", "C", "K", "K", "G", "G", "O", "D", "E"],
+    ["D", "D", "O", "G", "G", "K", "K", "J", "J", "C", "G", "G", "O", "D", "E", "E"],
+    ["D", "D", "B", "O", "G", "G", "K", "K", "K", "J", "G", "O", "B", "D", "E", "E"],
+    ["D", "D", "B", "D", "O", "G", "G", "G", "K", "K", "O", "D", "N", "D", "D", "E"],
+    ["D", "D", "P", "H", "H", "O", "G", "G", "G", "O", "D", "D", "N", "D", "D", "E"],
+    ["B", "P", "P", "P", "P", "B", "O", "G", "O", "B", "B", "N", "N", "N", "B", "B"],
+    ["D", "D", "P", "D", "D", "D", "D", "O", "D", "D", "D", "D", "D", "D", "D", "A"],
+  ],
+  regionColors: {
+    A: lightWisteria,
+    B: chardonnay,
+    C: anakiwa,
+    D: celadon,
+    E: altoMain,
+    F: bittersweet,
+    G: saharaSand,
+    H: nomad,
+    I: lightOrchid,
+    J: halfBaked,
+    K: turquoiseBlue,
+    L: atomicTangerine,
+    M: lightGreen,
+    N: emerald,
+    O: periwinkle,
+    P: coldPurple,
+  },
+  solutionsCount: 1,
+  createdBy: "VictorBandoiu",
+  creatorLink: "https://www.instagram.com/victorban72/",
+};
+
+export default level;

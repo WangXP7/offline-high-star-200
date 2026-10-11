@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talha - Mastermind Game</title>
+
+    <!-- 👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻-->
+    <!-- Also uploaded the demo of this code in a gif : https://c.tenor.com/x8v1oNUOmg4AAAAd/tenor.gif-->
+    <!-- 👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻-->
+
+    <!-- 👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻-->
+    <!-- More html-css-js Games Calculators Games Cards Elements Projects on https://www.github.com/he-is-talha -->
+    <!-- 👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻-->
+
+    <link rel="icon" href="https://i.ibb.co/M6KTWnf/pic.jpg" />
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="wrapper">
+      <div id="levelScreen" class="level-screen">
+        <div class="level-header">
+          <h1>Mastermind</h1>
+          <button type="button" id="helpBtnLevel" class="help-btn" title="How to play" aria-label="How to play">?</button>
+        </div>
+        <p>Choose difficulty</p>
+        <div class="level-buttons">
+          <button type="button" data-level="easy" class="level-btn">
+            <span class="level-name">Easy</span>
+            <span class="level-desc">4 pegs · 4 colors · 12 guesses</span>
+          </button>
+          <button type="button" data-level="medium" class="level-btn">
+            <span class="level-name">Medium</span>
+            <span class="level-desc">4 pegs · 6 colors · 10 guesses</span>
+          </button>
+          <button type="button" data-level="hard" class="level-btn">
+            <span class="level-name">Hard</span>
+            <span class="level-desc">5 pegs · 8 colors · 8 guesses</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="gameScreen" class="game-screen hidden">
+        <header class="header">
+          <h1>Mastermind</h1>
+          <button type="button" id="helpBtnGame" class="help-btn" title="How to play" aria-label="How to play">?</button>
+          <span class="level-badge" id="levelBadge">Easy</span>
+          <div class="header-actions">
+            <span class="guesses-left" id="guessesLeft">Guesses: 12</span>
+            <button type="button" id="changeLevelBtn" class="btn btn-ghost">Level</button>
+            <button type="button" id="newGameBtn" class="btn">New Game</button>
+          </div>
+        </header>
+
+        <main class="game-container">
+          <div id="secretRow" class="secret-row" aria-label="Secret code"></div>
+          <div id="history" class="history" aria-label="Guess history"></div>
+          <div class="current-area">
+            <div id="currentGuess" class="current-guess" aria-label="Current guess"></div>
+            <div id="palette" class="palette" aria-label="Color palette"></div>
+            <div class="actions">
+              <button type="button" id="clearBtn" class="btn btn-ghost">Clear</button>
+              <button type="button" id="submitBtn" class="btn btn-large">Submit</button>
+            </div>
+          </div>
+        </main>
+
+        <div id="resultOverlay" class="result-overlay hidden">
+          <div class="result-box">
+            <h2 id="resultTitle"></h2>
+            <p id="resultMsg"></p>
+            <div class="result-actions">
+              <button type="button" id="playAgainBtn" class="btn btn-large">Play Again</button>
+              <button type="button" id="changeLevelFromResultBtn" class="btn btn-ghost">Change Level</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="helpOverlay" class="help-overlay hidden" aria-hidden="true">
+      <div class="help-modal" role="dialog" aria-labelledby="helpTitle" aria-modal="true">
+        <div class="help-header">
+          <h2 id="helpTitle">How to play</h2>
+          <button type="button" id="helpClose" class="help-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="help-body">
+          <p>Guess the secret color code in a limited number of tries.</p>
+          <ul>
+            <li>Tap colors to fill your guess, then press <strong>Submit</strong>.</li>
+            <li><strong>Black peg</strong> — correct color in the correct position.</li>
+            <li><strong>White peg</strong> — correct color in the wrong position.</li>
+            <li>Easy: 4 pegs / 4 colors / 12 guesses. Medium: 4 / 6 / 10. Hard: 5 / 8 / 8.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talha - Battleship Game</title>
+
+    <!-- 👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻-->
+    <!-- Also uploaded the demo of this code in a gif : https://c.tenor.com/x8v1oNUOmg4AAAAd/tenor.gif-->
+    <!-- 👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻-->
+
+    <!-- 👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻-->
+    <!-- More html-css-js Games Calculators Games Cards Elements Projects on https://www.github.com/he-is-talha -->
+    <!-- 👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻-->
+
+    <link rel="icon" href="https://i.ibb.co/M6KTWnf/pic.jpg" />
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="wrapper">
+      <div id="levelScreen" class="level-screen">
+        <div class="level-header">
+          <h1>Battleship</h1>
+          <button type="button" id="helpBtnLevel" class="help-btn" aria-label="How to play">?</button>
+        </div>
+        <p>Choose difficulty</p>
+        <div class="level-buttons">
+          <button type="button" data-level="easy" class="level-btn">
+            <span class="level-name">Easy</span>
+            <span class="level-desc">Random fire · no hunt</span>
+          </button>
+          <button type="button" data-level="medium" class="level-btn">
+            <span class="level-name">Medium</span>
+            <span class="level-desc">Hunt after hit</span>
+          </button>
+          <button type="button" data-level="hard" class="level-btn">
+            <span class="level-name">Hard</span>
+            <span class="level-desc">Hunt + target adjacency</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="gameScreen" class="game-screen hidden">
+        <header class="header">
+          <h1>Battleship</h1>
+          <button type="button" id="helpBtnGame" class="help-btn" aria-label="How to play">?</button>
+          <span class="level-badge" id="levelBadge">Easy</span>
+          <div class="header-actions">
+            <span id="hud" class="hud">Place your fleet</span>
+            <button type="button" id="changeLevelBtn" class="btn btn-ghost">Change Level</button>
+            <button type="button" id="newGameBtn" class="btn">New Game</button>
+          </div>
+        </header>
+
+        <div id="placementBar" class="placement-bar">
+          <div id="shipTray" class="ship-tray" aria-label="Ship tray"></div>
+          <div class="placement-controls">
+            <button type="button" id="rotateBtn" class="btn btn-rotate">Rotate</button>
+            <button type="button" id="readyBtn" class="btn" disabled>Ready</button>
+          </div>
+        </div>
+
+        <main class="boards">
+          <section class="board-panel">
+            <h2 class="board-title">Your Fleet</h2>
+            <div id="playerBoard" class="board" role="grid" aria-label="Your fleet board"></div>
+          </section>
+          <section class="board-panel">
+            <h2 class="board-title">Enemy Waters</h2>
+            <div id="enemyBoard" class="board" role="grid" aria-label="Enemy waters board"></div>
+          </section>
+        </main>
+
+        <div id="resultOverlay" class="result-overlay hidden">
+          <div class="result-box">
+            <h2 id="resultTitle"></h2>
+            <p id="resultMsg"></p>
+            <div class="result-actions">
+              <button type="button" id="playAgainBtn" class="btn btn-large">Play Again</button>
+              <button type="button" id="changeLevelFromResultBtn" class="btn btn-ghost">Change Level</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="helpOverlay" class="help-overlay hidden" aria-hidden="true">
+      <div class="help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+        <div class="help-header">
+          <h2 id="helpTitle">How to play</h2>
+          <button type="button" id="helpClose" class="help-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="help-body">
+          <p>Classic Battleship on dual 10×10 grids. Place your fleet, then take turns firing one shot at a time (no Salvo).</p>
+          <ul>
+            <li><strong>Fleet:</strong> Carrier (5), Battleship (4), Cruiser (3), Submarine (3), Destroyer (2). Ships may touch.</li>
+            <li><strong>Placement:</strong> Select a ship from the tray, press Rotate or R to turn, then click your board. Ready starts combat when all ships are placed.</li>
+            <li><strong>Combat:</strong> You fire first. Click an enemy cell. Misses mark water; hits mark ships. Sunk ships are announced and revealed on the enemy board.</li>
+            <li><strong>Win:</strong> Sink the entire enemy fleet. <strong>Lose:</strong> your fleet is sunk.</li>
+            <li><strong>AI:</strong> Easy fires at random. Medium hunts orthogonally after a hit. Hard continues along aligned hits and uses checkerboard hunting.</li>
+            <li><strong>New Game</strong> restarts placement on the same level. <strong>Change Level</strong> returns to the difficulty screen.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

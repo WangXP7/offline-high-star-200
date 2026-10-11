@@ -1,0 +1,766 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { use } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { Link, useSearchParams } from 'react-router';
+import { z } from 'zod';
+import type { Resource } from '@pillage-first/types/models/resource';
+import {
+  type ResourceFieldComposition,
+  resourceFieldCompositionSchema,
+} from '@pillage-first/types/models/resource-field-composition';
+import {
+  calculateGridLayout,
+  parseResourcesFromRFC,
+} from '@pillage-first/utils/map';
+import type { Route } from '@react-router/types/app/(game)/(village-slug)/(hero)/+types/page';
+import { BorderIndicator } from 'app/(game)/(village-slug)/components/border-indicator';
+import {
+  OverflowContainer,
+  Section,
+  SectionContent,
+} from 'app/(game)/(village-slug)/components/building-layout';
+import { Resources } from 'app/(game)/(village-slug)/components/resources';
+import { useCurrentVillage } from 'app/(game)/(village-slug)/hooks/current-village/use-current-village';
+import { usePagination } from 'app/(game)/(village-slug)/hooks/use-pagination';
+import { useServer } from 'app/(game)/(village-slug)/hooks/use-server';
+import { InformationPopover } from 'app/(game)/components/information-popover';
+import { oasisBonusFinderCacheKey } from 'app/(game)/constants/query-keys';
+import { ApiContext } from 'app/(game)/providers/api-context';
+import { Icon } from 'app/components/icon';
+import { getOasisBonusIconType } from 'app/components/icons/utils/icons';
+import { PageContents } from 'app/components/page-contents';
+import { Text } from 'app/components/text';
+import { Button } from 'app/components/ui/button';
+import { Checkbox } from 'app/components/ui/checkbox';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from 'app/components/ui/form';
+import { Input } from 'app/components/ui/input';
+import { Pagination } from 'app/components/ui/pagination';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from 'app/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+} from 'app/components/ui/table';
+
+type OasisBonus =
+  | `25-${Resource}`
+  | `50-${Resource}`
+  | `25-${Exclude<Resource, 'wheat'>}-25-wheat`;
+
+const oasisBonuses: OasisBonus[] = [
+  '25-wheat',
+  '50-wheat',
+  '25-wood',
+  '25-wood-25-wheat',
+  '50-wood',
+  '25-clay',
+  '25-clay-25-wheat',
+  '50-clay',
+  '25-iron',
+  '25-iron-25-wheat',
+  '50-iron',
+];
+
+const splitOasisBonus = (oasisBonus: OasisBonus) => {
+  return oasisBonus.split('-') as
+    | [string, Resource, string, Resource]
+    | [string, Resource];
+};
+
+const parseOasisBonus = (
+  oasisBonus: OasisBonus | typeof NO_OASIS_BONUS_KEY,
+): Array<{ bonus: 25 | 50; resource: Resource }> => {
+  if (oasisBonus === NO_OASIS_BONUS_KEY) {
+    return [];
+  }
+
+  const [firstBonus, firstResource, secondBonus, secondResource] =
+    splitOasisBonus(oasisBonus);
+
+  const bonuses = [
+    {
+      bonus: Number.parseInt(firstBonus, 10) as 25 | 50,
+      resource: firstResource,
+    },
+  ];
+
+  if (secondBonus && secondResource) {
+    bonuses.push({
+      bonus: Number.parseInt(secondBonus, 10) as 25 | 50,
+      resource: secondResource,
+    });
+  }
+
+  return bonuses;
+};
+
+const bonusSetSchema = z.enum(oasisBonuses).or(z.literal('no-oasis-bonus'));
+
+const extendedRFCSchema = resourceFieldCompositionSchema.or(
+  z.literal('any-cropper'),
+);
+
+const resourceFieldCompositions: ResourceFieldComposition[] = [
+  '4446',
+  '5436',
+  '5346',
+  '4536',
+  '3546',
+  '4356',
+  '3456',
+  '4437',
+  '4347',
+  '3447',
+  '3339',
+  '11115',
+  '00018',
+];
+
+const RFCFieldValues = ['any-cropper', ...resourceFieldCompositions] as const;
+
+const NO_OASIS_BONUS_KEY = 'no-oasis-bonus';
+
+const OasisBonusSelectContent = () => {
+  const { t } = useTranslation();
+
+  return (
+    <SelectContent>
+      <SelectItem value={NO_OASIS_BONUS_KEY}>{t('Any oasis bonus')}</SelectItem>
+      {oasisBonuses.map((oasisBonus) => {
+        const [
+          firstBonusValue,
+          firstBonusResource,
+          secondBonusValue,
+          secondBonusResource,
+        ] = splitOasisBonus(oasisBonus);
+
+        return (
+          <SelectItem
+            key={oasisBonus}
+            value={oasisBonus}
+          >
+            {firstBonusValue}%
+            <Icon
+              className="size-4"
+              type={firstBonusResource}
+            />
+            {secondBonusValue && secondBonusResource && (
+              <>
+                {firstBonusValue}%
+                <Icon
+                  className="size-4"
+                  type={secondBonusResource}
+                />
+              </>
+            )}
+          </SelectItem>
+        );
+      })}
+    </SelectContent>
+  );
+};
+
+const OasisBonusFinderPage = ({ params }: Route.ComponentProps) => {
+  const { serverSlug, villageSlug } = params;
+
+  const { t } = useTranslation();
+  const { apiClient } = use(ApiContext);
+  const { currentVillage } = useCurrentVillage();
+  const { mapSize } = useServer();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const { halfSize } = calculateGridLayout(mapSize);
+
+  const bonusFinderFormSchema = z.strictObject({
+    origin: z.strictObject({
+      x: z.number().min(-halfSize).max(halfSize),
+      y: z.number().min(-halfSize).max(halfSize),
+    }),
+    resourceFieldComposition: extendedRFCSchema,
+    firstOasisBonus: bonusSetSchema,
+    secondOasisBonus: bonusSetSchema,
+    thirdOasisBonus: bonusSetSchema,
+    showOccupiedTiles: z.boolean(),
+    onlyUseUnoccupiedOases: z.boolean(),
+  });
+
+  const title = `${t('Oasis bonus finder')} | Pillage First! - ${serverSlug} - ${villageSlug}`;
+
+  const { coordinates } = currentVillage;
+
+  const searchParamX = Number.parseInt(searchParams.get('x') ?? '', 10);
+  const searchParamY = Number.parseInt(searchParams.get('y') ?? '', 10);
+  const x = Number.isNaN(searchParamX) ? coordinates.x : searchParamX;
+  const y = Number.isNaN(searchParamY) ? coordinates.y : searchParamY;
+  const resourceFieldComposition = (searchParams.get('rfc') ??
+    'any-cropper') as (typeof RFCFieldValues)[number];
+  const firstOasisBonus = (searchParams.get('first-bonus') ??
+    NO_OASIS_BONUS_KEY) as OasisBonus | typeof NO_OASIS_BONUS_KEY;
+  const secondOasisBonus = (searchParams.get('second-bonus') ??
+    NO_OASIS_BONUS_KEY) as OasisBonus | typeof NO_OASIS_BONUS_KEY;
+  const thirdOasisBonus = (searchParams.get('third-bonus') ??
+    NO_OASIS_BONUS_KEY) as OasisBonus | typeof NO_OASIS_BONUS_KEY;
+  const showOccupiedTiles = searchParams.get('show-occupied-tiles') !== 'false';
+  const onlyUseUnoccupiedOases =
+    searchParams.get('only-unoccupied-oases') !== 'false';
+
+  const form = useForm<z.infer<typeof bonusFinderFormSchema>>({
+    resolver: zodResolver(bonusFinderFormSchema),
+    defaultValues: {
+      origin: {
+        x,
+        y,
+      },
+      resourceFieldComposition,
+      firstOasisBonus,
+      secondOasisBonus,
+      thirdOasisBonus,
+      showOccupiedTiles,
+      onlyUseUnoccupiedOases,
+    },
+  });
+
+  const {
+    data = [],
+    isFetching,
+    refetch,
+    isFetched,
+  } = useQuery({
+    queryKey: [
+      oasisBonusFinderCacheKey,
+      x,
+      y,
+      resourceFieldComposition,
+      firstOasisBonus,
+      secondOasisBonus,
+      thirdOasisBonus,
+      showOccupiedTiles,
+      onlyUseUnoccupiedOases,
+    ],
+    queryFn: async () => {
+      const values = form.getValues();
+
+      const { data } = await apiClient.query('/search/oases/by-bonus', {
+        body: {
+          x: values.origin.x,
+          y: values.origin.y,
+          resourceFieldComposition: values.resourceFieldComposition,
+          bonuses: {
+            firstOasis: parseOasisBonus(values.firstOasisBonus),
+            secondOasis: parseOasisBonus(values.secondOasisBonus),
+            thirdOasis: parseOasisBonus(values.thirdOasisBonus),
+          },
+          showOccupiedTiles: values.showOccupiedTiles,
+          onlyUseUnoccupiedOases: values.onlyUseUnoccupiedOases,
+        },
+      });
+
+      return data;
+    },
+    staleTime: 2000,
+    enabled: false,
+    placeholderData: keepPreviousData,
+  });
+
+  const onSubmit = async () => {
+    await refetch();
+  };
+
+  const pagination = usePagination(data, 20, 1);
+  const { currentPageItems, page, resultsPerPage } = pagination;
+
+  return (
+    <PageContents>
+      <title>{title}</title>
+      <InformationPopover
+        ariaLabel={t('Oasis bonus finder')}
+        className="top-2 right-2"
+      >
+        <Text>
+          {t(
+            'Search for villages that offer your desired resources and oasis bonuses.',
+          )}
+        </Text>
+      </InformationPopover>
+      <Text as="h1">{t('Oasis bonus finder')}</Text>
+      <Section>
+        <SectionContent>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="flex gap-4 flex-col"
+            >
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex gap-4 items-end">
+                  <FormField
+                    name="origin.x"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col gap-2">
+                        <FormLabel>{t('Start position (x)')}</FormLabel>
+                        <FormControl>
+                          <Input
+                            className="max-w-20"
+                            type="number"
+                            min={-halfSize}
+                            max={halfSize}
+                            {...form.register('origin.x', {
+                              valueAsNumber: true,
+                            })}
+                            onChange={(event) => {
+                              field.onChange(event);
+                              setSearchParams(
+                                (prev) => {
+                                  prev.set('x', event.target.value);
+                                  return prev;
+                                },
+                                { replace: true },
+                              );
+                            }}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    name="origin.y"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col gap-2">
+                        <FormLabel>{t('Start position (y)')}</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...form.register('origin.y', {
+                              valueAsNumber: true,
+                            })}
+                            onChange={(event) => {
+                              field.onChange(event);
+                              setSearchParams(
+                                (prev) => {
+                                  prev.set('y', event.target.value);
+                                  return prev;
+                                },
+                                { replace: true },
+                              );
+                            }}
+                            className="max-w-20"
+                            type="number"
+                            min={-halfSize}
+                            max={halfSize}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="resourceFieldComposition"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-2">
+                      <FormLabel>{t('Resource field composition')}</FormLabel>
+                      <Select
+                        onValueChange={(v) => {
+                          field.onChange(v);
+                          setSearchParams(
+                            (prev) => {
+                              prev.set('rfc', v);
+                              return prev;
+                            },
+                            { replace: true },
+                          );
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={t('Select resource composition')}
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {RFCFieldValues.map((rfc) => {
+                            if (rfc === 'any-cropper') {
+                              return (
+                                <SelectItem
+                                  key={rfc}
+                                  value={rfc}
+                                >
+                                  <Icon
+                                    className="size-4"
+                                    type="wheat"
+                                  />
+                                  {t('Any cropper')}
+                                </SelectItem>
+                              );
+                            }
+
+                            const resources = parseResourcesFromRFC(rfc);
+
+                            return (
+                              <SelectItem
+                                key={rfc}
+                                value={rfc}
+                              >
+                                <Resources
+                                  iconClassName="size-4"
+                                  resources={resources}
+                                />
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 md:flex gap-4 md:w-full *:flex *:flex-1 *:flex-col">
+                <FormField
+                  control={form.control}
+                  name="firstOasisBonus"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-2">
+                      <FormLabel>{t('First oasis bonus')}</FormLabel>
+                      <Select
+                        onValueChange={(v) => {
+                          field.onChange(v);
+                          setSearchParams(
+                            (prev) => {
+                              prev.set('first-bonus', v);
+                              return prev;
+                            },
+                            { replace: true },
+                          );
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <OasisBonusSelectContent />
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="secondOasisBonus"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-2">
+                      <FormLabel>{t('Second oasis bonus')}</FormLabel>
+                      <Select
+                        onValueChange={(v) => {
+                          field.onChange(v);
+                          setSearchParams(
+                            (prev) => {
+                              prev.set('second-bonus', v);
+                              return prev;
+                            },
+                            { replace: true },
+                          );
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <OasisBonusSelectContent />
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="thirdOasisBonus"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-2">
+                      <FormLabel>{t('Third oasis bonus')}</FormLabel>
+                      <Select
+                        onValueChange={(v) => {
+                          field.onChange(v);
+                          setSearchParams(
+                            (prev) => {
+                              prev.set('third-bonus', v);
+                              return prev;
+                            },
+                            { replace: true },
+                          );
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <OasisBonusSelectContent />
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex flex-col gap-3">
+                <FormField
+                  control={form.control}
+                  name="showOccupiedTiles"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center gap-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            const value = checked === true;
+                            field.onChange(value);
+                            setSearchParams(
+                              (prev) => {
+                                prev.set(
+                                  'show-occupied-tiles',
+                                  value.toString(),
+                                );
+                                return prev;
+                              },
+                              { replace: true },
+                            );
+                          }}
+                        />
+                      </FormControl>
+                      <FormLabel>{t('Show occupied tiles')}</FormLabel>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="onlyUseUnoccupiedOases"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center gap-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            const value = checked === true;
+                            field.onChange(value);
+                            setSearchParams(
+                              (prev) => {
+                                prev.set(
+                                  'only-unoccupied-oases',
+                                  value.toString(),
+                                );
+                                return prev;
+                              },
+                              { replace: true },
+                            );
+                          }}
+                        />
+                      </FormControl>
+                      <FormLabel>
+                        {t('Only take unoccupied oasis into account')}
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex md:justify-end">
+                <Button
+                  size="fit"
+                  disabled={isFetching}
+                  type="submit"
+                >
+                  {t('Search')}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </SectionContent>
+        <SectionContent>
+          {isFetched && (
+            <Text className="font-semibold">
+              {t(
+                'Found a total of {{amount}} tiles that match your criteria.',
+                {
+                  amount: data.length,
+                },
+              )}
+            </Text>
+          )}
+
+          <OverflowContainer>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHeaderCell />
+                  <TableHeaderCell>
+                    <Text>{t('Resources')}</Text>
+                  </TableHeaderCell>
+                  <TableHeaderCell>
+                    <Text>{t('Coordinates')}</Text>
+                  </TableHeaderCell>
+                  <TableHeaderCell>
+                    <Text>{t('Owner village')}</Text>
+                  </TableHeaderCell>
+                  <TableHeaderCell>
+                    <Text>{t('Oasis')}</Text>
+                  </TableHeaderCell>
+                  <TableHeaderCell>
+                    <Text>{t('Distance')}</Text>
+                  </TableHeaderCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {!isFetched && (
+                  <TableRow>
+                    <TableCell
+                      className="text-left"
+                      colSpan={6}
+                    >
+                      <Text>{t('Define your criteria and click search.')}</Text>
+                    </TableCell>
+                  </TableRow>
+                )}
+                {isFetched &&
+                  currentPageItems.map(
+                    (
+                      {
+                        tileId,
+                        coordinates,
+                        resourceFieldComposition,
+                        ownerVillage,
+                        nearbyOases,
+                        distance,
+                      },
+                      index,
+                    ) => {
+                      const resources = parseResourcesFromRFC(
+                        resourceFieldComposition,
+                      );
+
+                      return (
+                        <TableRow key={tileId}>
+                          <TableCell>
+                            <Text className="text-sm font-medium">
+                              {(page - 1) * resultsPerPage + index + 1}.
+                            </Text>
+                          </TableCell>
+                          <TableCell>
+                            <Text>
+                              <span className="inline-flex gap-2">
+                                <Resources
+                                  className="justify-center"
+                                  iconClassName="size-4"
+                                  resources={resources}
+                                />
+                              </span>
+                            </Text>
+                          </TableCell>
+                          <TableCell>
+                            <Text variant="link">
+                              <Link
+                                to={`../map?x=${coordinates.x}&y=${coordinates.y}`}
+                              >
+                                ({coordinates.x} | {coordinates.y})
+                              </Link>
+                            </Text>
+                          </TableCell>
+                          <TableCell>
+                            {ownerVillage === null && <Text>/</Text>}
+                            {ownerVillage !== null && (
+                              <Text variant="link">
+                                <Link
+                                  to={`../map?x=${ownerVillage.coordinates.x}&y=${ownerVillage.coordinates.y}`}
+                                >
+                                  {ownerVillage.name}
+                                </Link>
+                              </Text>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {nearbyOases.length === 0 && <Text>/</Text>}
+                            {nearbyOases.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {nearbyOases.map(
+                                  ({
+                                    tileId: oasisTileId,
+                                    coordinates: oasisCoordinates,
+                                    resource,
+                                    bonusType,
+                                    isOccupied,
+                                  }) => (
+                                    <Link
+                                      key={oasisTileId}
+                                      to={`../map?x=${oasisCoordinates.x}&y=${oasisCoordinates.y}`}
+                                      aria-label={t(
+                                        isOccupied
+                                          ? 'Occupied oasis at ({{x}} | {{y}})'
+                                          : 'Unoccupied oasis at ({{x}} | {{y}})',
+                                        {
+                                          x: oasisCoordinates.x,
+                                          y: oasisCoordinates.y,
+                                        },
+                                      )}
+                                    >
+                                      <BorderIndicator
+                                        variant={isOccupied ? 'red' : 'green'}
+                                      >
+                                        <Icon
+                                          className="size-4"
+                                          type={getOasisBonusIconType(
+                                            resource,
+                                            bonusType,
+                                          )}
+                                          shouldShowTooltip={false}
+                                        />
+                                      </BorderIndicator>
+                                    </Link>
+                                  ),
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Text>{distance}</Text>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    },
+                  )}
+              </TableBody>
+            </Table>
+          </OverflowContainer>
+        </SectionContent>
+        <SectionContent>
+          <div className="flex w-full justify-end">
+            <Pagination {...pagination} />
+          </div>
+        </SectionContent>
+      </Section>
+    </PageContents>
+  );
+};
+
+export default OasisBonusFinderPage;

@@ -1,0 +1,206 @@
+/* Reset */
+html, body, h1, p {
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  font-family: Arial, sans-serif;
+  color: #222;
+  line-height: 1.5;
+}
+
+body {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 10px;
+}
+
+a {
+  color: #3473ee;
+}
+
+.controls {
+  display: grid;
+  grid-template-areas: ".    up   ."
+                       "left down right";
+  /* Limit the size of the controls by the viewport size. */
+  width: 75vmin;
+  height: 50vmin;
+  margin: 10px auto;
+}
+
+#up { grid-area: up; }
+#down { grid-area: down; }
+#left { grid-area: left; }
+#right { grid-area: right; }
+
+.controls button {
+  color: #888;
+  font-size: 8vmin;
+  background: none;
+  border: 2px solid;
+  margin: 2px;
+  border-radius: 5vmin;
+}
+
+.controls button:focus {
+  outline: none;
+}
+
+@media (min-width: 10cm) and (min-height: 10cm) {
+  /* Avoid controls getting too big on larger touch devices. */
+  .controls {
+    position: absolute;
+    width: 7.5cm;
+    height: 5cm;
+    bottom: 1.5cm;
+    right: 1.5cm;
+  }
+  .controls button {
+    font-size: 0.8cm;
+    border-radius: 0.5cm;
+  }
+}
+
+#url,
+#max-score-grid {
+  background: #8883;
+  padding: 2px;
+  border-radius: 3px;
+}
+
+#share {
+  display: inline-block;
+}
+
+footer {
+  margin-top: auto;
+  font-size: 0.9rem;
+}
+
+.invisible {
+  display: none !important;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+:root.touch .no-touch-only,
+:root:not(.touch) .touch-only {
+  display: none;
+}
+
+.expand-btn,
+.collapse-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  width: 1rem;
+}
+
+.expand-btn,
+.expandable {
+  transition: transform, opacity;
+  transition-duration: .4s;
+}
+
+.expandable {
+  display: inline-block;
+  position: relative;
+  height: 1.5rem;
+  transform: translateX(-100%);
+  /* Clear body padding so it doesn't show on the left of the expand-btn */
+  padding-right: 10px;
+}
+
+.expand-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  transform: translateX(100%);
+  opacity: 1;
+}
+
+.help-toggle {
+  color: #0bc3ff;;
+}
+
+.high-score-toggle {
+  color: #ff8c0b;
+}
+
+.collapse-btn {
+  color: #aaa;
+}
+
+.expandable.expanded {
+  height: auto;
+  transform: none;
+}
+
+.expandable.expanded .expand-btn {
+  opacity: 0;
+}
+
+#share-note {
+  padding-left: 0.5rem;
+}
+
+#share-note.invisible {
+  /* Only animate fading out. */
+  transition: opacity 0.4s ease-in-out, display 0s ease-out 0.4s;
+  transition-behavior: allow-discrete;
+  opacity: 0;
+  /* Hide with display:none to avoid messing up the position of the collapse button. */
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    background: #222;
+    color: #eee;
+  }
+}
+
+/* Icon font styles copied from Fontello. */
+@font-face {
+  font-family: 'icons';
+  src: url('icons.woff2?40046441') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+[class^="icon-"]:before, [class*=" icon-"]:before {
+  font-family: "icons";
+  font-style: normal;
+  font-weight: normal;
+  speak: none;
+  display: inline-block;
+  text-decoration: inherit;
+  width: 1em;
+  margin-right: .2em;
+  text-align: center;
+  /* For safety - reset parent styles, that can break glyph codes*/
+  font-variant: normal;
+  text-transform: none;
+  /* Animation center compensation - margins should be symmetric */
+  /* remove if not needed */
+  margin-left: .2em;
+  /* Font smoothing. That was taken from TWBS */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-share:before { content: '\e811'; }

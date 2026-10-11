@@ -1,0 +1,52 @@
+import {
+  altoMain,
+  anakiwa,
+  atomicTangerine,
+  bittersweet,
+  celadon,
+  chardonnay,
+  halfBaked,
+  lightOrchid,
+  lightWisteria,
+  nomad,
+  saharaSand,
+  turquoiseBlue,
+} from "../colors";
+
+const level = {
+  path: "/community-level/720",
+  size: 12,
+  colorRegions: [
+    ["B", "K", "J", "I", "A", "A", "A", "J", "J", "B", "K", "K"],
+    ["B", "L", "L", "I", "A", "G", "A", "L", "L", "L", "L", "K"],
+    ["B", "L", "L", "C", "F", "C", "A", "I", "L", "L", "L", "K"],
+    ["F", "F", "A", "A", "A", "F", "G", "A", "F", "F", "A", "A"],
+    ["B", "L", "L", "C", "A", "C", "F", "D", "L", "H", "H", "J"],
+    ["L", "L", "L", "E", "A", "E", "A", "D", "L", "L", "H", "H"],
+    ["A", "G", "G", "A", "F", "A", "F", "A", "A", "G", "G", "A"],
+    ["J", "L", "L", "E", "A", "E", "A", "I", "L", "L", "L", "J"],
+    ["D", "L", "L", "I", "G", "K", "F", "L", "L", "L", "L", "B"],
+    ["J", "L", "L", "I", "A", "F", "G", "L", "L", "L", "L", "B"],
+    ["D", "L", "L", "K", "G", "H", "F", "L", "L", "L", "L", "D"],
+    ["D", "D", "H", "H", "G", "H", "A", "H", "H", "D", "D", "D"],
+  ],
+  regionColors: {
+    A: lightWisteria,
+    B: chardonnay,
+    C: anakiwa,
+    D: celadon,
+    E: altoMain,
+    F: bittersweet,
+    G: saharaSand,
+    H: nomad,
+    I: lightOrchid,
+    J: halfBaked,
+    K: turquoiseBlue,
+    L: atomicTangerine,
+  },
+  solutionsCount: 1,
+  createdBy: "Ja-Nice",
+  creatorLink: "https://www.linkedin.com/in/jan-hollmann-215a85315",
+};
+
+export default level;

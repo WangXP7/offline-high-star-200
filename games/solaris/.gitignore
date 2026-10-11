@@ -1,0 +1,33 @@
+.DS_Store
+node_modules
+dist
+build
+
+# local env files
+.env.local
+.env.*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.idea
+.vscode/**
+.vs/**
+!.vscode/launch.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Mongo playground files
+*.mongodb
+
+# local db folder when using docker-compose
+database_data
+mise.toml
+
+stats.html

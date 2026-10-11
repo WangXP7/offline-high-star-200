@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Guitar Bro – browser game with a real guitar.</title>
+
+  <meta property="og:url"           content="https://makaroni4.github.io/guitar_bro/" />
+  <meta property="og:type"          content="website" />
+  <meta property="og:title"         content="Guitar Bro – open source browser game that helps you learn notes on guitar" />
+  <meta property="og:description"   content="Practice and learn notes on any string – just grab your guitar, select comfortable rythm and play" />
+  <meta property="og:image"         content="https://makaroni4.github.io/guitar_bro/img/og.png" />
+  <meta property="fb:app_id"        content="1611939258817451">
+
+  <meta name="twitter:card" content="https://makaroni4.github.io/guitar_bro/img/og.png">
+  <meta name="twitter:site" content="@makaroni4">
+  <meta name="twitter:title" content="Guitar Bro – open source browser game that helps you learn notes on your guitar">
+  <meta name="twitter:description" content="Practice and learn notes on any string – just grab your guitar, select comfortable rythm and play">
+  <meta name="twitter:creator" content="@makaroni4">
+  <meta name="twitter:image" content="https://makaroni4.github.io/guitar_bro/img/og.png">
+  <meta name="twitter:domain" content="makaroni4.com">
+
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <link href="https://fonts.googleapis.com/css?family=Kalam:700" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
+</head>
+
+<body>
+  <div class="allow-mic">
+    <div class="allow-mic__arrow">
+    </div>
+
+    <div class="allow-mic__message">
+      Allow microphone so we can recognize musical notes when you're playing
+    </div>
+  </div>
+
+  <div class="real-guitar-hero">
+    <div class="real-guitar-hero__header">
+      <header class="header">
+        <div class="header__audio-wave">
+          <div class="audio-wave audio-wave--active">
+          </div>
+
+          <div class="no-sound">
+            <i class="fa fa-microphone-slash" aria-hidden="true"></i>
+          </div>
+        </div>
+
+        <div class="header__score score">
+          Score: <span class="score__points">0</span>
+        </div>
+      </header>
+    </div>
+
+    <div class="real-guitar-hero__canvas">
+      <canvas id="game-canvas"></canvas>
+    </div>
+  </div>
+
+  <div class="sidebar-menu sidebar-menu--active">
+    <div class="sidebar-menu__body">
+      <h1 class="sidebar-menu__header" data-welcome-copy="Welcome to Guitar Bro – guitar browser game with a real guitar!" data-game-over-copy="Game over! Did you have some fun?">
+        Welcome to Guitar Bro – guitar browser game with a real guitar!
+      </h1>
+
+      <div class="sidebar-menu__subheader" data-welcome-copy="Pick up a string you want to play on" data-game-over-copy="Game over! Nice one! Try to adjust BPM and try again!">
+        Pick up a string you want to play on (yep, it's "unitar").
+      </div>
+
+      <div class="sidebar-menu__settings">
+        <div class="game-settings">
+          <label class="game-settings__bpm-input-label">
+            BPM
+            <input class="game-settings__bpm-input" type="number" value="30" />
+          </label>
+
+          <label class="game-settings__song-select-label">
+            Select a song
+            <select class="game-settings__song-select">
+            </select>
+          </label>
+
+          <label class="game-settings__string-select-label">
+            Select a string
+            <select class="game-settings__string-select">
+            </select>
+          </label>
+
+          <div class="game-settings__mode-select">
+            <div class="game-settings__mode-select-label">
+              Select a mode
+            </div>
+
+            <div class="game-settings__mode-select-item">
+              <input type="radio" id="game-settings-survival-mode" name="game-mode-select" value="survival" checked>
+              <label for="game-settings-survival-mode" class="game-settings__mode-select-input">
+                Survival
+                <div class="game-settings__mode-select-hint">You start with 5 health (and get 1 health on correct note)</div>
+              </label>
+            </div>
+
+            <div class="game-settings__mode-select-item">
+              <input type="radio" id="game-settings-sandbox-mode" name="game-mode-select" value="sandbox" class="game-settings__mode-select-input">
+              <label for="game-settings-sandbox-mode" class="game-settings__mode-select-input">
+                Sandbox
+                <div class="game-settings__mode-select-hint">The game will stop when you stop it</div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="sidebar-menu__start-button js-start">
+        START NEW GAME
+      </button>
+
+      <div class="sidebar-menu__install-chrome">
+        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> To enjoy Guitar Bro you need to open this web page in <a href="https://www.google.com/chrome/browser/desktop/">Google Chrome</a>. It's the only browser now that supports sound analysis on the client (yep, there is no fancy servers – all magic happens here).
+      </div>
+
+      <div class="sidebar-menu__update-chrome">
+        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> To enjoy Guitar Bro you need to update you Chrome browser to the latest version. Open <a href="chrome://help/">Chrome settings</a> and make sure you have version 58 or more (latest version supports sound analysis, Guitar Bro works completely in browser).
+      </div>
+    </div>
+
+    <div class="sidebar-menu__footer">
+      <div class="sidebar-menu__sharing-buttons">
+        <div class="sharing-buttons">
+          <a href="https://www.facebook.com/sharer.php?u=https://makaroni4.github.io/guitar_bro/" class="share-button share-button--fb" data-event-label="fb">
+            <i class="fa fa-facebook" aria-hidden="true"></i>
+            Share on Facebook
+          </a>
+          <a href="https://twitter.com/share?url=https://makaroni4.github.io/guitar_bro/&amp;text=Try Guitar Bro – open source browser game to learn notes on guitar" class="share-button share-button--tw" data-event-label="tw">
+            <i class="fa fa-twitter" aria-hidden="true"></i>
+            Share on Twitter
+          </a>
+        </div>
+      </div>
+
+      <a class="footer-link" href="https://makaroni4.github.io/triads/" target="_blank">
+        <i class="fa fa-hand-spock-o" aria-hidden="true"></i>
+        Learn triads
+      </a>
+
+      <a class="footer-link" href="http://makaroni4.com/2017/07/10/guitar-bro/" target="_blank">
+        <i class="fa fa-cogs" aria-hidden="true"></i>
+        How it works?
+      </a>
+
+      <a class="footer-link" href="https://github.com/makaroni4/real_guitar_hero" target="_blank">
+        <i class="fa fa-github" aria-hidden="true"></i>
+        Source Code
+      </a>
+    </div>
+  </div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-101505240-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.9.1/d3.min.js"></script>
+  <script src="js/config.js" type="text/javascript" charset="utf-8" async defer></script>
+  <script src="js/song_loader.js" type="text/javascript" charset="utf-8" async defer></script>
+  <script src="js/health_drawer.js" type="text/javascript" charset="utf-8" async defer></script>
+  <script src="js/helper_functions.js" type="text/javascript" charset="utf-8" async defer></script>
+  <script src="js/explosion_effect.js" type="text/javascript" charset="utf-8" async defer></script>
+  <script src="js/fretboard.js" type="text/javascript" charset="utf-8" async defer></script>
+  <script src="js/audio_wave.js" type="text/javascript" charset="utf-8" async defer></script>
+  <script src="js/audio_processor.js" type="text/javascript" charset="utf-8" async defer></script>
+  <script src="js/app.js" type="text/javascript" charset="utf-8" async defer></script>
+  <script src="js/sharing.js" type="text/javascript" charset="utf-8" async defer></script>
+<script src="../__i18n.js"></script></body>
+</html>

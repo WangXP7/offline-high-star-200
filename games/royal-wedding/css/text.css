@@ -1,0 +1,52 @@
+#text {
+	width: 38%;
+	padding: 1%;
+	font-size: 17px;
+	font-family: merienda;
+}
+
+#story .fade {
+	opacity: 0;
+}
+
+#story * {
+	-webkit-transition: all 0.5s;
+	-moz-transition: all 0.5s;
+	transition: all 0.5s;
+}
+
+#story p {
+	-webkit-transition: all 4s;
+	-moz-transition: all 4s;
+	transition: all 4s;
+}
+
+#story a {
+	cursor: pointer;
+	opacity: 0.5;
+}
+
+#story span {
+	font-weight: bold;
+	margin: 0 0.6em;
+}
+
+#story a:hover {
+	opacity: 1;
+}
+
+#task {
+	color: #f33;
+}
+
+#status {
+	color: #57f;
+}
+
+#stats {
+	color: #aaa;
+}
+
+#stats .crit {
+	color: #f33;
+}

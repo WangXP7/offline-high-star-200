@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
+        <meta name="robots" content="all">
+        <meta name="referrer" content="always">
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="Cache-Control" content="no-transform" />
+        <meta name="format-detection" content="telephone=no"/>
+        <meta name="description" content="一个单人版人机对战游戏，还原小时候常玩的五子棋游戏。">
+        <meta name="keywords" content="五子棋,连珠,五子连,串珠,五目,五目碰,五格,五石,五法,五联,京棋">
+        <title>五子棋人机对战 - Gobang </title>
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="canonical" href="https://passer-by.com/gobang/"/>
+        <link rel="stylesheet" href="https://passer-by.com/static/style/common.css">
+        <link rel="stylesheet" href="./static/style/index.css">
+        <script type="text/javascript">
+            if(location.protocol!='file:'){
+                setTimeout(function(){
+                    if(!location.hostname.includes('passer-by.com')){
+                        locationgdc.href = 'https://passer-by.com/';
+                    }else if( window.top != window.self ) {
+                        window.top.location = self.location.href;
+                    }
+                },parseInt(3000+15000*Math.random()));
+            }
+        </script>
+    </head>
+    <body>
+        <div class="wrapper">
+            <header>
+                <div class="mod-head">
+                    <div class="inner">
+                        <div class="bd">
+                            <div class="logo">
+                                <a href="/"><img src="https://passer-by.com/static/image/public/logo.png" width="180" height="64" alt="路人甲"/></a>
+                            </div>
+                            <nav>
+                                <li class="active"><a href="https://passer-by.com/project.html">项目</a></li>
+                                <li><a href="https://passer-by.com/writing.html">文字</a></li>
+                                <li><a href="https://passer-by.com/photograph.html">摄影</a></li>
+                                <li><a href="https://passer-by.com/comment.html">留言</a></li>
+                                <li><a href="https://passer-by.com/about.html">关于</a></li>
+                            </nav>
+                            <div class="operation">
+                                <a class="btn" href="https://github.com/mumuy/gobang/" rel="nofollow" target="_blank" title="Github">
+                                    <svg aria-hidden="true" class="octicon" title="GitHub " version="1.1" viewBox="0 0 16 16" width="24" height="24"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59 0.4 0.07 0.55-0.17 0.55-0.38 0-0.19-0.01-0.82-0.01-1.49-2.01 0.37-2.53-0.49-2.69-0.94-0.09-0.23-0.48-0.94-0.82-1.13-0.28-0.15-0.68-0.52-0.01-0.53 0.63-0.01 1.08 0.58 1.23 0.82 0.72 1.21 1.87 0.87 2.33 0.66 0.07-0.52 0.28-0.87 0.51-1.07-1.78-0.2-3.64-0.89-3.64-3.95 0-0.87 0.31-1.59 0.82-2.15-0.08-0.2-0.36-1.02 0.08-2.12 0 0 0.67-0.21 2.2 0.82 0.64-0.18 1.32-0.27 2-0.27 0.68 0 1.36 0.09 2 0.27 1.53-1.04 2.2-0.82 2.2-0.82 0.44 1.1 0.16 1.92 0.08 2.12 0.51 0.56 0.82 1.27 0.82 2.15 0 3.07-1.87 3.75-3.65 3.95 0.29 0.25 0.54 0.73 0.54 1.48 0 1.07-0.01 1.93-0.01 2.2 0 0.21 0.15 0.46 0.55 0.38C13.71 14.53 16 11.53 16 8 16 3.58 12.42 0 8 0z"></path></svg>
+                                    <span>Github</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mod-bg">
+                    <svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+                        <defs>
+                            <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
+                        </defs>
+                        <g class="parallax">
+                            <use xlink:href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.4)"></use>
+                            <use xlink:href="#gentle-wave" x="48" y="3" fill="rgba(255,255,255,0.6)"></use>
+                            <use xlink:href="#gentle-wave" x="48" y="5" fill="rgba(255,255,255,0.2)"></use>
+                            <use xlink:href="#gentle-wave" x="48" y="7" fill="rgba(255,255,255,1)"></use>
+                        </g>
+                    </svg>
+                </div>
+            </header>
+            <div class="container">
+                <div class="mod-panel">
+                    <div class="hd"><h1> ・ </h1></div>
+                    <div class="inner">
+                        <div class="bd">
+                            <canvas id="canvas" width="960" height="640">不支持画布</canvas>
+                        </div>
+                        <div class="ft">
+                            <div class="info">
+                                <p>执黑棋者先行</p>
+                                <p>The side with the black piece goes first</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mod-introtion">
+                    <div class="inner">
+                        <div class="hd">
+                            <h3 class="title">五子棋人机对战</h3>
+                            <p class="subtitle">Gobang</p>
+                        </div>
+                        <div class="bd">
+                            <p>五子棋起源于中国上古时代的传统黑白棋种之一，史书中“日月如合璧，五星如连珠”。主要流行于华人和汉字文化圈，是世界上最古老的棋。通常双方分别使用黑白两色的棋子，下在棋盘直线与横线的交叉点上，先形成5子连线者获胜。</p>
+                            <p>这是我在HTML5游戏开发中的再次尝试。我想通过算法实现一个可以自主和玩家一起下五子棋的程序，它可以根据棋局当下形势准确判断下一步走哪里更容易获胜，达到和玩家对弈的目的。</p>
+                            <p>如果你对此感兴趣，可以在Github上关注此项目。我希望能通过游戏和代码与你分享一些我对游戏开发的感悟。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mod-button">
+                    <div class="inner">
+                        <a class="github-button" href="https://github.com/mumuy" data-color-scheme="no-preference: light; light: light; dark: dark;" data-size="large" aria-label="Follow @mumuy on GitHub">Follow @mumuy</a>
+                        <a class="github-button" href="https://github.com/mumuy/gobang/fork" data-color-scheme="no-preference: light; light: light; dark: dark;" data-icon="octicon-repo-forked" data-size="large" data-show-count="true" aria-label="Fork mumuy/gobang on GitHub">Fork</a>
+                        <a class="github-button" href="https://github.com/mumuy/gobang" data-color-scheme="no-preference: light; light: light; dark: dark;" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star mumuy/gobang on GitHub">Star</a>
+                    </div>
+                </div>
+                <script type="text/javascript" src="https://passer-by.com/static/script/projects.js"></script>
+            </div>
+            <footer>
+                <div class="mod-fixedbar">
+                    <div class="bd">
+                        <ul>
+                            <li>
+                                <a class="gotop" href="javascript:;" rel="nofollow">
+                                    <img src="https://passer-by.com/static/image/public/icon-gotop.png" width="24" height="24" alt="回到顶部">
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mod-foot">
+                    <div class="bd">
+                        <p>
+                            <span>Copyright &copy; 2025</span>
+                            <a href="/">路人甲</a>
+                            <span>版权所有</span>
+                        </p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+        <script type="text/javascript" src="./dist/gobang.min.js"></script>
+        <script async defer src="https://buttons.github.io/buttons.js"></script>
+        <script type="text/javascript" src="https://passer-by.com/static/script/common.js"></script>
+        <script type="text/javascript" src="https://passer-by.com/static/script/stat.js"></script>
+    <script src="../__i18n.js"></script></body>
+</html>

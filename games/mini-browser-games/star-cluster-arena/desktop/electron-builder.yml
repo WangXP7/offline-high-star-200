@@ -1,0 +1,40 @@
+appId: cn.wangzifan.starclusterarena
+productName: 星团大作战
+copyright: Copyright © 2026 wangzifan396-wzf
+asar: true
+directories:
+  output: ../star-cluster-arena-desktop/build
+files:
+  - backend/**/*
+  - frontend/**/*
+  - desktop/**/*
+  - package.json
+  - LICENSE
+  - THIRD-PARTY-NOTICES.md
+  - '!desktop/forge.config.mjs'
+  - '!desktop/electron-builder.yml'
+win:
+  icon: desktop/assets/icon.ico
+  executableName: StarClusterArena
+  artifactName: 星团大作战-便携版-${version}-win-${arch}.${ext}
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: zip
+      arch:
+        - x64
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  allowElevation: true
+  perMachine: false
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: 星团大作战
+  uninstallDisplayName: 星团大作战
+  deleteAppDataOnUninstall: false
+  runAfterFinish: true
+  installerLanguages:
+    - zh_CN
+  artifactName: 星团大作战-安装程序-${version}-win-${arch}.${ext}

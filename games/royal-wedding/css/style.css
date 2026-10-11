@@ -1,0 +1,15 @@
+@import url(intro.css);
+@import url(level.css);
+@import url(text.css);
+
+html, body {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	background-color: #000;
+	font-family: droid sans mono, monospace;
+	color: #b82;
+	overflow: hidden;
+}

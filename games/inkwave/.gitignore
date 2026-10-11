@@ -1,0 +1,17 @@
+dist/
+node_modules/
+.vercel/
+.wrangler/
+.env*
+.DS_Store
+# botlab scratch (profiles, locks)
+.botlab/
+# your own music: drop files into songs/ (see songs/README.md); they and the generated manifest stay local
+songs/**/*.mp3
+songs/**/*.m4a
+songs/**/*.aac
+songs/**/*.ogg
+songs/**/*.opus
+songs/**/*.wav
+songs/**/*.flac
+songs/manifest.json

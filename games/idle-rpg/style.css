@@ -1,0 +1,2780 @@
+
+:root {
+	--background_gradient: linear-gradient(to bottom right, #232f47, #15152d);
+	--options_gradient: linear-gradient(to bottom right, #637088f7, #353572f7);
+	--options_display: none;
+
+	--equipment_display: inline-block;
+	--consumables_display: inline-block;
+	--other_display: inline-block;
+	--faved_equipment_display: inline-block;
+	--faved_consumables_display: inline-block;
+	--faved_other_display: inline-block;
+
+	--inventory_div_display: block;
+	--character_combat_div_display: none;
+
+	--trader_equipment_display: inline-block;
+	--trader_consumable_display: inline-block;
+	--trader_other_display: inline-block;
+
+	--storage_equipment_display: inline-block;
+	--storage_consumable_display: inline-block;
+	--storage_other_display: inline-block;
+
+	--message_combat_display: inline-block;
+	--message_unlocks_display: inline-block;
+	--message_loot_display: inline-block;
+	--message_events_display: inline-block;
+	--message_background_display: inline-block;
+	--message_crafting_display: inline-block;
+
+	--trade_ammount_button_display: none;
+	--item_use_button_display: inline-block;
+	 
+	--item_tooltip_top: 0px;
+	--item_tooltip_left: 0px;
+
+	--recipe_tooltip_top: 0px;
+	--recipe_tooltip_left: 0px;
+
+	--job_tooltip_top: 0px;
+	--job_tooltip_left: 0px;
+
+	--maxxed_skill_display: block;
+	--skill_tooltip_top: 0px;
+	--skill_tooltip_left: 0px;
+	--enemy_div_display: block;
+
+	--stat_tooltip_top: 0px;
+	--stat_tooltip_left: 0px;
+
+	--bar_tooltip_top: 0px;
+	--bar_tooltip_left: 0px;
+
+	--location_type_tooltip_top: 0px;
+	--location_type_tooltip_left: 0px;
+
+	--location__desc_tooltip_top: 0px;
+	--location_desc_tooltip_left: 0px;
+	--location_desc_tooltip_visibility: hidden;
+
+	--temperature_tooltip_top: 0px;
+	--temperature_tooltip_left: 0px;
+
+	--stance_tooltip_top: 0px;
+	--stance_tooltip_left: 0px;
+
+	--bestiary_entry_tooltip_top: 0px;
+	--bestiary_entry_tooltip_left: 0px;
+
+    --race_choice_tooltip_top: 0px;
+    --race_choice_tooltip_left: 0px;
+
+	--actions_div_height_default: 420px;
+	--actions_div_height_combat: 120px;
+	--actions_div_height: var(--actions_div_height_default);
+	--actions_div_top_default: 340px;
+	--actions_div_top_combat: 640px;
+	--actions_div_top: var(--actions_div_top_default);
+
+	--completed_quest_display: "block";
+
+	--export_button_tooltip_bottom: 0px;
+	--export_button_tooltip_left: 0px;
+
+	--options_action_textsize: 16px;
+	--location_name_div_width: 270px;
+
+	--active_button_color: #4d5e80;
+    --hovered_button_color: rgb(48, 57, 77);
+	--tooltip_background_color: rgba(92, 92, 92, 0.97);
+
+	--onclick_button_color: rgb(75, 99, 145);
+
+	--outline_white: -1px -1px 0 #ffffff80, 1px -1px 0 #ffffff80, -1px 1px 0 #ffffff80, 1px 1px 0 #ffffff80;
+	--outline_white_default: var(--outline_white);
+	--outline_black: -1px -1px 0 #00000080, 1px -1px 0 #00000080, -1px 1px 0 #00000080, 1px 1px 0 #00000080;
+	--outline_black_default: var(--outline_black);
+
+    --default_background_color: rgb(0, 78, 180);
+    --background_color: var(--default_background_color);
+    --rain_background_color: rgb(54, 54, 54);
+    --indoor_background_color: rgb(53, 32, 0);
+    --background_opacity: 0;
+}
+
+body {
+	background-color: #05040f;
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	cursor: default;
+	color: white;
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+@-moz-document url-prefix(){
+    body {
+        scrollbar-color: silver #ffffff;
+		scrollbar-width: thin;
+    }
+}
+
+@font-face {
+    font-family: inkFree;
+    src: url(resources/fonts/Inkfree.ttf);
+}
+
+input[type=checkbox], input[type=radio] {
+	accent-color: rgb(0, 127, 255);
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.italic {
+	font-style: italic;
+}
+
+#loading_screen {
+	visibility: visible;
+	width: 100%;
+	height: 100%;
+	z-index: 100;
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	background-image: linear-gradient(to bottom right,  #641860, #2e154b 50%, #15152d);
+	display: flex;
+	justify-content: center;
+}
+
+	#loading_screen_game_title {
+		width: 950px;
+		font-size: 96px;
+		font-family: inkFree;
+		font-weight: bold;
+		position: fixed;
+		justify-content: center;
+		top: 200px;
+	}
+	#loading_screen_author {
+		width: fit-content;
+		font-size: 35px;
+		font-family: inkFree;
+		font-weight: lighter;
+		text-align: right;
+		position: absolute;
+		top: 120px;
+		right: -50px;
+		rotate: -10deg;
+		animation-name: titleSizeAnimation;
+		animation-duration: 2s;
+		animation-iteration-count: infinite;
+		animation-direction: alternate;
+	}
+		@keyframes titleSizeAnimation {
+			from {font-size: 35px;}
+			to {font-size: 40px;}
+		}
+	#loading_screen_loading_text {
+		width: fit-content;
+		height: fit-content;
+		font-size: 50px;
+		position: fixed;
+		top: 320px;
+		border-bottom: 1px solid gray;
+	}
+
+	#loading_screen_loading_progress {
+		width: 100%;
+		font-size: 25px;
+		top: 390px;
+		position: fixed;
+		text-align: center;
+	}
+
+	#loading_screen_version_info {
+		width: fit-content;
+		max-width: 420px;
+		font-size: 20px;
+		top: 470px;
+		left: -170px;
+		position: relative;
+	}
+
+	#loading_screen_play_button {
+		width: 200px;
+		font-size: 60px;
+		height: fit-content;
+		top: 470px;;
+		position: fixed;
+		text-align: center;
+		border: 1px solid gray;
+	}
+
+	#loading_screen_play_button:hover {
+		background-color: var(--active_button_color);
+	}
+
+	#loading_screen_status {
+		max-width: 300px;
+		padding: 10px;
+		font-size: 20px;
+		height: fit-content;
+		top: 470px;
+		left: 150px;
+		position: relative;
+		border: 3px double gray;
+		font-weight: bold;
+	}
+
+	.loading_screen_status_good {
+		background-color: rgb(0, 128, 0, 0.5);
+	}
+
+	.loading_screen_status_errors {
+		color: rgb(255, 73, 73, 0.5);
+		background-color: black;
+	}
+	
+	.loading_screen_status_warnings {
+		color: rgba(255, 230, 0, 0.555);
+		background-color: black;
+	}
+
+#hero_creation_panel {
+	width: 100%;
+	height: 100%;
+	z-index: 10;
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	justify-content: center;
+    background-color: rgba(80, 80, 80, 0.97);
+}
+    #hero_creation_panel_title {
+		width: 950px;
+		font-size: 42px;
+		font-weight: bold;
+		position: absolute;
+        left: 10px;
+	}
+    #hero_creation_panel_note {
+        position: absolute;
+        top: 50px;
+        left: 10px;
+        font-style: italic;  
+    }
+    #hero_creation_panel_content {
+        position: absolute;
+        top: 150px;
+        left: 100px;
+        width: 1000px;
+        height: 400px;
+        border: 5px dashed gray;
+        background-image: var(--background_gradient);
+        font-size: 18px;
+    }
+    #hero_creation_panel_first_row div {
+        position: absolute;
+        width: 360px;;
+        left: 10px;
+    }
+
+    #hero_creation_panel_name {
+        position: absolute;
+        top: 100px;
+    }
+
+    #hero_creation_panel_age_selection {
+        position: absolute;
+        top: 150px;
+    }
+
+    #hero_creation_panel_height_selection {
+        position: absolute;
+        top: 200px;
+    }
+
+    #hero_creation_panel_race_selection {
+        position: absolute;
+        top: 20px;
+        left: 360px;
+        width: 600px;
+        height: 320px;
+        border: 1px solid gray;
+    }
+
+        .race_label {
+            text-align: center;
+        }
+        
+        #hero_creation_panel_race_default {
+            position: absolute;
+            width: 200px;
+        }
+
+        #hero_creation_panel_race_furless {
+            position: absolute;
+            left: 200px;
+            width: 200px;
+        }
+
+        #hero_creation_panel_race_kemonomimi {
+            position: absolute;
+            left: 400px;
+            width: 200px;
+        }
+
+            .race_selection_button {
+                width: 180px;
+                border: 2px solid gray;
+                margin-left: 10px;
+                margin-top: 5px;
+                height: 60px;
+                font-size: 20px;
+                display: flex;
+                text-align: center;
+                justify-content: center;
+                align-items: center;
+            }
+
+                .race_selection_button:hover .race_choice_tooltip {
+                    display: block;
+                }
+                .race_choice_tooltip {
+                    top: var(--race_choice_tooltip_top);
+                    left: var(--race_choice_tooltip_left);
+                    max-width: 450px;
+                    min-width: 150px;
+                    width: max-content;
+                }
+
+    #hero_creation_panel_confirmation_wrapper {
+        width: 100%;
+        position: absolute;
+        bottom: 5px;
+        display: flex;
+        text-align: center;
+        justify-content: center;
+    }
+
+    #hero_creation_panel_confirmation {
+        font-size: 32px;
+        width: 160px;
+        border: 2px solid rgb(177, 168, 219);
+    }
+    
+    #hero_creation_panel_confirmation:hover {
+        background-color: var(--active_button_color);
+    }
+
+#background_canvas {
+	position: absolute;
+	pointer-events: none;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: -2;
+}
+
+#light_based_background_div {
+	position: absolute;
+	pointer-events: none;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: -1;
+    background-color: var(--background_color);
+    opacity: var(--background_opacity);
+}
+
+#foreground_canvas {
+	position: absolute;
+	pointer-events: none;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+}
+
+.box_div {
+	background-image: var(--background_gradient);
+	border: 3px solid #797691;
+	position: absolute;
+}
+
+.top_border {
+	border-top: 1px solid gray;
+}
+
+.hidden {
+	visibility: hidden;
+}
+
+.none_display {
+	display: none;
+}
+
+.fade_in {
+	opacity: 1;
+	animation-name: fadeIn;
+	animation-iteration-count: 1;
+	animation-timing-function: ease-out;
+	animation-duration: 1s;
+}
+
+@keyframes fadeIn {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+@keyframes fadeInLight {
+	0% {
+		opacity: 0.8;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+.fade {
+	opacity: 0;
+	animation-name: fadeOut;
+	animation-iteration-count: 1;
+	animation-timing-function: ease-out;
+	animation-duration: 1s;
+}
+
+@keyframes fadeOut {
+	0% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
+.message_common { 
+	text-align: center;
+	width: inherit;
+	max-width: 395px;
+	height: auto;
+	display: inline-block;
+	word-wrap: break-word;
+	padding: 2px;
+	padding-right:20px;
+	font-size: 12px;
+}
+
+ .message_items_obtained {
+	color: gold;
+ }
+
+ .message_total_items_obtained {
+	color: gold;
+	font-weight: bold;
+ }
+
+ .message_victory {
+	 color: green;
+	 font-weight: bold;
+ }
+
+ .message_hero_defeated {
+	 color: #ff3d44;
+	 font-weight: bold;
+ }
+
+ .message_enemy_attacked {
+	 color: lightblue;
+ }
+
+ .message_enemy_attacked_critically {
+	color: rgb(90, 151, 221);
+ }
+
+ .message_hero_attacked {
+	 color: #ff3d44;
+ }
+ .message_hero_attacked_critically, .message_critical {
+	 color: #ff3d44;
+	 font-weight: bold;
+ }
+
+ .message_travel {
+	 font-weight: bold;
+ }
+
+ .message_location_unlocked {
+	 font-weight: bold;
+ }
+
+ .message_notification {
+	font-weight: bold;
+	font-size: 12px;
+	color: yellow;
+	text-align: left;
+ }
+
+ .message_export_reward {
+	font-size: 12px;
+	color: yellow;
+ }
+ @keyframes export_reward {
+  0% {
+		color: white;
+	}
+  50% {
+		color: orange;
+	}
+  100% {
+		color: greenyellow;
+  	}
+ }
+ .export_button_with_reward {
+	animation-name: export_reward;
+  	animation-duration: 4s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	font-weight: bold;
+ }
+
+ #export_button_tooltip {
+	display: none;
+	position: absolute;
+ }
+
+ #save_to_file_button:hover #export_button_tooltip{
+	display: block;
+	bottom: var(--export_button_tooltip_bottom);
+	left: var(--export_button_tooltip_left);
+ }
+
+ .message_background {
+	font-style: italic;
+	color: rgb(171, 171, 255);
+ }
+
+ .action_travel, .activity_unavailable, .start_dialogue,  .end_dialogue_button, .start_trade, .start_game_action, .dialogue_trade, .choices_return_button, .start_activity, #action_status_div, #action_end_div {
+	text-align: left;
+	font-size: 20px;
+	border-top: 1px dotted white;
+	cursor: pointer;
+	padding: 5px;
+ }
+ .action_travel {
+	padding-top: 8px;
+ }
+ .end_dialogue_button {
+	border-bottom: 1px solid white;
+ }
+
+ .location_choice {
+	font-size: 16px;
+	padding-left: 5px;
+	margin-top: 2px;
+ }
+ .location_choice_icon_box {
+	float: left;
+	width: auto;
+	height: auto;
+	top: -4px;
+	position: relative;
+ }
+
+ .location_choice_dropdown, .location_choices, #start_sleeping_div, #open_storage_div, :not(.location_choice_dropdown) > .action_travel {
+	text-align: left;
+	font-size: 20px;
+	border: 2px solid white;
+	cursor: pointer;
+	padding: 5px;
+	margin-bottom: 1px;
+ }
+
+ .location_choice_dropdown :nth-child(2):not(span){
+	border-top: 1px solid white;
+ }
+
+ .location_choice_dropdown:not(.location_choice_dropdown_expanded) .location_choice {
+	display: none;
+ }
+
+ .location_choice_dropdown_expanded .location_choice {
+	display: block;
+ }
+
+ .fast_travel_name {
+	display: inline-block;
+	width: 304px;
+ }
+
+ .fast_travel_removal_button {
+	border: 1px solid gray;
+ }
+
+ .fast_travel_removal_button:hover {
+	background-color: var(--active_button_color);
+ }
+
+ #action_status_div, #action_end_div {
+	text-align: center;
+	font-size: 20px;
+
+	border-bottom: 1px solid white;
+	cursor: pointer;
+	padding: 5px;
+ }
+
+ #options_panel {
+	display: var(--options_display);
+	position: fixed;
+	background-image: var(--options_gradient);
+	width: max-content;
+	height: fit-content;
+	border: 4px solid blueviolet;
+	z-index: 20;
+	bottom: 50px;
+	left: 10px;
+ }
+
+ @media only screen and (max-height: 720px) {
+	#options_panel {
+		position: absolute;
+		top: 100px;
+	}
+}
+
+ #close_options {
+	position: absolute;
+	font-size: 40px;
+	right: 3px;
+	top: 2px;
+	width: 50px;
+	height: 50px;
+	text-align: center;
+	outline: 3px solid gray;
+	cursor: pointer;
+	z-index: 3;
+ }
+
+ #options_choices {
+	position: relative;
+	left: 5px;
+	font-size: 16px;
+ }
+ 
+ #options_expo_threshold {
+	width: 160px;
+ }
+ 
+ .options_choice {
+	margin: 5px;
+	width: fit-content;
+	border: 2px solid gray;
+	padding: 3px;
+ }
+ .options_choice:not(.options_choice_range) input {
+	outline: 1px solid black;
+ }
+
+ .options_choice_range input {
+	accent-color: rgb(255, 255, 255);
+	background-color: red;
+ }
+
+ .options_button {
+	width: fit-content;
+	margin-left: 40px;
+	margin-right: auto;
+	padding: 10px 10px;
+	height: 20px;
+	background-image: linear-gradient(to left, #232f47, #15152d);
+	color: white;
+	cursor: pointer;
+	text-align: center;
+	font-size: 20px;
+	margin-top: 5px;
+}
+
+ .options_button:hover {
+	background-image: linear-gradient(to right, #232f47, #15152d);
+ }
+
+ .fas, .far {
+	 width: 30px;
+ }
+
+.activity_unavailable {
+	color: gray;
+	cursor: not-allowed;
+}
+
+.action_travel:hover:not(:has(.fast_travel_removal_button:hover)), .start_dialogue:hover, .start_trade:hover, .start_game_action:hover, 
+.start_activity:hover, .location_choices:hover, .choices_return_button:hover, .location_choice_dropdown:not(.location_choice_dropdown_expanded):hover, 
+.dialogue_textline:hover, .end_dialogue_button:hover, .dialogue_trade:hover, .backstep_dialogue_button:hover {
+	background-color: #2c3953;
+}
+.dialogue_textline {
+	text-align: center;
+	font-size: var(--options_action_textsize);
+
+	border-bottom: 1px solid white;
+	cursor: pointer;
+	padding: 5px;
+}
+	.dialogue_textline:active{
+		color: var(--onclick_button_color);
+	}
+
+	#dialogue_answer_div {
+		border-bottom: 1px solid white;
+		background-color: #15152d;
+		font-size: var(--options_action_textsize);
+		padding: 10px;
+		animation: fadeInLight;
+		opacity: 1;
+		animation-duration: 0.2s;
+	}
+	#dialogue_name_div {
+		border-bottom: 1px solid white;
+		text-align: center;
+		background-color: #15152d;
+		font-size: 14px;
+		padding: 2px;
+		font-weight: bold;
+	}
+	.backstep_dialogue_button {
+		text-align: center;
+		font-size: var(--options_action_textsize);
+
+		border-bottom: 1px solid white;
+		cursor: pointer;
+		padding: 5px;
+	}
+
+.inventory_item, .trader_item {
+	 font-size: 13px;
+	 display: inline-block;
+}
+
+.equipped_item_control {
+	width: 383px;
+	border-bottom: 1px dotted white;
+	font-size: 13px;
+	background-color: rgba(255, 236, 128, 0.15);
+	padding-bottom: 1px;
+	padding-top: 1px;
+}
+
+.equipped_item_control:hover {
+	background-color: var(--active_button_color);
+}
+
+.item_fav_div {
+	width: fit-content;
+	display: inline-block;
+}
+
+.item_fav_div:hover {
+	cursor: pointer;
+}
+
+.item_fav_div i {
+	font-size: 16px;
+}
+
+.inventory_item_name, .equipped_item_name {
+	display: inline-block;
+}
+
+.inventory_item_control {
+	border-bottom: 1px dotted white;
+	width: 383px;
+}
+.inventory_item_control:hover {
+	background-color: var(--active_button_color);
+}
+.item_additional_content {
+	float: right;
+	width: fit-content;
+}
+
+.item_tooltip, .job_tooltip, .location_tooltip, .recipe_tooltip, #export_button_tooltip, .race_choice_tooltip {
+	display: none;
+	text-align: left;
+	color: white;
+	font-weight: normal;
+	background-color: var(--tooltip_background_color);
+	border-radius: 10px;
+	padding: 5px;
+	position: fixed;
+	z-index: 1000;
+	pointer-events: none;
+	font-size: 14px;
+	border: 1px solid white;
+}
+
+.item_tooltip, .job_tooltip, .location_tooltip, .recipe_tooltip {
+	max-width: 250px;
+	min-width: 150px;
+	width: max-content;
+}
+
+#export_button_tooltip {
+	width: fit-content;
+}
+
+.recipe_tooltip {
+	width: 250px;
+    top: var(--recipe_tooltip_top);
+	left: var(--recipe_tooltip_left);
+}
+
+.location_tooltip {
+	font-size: 16px;
+	top: var(--location_desc_tooltip_top);
+	left: var(--location_desc_tooltip_left);
+	display: none;
+	visibility: var(--location_desc_tooltip_visibility);
+	text-align: left;
+	color: white;
+	font-weight: normal;
+	background-color: var(--tooltip_background_color);
+	border-radius: 10px;
+	padding: 5px;
+	position: fixed;
+	z-index: 1000;
+	width: 200px;
+	pointer-events: none;
+}
+
+.item_tooltip {
+	top: var(--item_tooltip_top);
+	left: var(--item_tooltip_left);
+} 
+
+.outline_white {
+	text-shadow: var(--outline_white);
+}
+
+.outline_black {
+	text-shadow: var(--outline_black);
+}
+
+.outline_black_static {
+	text-shadow: -1px -1px 0 #00000080, 1px -1px 0 #00000080, -1px 1px 0 #00000080, 1px 1px 0 #00000080;
+}
+
+.job_tooltip {
+	top: var(--job_tooltip_top);
+	left: var(--job_tooltip_left);
+	font-size: 16px;
+}
+
+.equipment_slot_div:hover .item_tooltip, .trader_item_control:hover .item_tooltip, .inventory_item_control:hover .item_tooltip, 
+.equipped_item_control:hover .item_tooltip, 
+.start_activity:hover .job_tooltip, .activity_unavailable:hover .job_tooltip, #gathering_progress_bar_max:hover .job_tooltip, #location_name_div:hover .location_tooltip, .selectable_component:hover .item_tooltip{
+	display: block;
+}
+
+.stat_tooltip {
+	display: none;
+	background-color: var(--tooltip_background_color);
+	border-radius: 10px;
+	padding: 5px;
+	position: fixed;
+	z-index: 10;
+	width: 300px;
+	pointer-events: none;
+	top: var(--stat_tooltip_top);
+	left: var(--stat_tooltip_left);
+	border: 1px solid white;
+}
+	.stat_breakdown {
+		text-align: left;
+	}
+
+.stat_slot_div:hover .stat_tooltip{
+	display: block;
+}
+
+#character_health_tooltip, #character_stamina_tooltip, #character_xp_tooltip {
+	display: none;
+	background-color: var(--tooltip_background_color);
+	border-radius: 10px;
+	padding: 5px;
+	position: fixed;
+	z-index: 10;
+	max-width: 350px;
+	min-width: 100px;
+	width: max-content;
+	pointer-events: none;
+	top: var(--bar_tooltip_top);
+	left: var(--bar_tooltip_left);
+	border: 1px solid white;
+}
+
+#character_health_div:hover #character_health_tooltip, #character_stamina_div:hover #character_stamina_tooltip, #character_xp_div:hover #character_xp_tooltip {
+	display: block;
+}
+
+.skill_tooltip {
+	display: none;
+	background-color: var(--tooltip_background_color);
+	border-radius: 10px;
+	padding: 5px;
+	position: fixed;
+	z-index: 1000;
+	max-width: 300px;
+	width: max-content;
+	min-width: 100px;
+	top: var(--skill_tooltip_top);
+	left: var(--skill_tooltip_left);
+	pointer-events: none;
+	border: 1px solid white;
+}
+		.skill_tooltip_next_milestone {
+			color: rgb(206, 206, 206);
+		}
+
+		.skill_bar_max:hover .skill_tooltip {
+			display: block;
+		}
+
+		.skill_id {
+			color: rgb(190, 190, 190);
+			font-style: italic;
+		}
+
+		.skill_flavour_text {
+			color: rgb(190, 190, 190);
+			font-style: italic;
+		}
+
+#skill_list_div {
+	display: block;
+}
+
+.skill_div {
+	display: none;
+}
+.skill_category_div {
+	padding: 3px;
+	border-bottom: 1px solid gray;
+}
+.skill_category_div:not(.skill_category_expanded):hover {
+	background-color: var(--active_button_color);
+}
+.skill_category_expanded .skill_div {
+	display: block;
+}
+
+.skill_category_expanded .skill_dropdown_icon {
+	transform: rotate(180deg);
+}
+.activity_efficiency_info {
+	color: rgb(190, 190, 190);
+	font-style: italic;
+}
+
+#magic_list_div {
+	display: none;
+}
+
+#stance_list_div {
+	display: none;
+}
+
+.skill_stance_control_button {
+	float:left;
+	padding: 3px;
+	padding-left: 5px;
+	padding-right: 5px;
+	min-width: 121.3px;
+	text-align: center;
+	outline: 1px solid white;
+	cursor: pointer;
+	margin: 1px;
+	font-size: 20px;
+}
+
+.skill_stance_control_button:hover {
+	background-color: var(--active_button_color);
+}
+
+.item_slot {
+	color: rgb(149, 255, 190);
+}
+
+.equip_item_button, .unequip_item_button {
+	 cursor: pointer;
+	 font-weight: bold;
+	 font-size: 13px;
+	 text-align: right;
+	 display: var(--item_use_button_display);
+}
+
+.equip_item_button {
+	width: 48px;
+}
+
+.equip_item_button:active {
+	color: var(--onclick_button_color);
+}
+
+.unequip_item_button {
+	width: 60px;
+}
+
+.unequip_item_button:active {
+	color: var(--onclick_button_color);
+}
+
+.book_finished + .item_use_button {
+	visibility:hidden;
+}
+
+.book_name {
+	font-style: italic;
+}
+
+.book_finished .inventory_item_name .book_name{
+	color: silver;
+}
+
+.book_active {
+	background-color: rgba(255, 236, 128, 0.3);
+}
+
+.book_active .inventory_item{
+	color: gold;
+}
+
+.item_use_button {
+	display: var(--item_use_button_display);
+	width: 39px;
+	font-weight: bold;
+	cursor: pointer;
+	font-size: 13px;
+	text-align: right;
+	float: left;
+}
+
+.item_use_button:active {
+	color: var(--onclick_button_color);
+}
+
+.item_auto_use_button {
+	display: var(--item_use_button_display);
+	background-color: gray;
+	height: 100%;
+	width: 39px;
+	cursor: pointer;
+	text-align: center;
+	margin-left: 3px;
+	float: left;
+}
+
+.item_auto_use_button:hover {
+	background-color: var(--active_button_color);
+}
+
+.item_auto_use_button_active {
+	background-color: var(--active_button_color);
+	font-weight: bold;
+}
+
+.item_value {
+	text-align: right;
+	font-size: 13px;
+	width: 54px;
+	border-left: 1px solid white;
+	padding-left: 4px;
+	float: right;
+}
+
+.inventory_control_button {
+	float:left;
+	padding: 3px;
+	padding-left: 5px;
+	padding-right: 5px;
+	min-width: 60.7px; /* ouch */
+	text-align: center;
+	outline: 1px solid white;
+	margin: 1px;
+	cursor: pointer;
+}
+
+.equipped_item_control .equipped_item, .equipped_item_name .item_slot {
+	color: gold;
+}
+
+.equipped_item {
+	font-weight: bold;
+	display: inline-block;
+}
+
+.character_item_control.item_to_trade {
+	background-color: rgba(0, 128, 0, 0.4);
+}
+
+.item_component_list {
+	color: rgb(190, 190, 190);
+	font-style: italic;
+}
+
+
+.character_item_equippable {
+	display: var(--equipment_display);
+}
+
+.character_item_usable, .character_item_book {
+	display: var(--consumables_display);
+}
+
+.character_item_other, .character_item_loot, .character_item_material, .character_item_component {
+	display: var(--other_display);
+}
+
+.character_item_equippable.character_item_faved {
+	display: var(--faved_equipment_display);
+}
+
+.character_item_usable.character_item_faved, .character_item_book.character_item_faved {
+	display: var(--faved_consumables_display);
+}
+
+.character_item_other.character_item_faved, .character_item_loot.character_item_faved, .character_item_material.character_item_faved, .character_item_component.character_item_faved {
+	display: var(--faved_other_display);
+}
+
+.item_unique {
+	font-weight:1000;
+	color: #800080;
+	font-style: italic;
+}
+
+.character_control_button {
+	float:left;
+	padding: 6px;
+	min-width: 119.3px;
+	font-size: 14px;
+	text-align: center;
+	margin: 1px;
+	outline: 1px solid white;
+	cursor: pointer;
+}
+
+.active_effect_tooltip {
+	border: 2px solid gray;
+	border-radius: 10px;
+	padding: 3px;
+	margin-top: 1px;
+	height: fit-content;
+	width: 210px;
+}
+.active_effect_name_and_duration {
+	width: 100%;
+	border-bottom: 1px solid gray;
+}
+.active_effect_duration {
+	text-align: right;
+	float: right;
+}
+.active_effect_description {
+	margin-top: 5px;
+	margin-bottom: 10px;
+}
+
+.message_border { 
+	border-bottom: 1px solid #47465f;
+	position: relative;
+	bottom: 0px;
+	padding-top: 5px;
+	max-width: 350px;
+	margin: auto;
+}
+
+.equipment_slot_div {
+	text-align: center;
+	font-size: 14px;
+	width: 100%;
+	height: 28px;
+	margin-bottom: -1px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+	border: 1px solid white;
+	padding-top: auto;
+}
+.equipment_slot_div_long {
+	height: 15px;
+	padding-bottom: 2px;
+}
+
+.equipment_slot_empty {
+	color: silver;
+	font-style: italic;
+	font-size: 12px;
+}
+
+.equipment_slot_empty .item_tooltip {
+	font-size: 14px;
+	font-style: normal;
+}
+
+.grid_container {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+}
+
+.stat_slot_div, .loot_slot_div {
+	width: 100%;
+	height: 20px;
+	padding-top: 2px;
+	margin-left: 1px;
+	outline: 1px solid white;
+}
+
+.loot_slots_div {
+	margin-top: 20px;
+}
+
+	.stat_value {
+		text-align: right;
+		display: inline-block;
+		width: 63px;
+	}
+
+	.stat_name {
+		display: inline-block;
+		width: 100px;
+		padding-left: 4px;
+	}
+	.loot_name {
+		display: inline-block;
+		width: 200px;
+		padding-left: 4px;
+	}
+
+	.loot_name, .loot_chance_current {
+		float:left;
+	}
+
+	.loot_chance_base {
+		text-align: right;
+		padding-left:2px;
+		padding-right:2px;
+	}
+	.loot_chance_current{
+		padding-left:2px;
+		padding-right:2px;
+	}
+	
+
+.skill_bar_max {
+	border: 2px solid rgb(3, 255, 36);
+	margin: auto;
+	margin-top: 5px;
+	width: 90%;
+}
+
+.skill_bar_current {
+	background-color: rgb(3, 255, 36);
+	height: 8px;
+}
+
+.skill_bar_text {
+	display: flex;
+	color: white;
+	width: 100%;
+}
+
+.skill_bar_name {
+	text-align: left;
+	width: 80%;
+}
+
+.skill_bar_xp {
+	text-align: right;
+	width: 20%;
+	float: right;
+}
+
+.skill_bar_text:after {
+	clear: both;
+}
+
+.skill_bar_capped {
+	border: 2px solid rgb(0, 123, 32);
+	display: var(--maxxed_skill_display);
+}
+
+	.skill_bar_capped .skill_bar_current {
+		background-color: rgb(0, 123, 32);
+		height: 8px;
+	}
+
+#crafting_window {
+	display: none;
+	height: 400px;
+}
+
+	#crafting_mainpage_buttons {
+		font-size: 20px;
+		top: 0px;
+		outline: 2px dashed silver;
+	}
+		.crafting_mainpage_button {
+			float:left;
+			padding: 3px;
+			padding-left: 2.4px;
+			padding-right: 2.4px;
+			text-align: center;
+			border: 1px solid white;
+			cursor: pointer;
+			flex-grow: 1;
+		}
+
+	.crafting_subpage_buttons {
+		font-size: 18px;
+		outline: 2px dashed silver;
+	}
+		.crafting_subpage_button {
+			padding: 3px 0px 3px 0px;
+			float:left;
+			text-align: center;
+			cursor: pointer;
+			flex-grow: 1;
+			border: 1px solid white;
+		}
+
+.crafting_recipe_list {
+	height: 300px;
+	width:100%;
+	top: 60px;
+	overflow-y: scroll;
+	border-top: 2px solid gray;
+}
+
+.crafting_mainpage_button:hover, .crafting_subpage_button:hover {
+	background-color: var(--active_button_color);
+}
+		
+.recipe_div {
+	width: 376px;
+	border-bottom: 2px dashed white;
+	font-size: 16px;
+	padding: 2px;
+}
+
+.recipe_unavailable {
+	color: gray;
+}
+
+.recipe_hidden {
+	display: none;
+}
+
+.weapon_recipe + .shield_recipe, .shield_recipe + .armor_recipe, .armor_recipe + .clothing_recipe {
+	border-top: 5px solid white;
+}
+
+.recipe_name:hover, .recipe_item_name:hover, .recipe_comp_name:hover, .craft_ammount_button:hover, .selected_recipe .recipe_name, .crafting_selection:hover, .selected_component_category, .selectable_component:hover {
+	background-color: var(--active_button_color);
+}
+
+.selected_component, .selected_component:hover {
+	background-color: rgba(0, 128, 0, 0.5);
+}
+
+.selected_component_icon, .selected_material_icon, .location_choice_icon {
+	visibility: hidden;
+}
+
+.selected_component .selected_component_icon, .selected_material .selected_material_icon {
+	visibility: visible;
+}
+
+.selected_recipe .recipe_name {
+	border-bottom: 1px dashed white;
+}
+
+.recipe_creation_button {
+	display: none;
+	font-size: 18px;
+	padding: 3px 0px 3px 0px;
+	background-color: rgba(128, 128, 128, 0.5);
+	text-align: center;
+}
+
+.recipe_creation_button:active{
+	color: var(--onclick_button_color);
+}
+
+.recipe_creation_span {
+	width: 300px;
+	display:inline-block;
+}
+
+.selected_recipe .recipe_creation_button {
+	display: block;
+}
+
+.crafting_tooltip_mat_list {
+	padding-left: 20px;
+}
+
+.recipe_result {
+	border: 1px solid white;
+	padding: 5px;
+}
+
+.recipe_div:hover .items_recipe_tooltip.recipe_tooltip{
+	display: block;
+}
+
+.recipe_creation_button:hover .recipe_tooltip{
+	display: block;
+}
+
+.selectable_material:hover .recipe_tooltip, .selectable_component:hover .recipe_tooltip{
+	display: block;
+}
+
+.crafting_selection {
+	display: none;
+	border-bottom: 1px solid white;
+	padding: 3px;
+}
+
+.selectable_component, .selectable_material {
+	border-bottom: 1px dotted white;
+	padding: 3px;
+	padding-left: 10px;
+}
+
+.selectable_component {
+	display: none;
+}
+
+.selected_recipe .crafting_selection, .selected_recipe .selectable_component {
+	display: block;
+}
+
+.recipe_name {
+	display: inline-block;
+	padding-bottom: 5px;
+	width: 100%;
+}
+
+.recipe_item_name {
+	display: inline-block;
+	padding-bottom: 5px;
+	width: 300px;
+}
+
+.recipe_item_name:active{
+	color: var(--onclick_button_color);
+}
+
+.recipe_comp_name {
+	display: inline-block;
+	padding-bottom: 5px;
+	width: 287px;
+}
+
+.recipe_comp_name:active{
+	color: var(--onclick_button_color);
+}
+
+.folded_crafting_selection, .folded_material_list {
+	display: none;
+}
+
+.selected_recipe .folded_material_list {
+	display: block;
+}
+
+.selected_recipe .crafting_dropdown_icon, .selected_component_category .subcrafting_dropdown_icon {
+	transform: rotate(180deg);
+}
+
+.selected_component_list, .selected_material_list {
+	display: block;
+}
+
+
+.craft_ammount_buttons {
+	display: inline-block;
+	width: 76px;
+	padding-bottom: 2px;
+	font-size: 16px;
+}
+
+.craft_ammount_button {
+	display: inline-block;
+	width: fit-content;
+	text-align: center;
+	padding: 3px 6px 3px 6px;
+	outline: 1px solid white;
+	outline-offset: -1px;
+	margin: -0.5px;
+	cursor: pointer;
+}
+
+.craft_ammount_button:active{
+	color: var(--onclick_button_color);
+}
+
+.sl_button {
+	width: fit-content;
+	padding: 10px 10px;
+	height: 20px;
+	background-image: linear-gradient(to left, #232f47, #15152d);
+	color: white;
+	cursor: pointer;
+	text-align: center;
+	display: inline-block;
+}
+
+.sl_button:hover {
+	background-image: none;
+	background-color: #2c3953;
+}
+
+.sl_button:active {
+	background-color: var(--onclick_button_color);
+}
+
+.game_info a, .game_info span {
+	width: fit-content;
+	padding: 10px 10px;
+	height: 20px;
+	background-image: linear-gradient(to left, #232f47, #15152d);
+	color: white;
+	cursor: pointer;
+	text-align: center;
+	display: inline-block;
+	text-decoration: none;
+}
+
+.game_info a:hover, .game_info span:hover {
+	background-image: none;
+	background-color: #2c3953;
+}
+
+.repo_link {
+	right: 42px;
+	position: fixed;
+	padding: 3px;
+}
+.financial_link {
+	right: 0px;
+	position: fixed;
+}
+
+i {
+	vertical-align: -4px;
+} 
+
+#bottom_panel_div i{
+	margin-top: -3px;
+}
+
+.trader_category_button, .storage_category_button {
+	float:left;
+	padding: 3px 0px 3px 0px;
+	width: 98px;
+	text-align: center;
+	outline: 1px solid white;
+	margin: 2px 1px;
+	cursor: pointer;
+}
+
+.activable_buttons {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.activable_buttons :hover {
+    background-color: var(--hovered_button_color);
+}
+
+.character_sorting_button {
+	float: left;
+	flex-grow: 1;
+	text-align: center;
+	outline: 1px solid white;
+	cursor: pointer;
+	margin: 1px;
+	font-size: 16px;
+}
+
+.character_control_button:hover, .inventory_control_button:hover, 
+.trader_category_button:hover, .storage_category_button:hover, .trader_sorting_button:hover, .storage_sorting_button:hover, .active_selection_button, .race_selection_button_active, .character_sorting_button:hover {
+	background-color: var(--active_button_color) !important;
+	background-image: none;
+}
+
+.trader_item_control.item_to_trade {
+	background-color: rgba(255, 0, 0, 0.4);
+}
+
+.trade_ammount_button {
+	cursor: pointer;
+	font-weight: bold;
+	font-size: 14px;
+	padding-left: 5px;
+	float: left;
+}
+.trade_ammount_buttons {
+	display: var(--trade_ammount_button_display);
+	width: 55px;
+	vertical-align: bottom;
+	text-align: right;
+}
+
+.trader_item_other, .trader_item_loot, .trader_item_material, .trader_item_component, .trader_item_book {
+	display: var(--trader_other_display);
+}
+.trader_item_equippable {
+	display: var(--trader_equipment_display);
+}
+.trader_item_usable, .trader_item_book {
+	display: var(--trader_consumable_display);
+}
+
+.storage_item_other, .storage_item_loot, .storage_item_material, .storage_item_component, .storage_item_book {
+	display: var(--storage_other_display);
+}
+.storage_item_equippable {
+	display: var(--storage_equipment_display);
+}
+.storage_item_usable, .storage_item_book {
+	display: var(--storage_consumable_display);
+}
+
+#inventory_combat_switch_selection {
+	width: 400px;
+	text-align: center;
+	position: absolute;
+	top: 353px;
+	background-color: #202044;
+	float: left;
+}
+
+#switch_to_inventory {
+	float:left;
+	border-right: 2px solid gray;
+}
+#switch_to_combat {
+	border-left: 2px solid gray;
+}
+#switch_to_inventory, #switch_to_combat {
+	width: 198px;
+	cursor: pointer;
+	display: inline-block;
+	font-size: 20px;
+	font-weight: bold;
+}
+
+.coin{
+	font-weight: bold;
+}
+
+.coin_wood{
+	color: rgb(136, 83, 14);
+}
+
+.coin_copper{
+	color: rgb(207, 144, 60);
+}
+
+.coin_silver{
+	color: silver;
+}
+
+.coin_gold{
+	color:gold;
+}
+
+.skill_sorting_button {
+	flex-grow: 1;
+	padding-left: 5px;
+	padding-right: 5px;
+	text-align: center;
+	outline: 1px solid white;
+	cursor: pointer;
+	margin: 1px;
+	font-size: 16px;
+}
+
+.skill_sorting_button:hover {
+	background-color: var(--active_button_color);
+}
+
+.floating_effect {
+	position: absolute;
+	pointer-events: none;
+	font-weight: bold;
+	opacity: 1;
+}
+
+
+#accept_trade_button, #cancel_trade_button, .trader_sorting_button, .storage_sorting_button {
+	float: left;
+	flex-grow: 1;
+	text-align: center;
+	outline: 1px solid white;
+	margin: -1px 1px;
+	cursor: pointer;
+	font-size: 16px;
+}
+
+#accept_trade_button {
+	background-color: green;
+	width: 198px;
+}
+
+#active_effect_count {
+	text-align: right;
+	width: 90px;
+	font-weight: bold;
+}
+
+#action_status_div, #time_for_earnings_div {
+	font-size: var(--options_action_textsize);
+	font-style: italic;
+	cursor: default;
+}
+#time_for_earnings_div, #action_xp_div {
+	color: rgb(192,192,192);
+	border-bottom: 1px solid white;
+	text-align: center;	
+	padding: 5px;
+	font-size: var(--options_action_textsize);
+}
+
+#action_end_text, #action_end_earnings {
+	display: inline;
+	font-size: var(--options_action_textsize);
+}
+
+#gathering_progress_bar, #action_progress_bar {
+	height: 30px;
+	background-color: purple;
+	width: 0px;
+}
+
+#gathering_progress_bar_max, #action_progress_bar_max {
+	width: 100%;
+	border-bottom: 1px solid white;
+	background-color: rgba(48, 0, 48, 0.596);
+}
+
+#location_actions_div :not(#action_end_div):hover #gathering_tooltip, .location_action_div:hover .location_action_tooltip{
+	display: block;
+}
+
+#action_end_earnings {
+
+	font-style: italic;
+	color: gray;
+	padding-left: 10px;
+}
+
+#cancel_trade_button {
+	background-color: red;
+	width: 198px;
+}
+
+#location_related_div {
+	width: 400px;
+	height: var(--actions_div_height);
+	left: 410px;
+	top: var(--actions_div_top);
+}
+
+#basic_character_info_div {
+    width: 400px;
+    height: 130px;
+    z-index: 1;
+}
+
+#bottom_panel_div {
+	display: flex;
+	position: fixed;
+	width: 100vw;
+	height: 40px;
+	z-index: 200;
+	background-image: linear-gradient(to right, #232f47, #15152d);
+	border-top: 2px solid gray;
+	bottom: 0px;
+	left: 0px;
+}
+
+#character_div {
+    width: 400px;
+    top: 136px;
+    height: 210px;
+	max-width: 400px;
+	max-height: 300px;
+    border-top: none;
+}
+
+#character_name_field {
+	text-align: center;
+	width: 120px;
+	margin: auto;
+	border: 0px;
+	background-color: #3a4e75;
+	color: white;
+	position: absolute;
+	top: 2px;
+	font-size: 16px;
+	left: 140px;
+}
+
+#character_health_div, #character_stamina_div, #character_mana_div, #character_xp_div {
+	width: 340px;
+	margin: auto;
+	margin-top: 10px;
+}
+
+#character_healthbar_max {
+	outline: 2px solid rgb(199, 0, 0);
+	background-color: rgba(255, 46, 46, 0.3);
+	margin: auto;
+	width: 100%;
+	height: 16px;
+	margin-top: 10px;
+}
+#character_healthbar_current {
+	background-color: rgb(255, 46, 46);
+	height: 100%;
+}
+
+#character_health_value, #character_health_text, #character_xp_value, #character_mana_value, #character_stamina_value {
+	color: white;
+	width: 340px;
+	text-align: center;
+	position: absolute;
+}
+
+#character_health_value {
+	top: 103px;
+	font-size: 18px;
+}
+
+#character_level_div {
+	text-align: center;
+	border: 1px solid white;
+	padding-top: 1px;
+	padding-bottom: 1px;
+	width: 350px;
+	font-weight: bold;
+}
+
+#character_mana_bar_max {
+	outline: 2px solid rgb(0, 0, 127);
+	margin: auto;
+	height: 15px;
+	background-color: rgba(0, 0, 255, 0.3);
+}
+
+#character_mana_bar_current {
+	height: 15px;
+	width: 0%;
+	background-color: rgb(15, 15, 255);
+}
+
+#character_mana_value {
+	font-size: 15px;
+	top: 77px;
+}
+
+#character_stamina_bar_max {
+	outline: 2px solid rgb(0, 127, 0);
+	margin: auto;
+	height: 15px;
+	background-color: rgba(0, 255, 0, 0.3);
+}
+
+#character_stamina_bar_current {
+	height: 15px;
+	background-color: rgb(0, 196, 0);
+}
+
+#character_stamina_value {
+	top: 53px;
+	font-size: 15px;
+}
+
+#character_xp_bar_max {
+	outline: 2px solid rgb(255, 126, 0);
+	margin: auto;
+	margin-top: 30px;
+	height: 15px;
+	background-color: rgba(255, 165, 0, 0.3);
+}
+
+#character_xp_bar_current {
+	height: 15px;
+	background-color: orange;
+}
+
+#character_xp_value {
+	font-size: 15px;
+	top: 29px;
+}
+
+#character_equipment_div { 
+	margin: auto;
+	width: 350px;
+	position: relative;
+	top: 3px;
+	display: none;
+}
+
+#character_tools_div {
+	display: none;
+}
+
+#character_stats_div {
+	width: 350px;
+	margin: auto;
+}
+
+#character_control_div {
+	color: white;
+	position: absolute;
+	bottom: 0px;
+}
+
+#character_effects{
+	position: absolute;
+	top: 158px;
+	left: 100px;
+}
+	#effects_div {
+		font-size: 16px;
+		padding-top: 2px;
+		padding-bottom: 2px;
+		padding-left: 4px;
+
+		background-color: #232f47;
+	}	
+
+#effects_div div:not(#effects_tooltip){
+	display: inline-block;
+}
+
+#effects_tooltip {
+	position: absolute;
+	display: none;
+	left: 220px;
+	z-index: 1000;
+	background-color: var(--tooltip_background_color);
+	color: white;
+	border-radius: 10px;
+	margin-left: 30px;
+	padding: 10px; 
+	border: 1px solid white;
+	flex-wrap: wrap;
+	flex-direction: column;
+	gap: 4px;
+	align-content: flex-start;
+}
+
+#effects_div:hover #effects_tooltip {
+	display: flex;
+}
+
+#exit_trade_button {
+	float:left;
+	width: 398px;
+	text-align: center;
+	border: 1px solid white;
+	border-top: none;
+	border-bottom: none;
+	cursor: pointer;
+	font-size: 20px;
+	padding: 3px 0px 0px 0px;
+	background-color: rgba(255, 241, 117, 0.2);
+}
+
+#exit_storage_button {
+	float:left;
+	width: 398px;
+	text-align: center;
+	border: 1px solid white;
+	border-bottom: none;
+	cursor: pointer;
+	font-size: 20px;
+	padding: 3px 0px 0px 0px;
+	background-color: rgba(255, 241, 117, 0.2);
+}
+
+#exit_crafting_button {
+	position: absolute;
+	float: left;
+	top: 393px;
+	width: 398px;
+	text-align: center;
+	border: 1px solid white;
+	cursor: pointer;
+	font-size: 20px;
+	padding: 3px 0px 0px 0px;
+	background-color: rgba(255, 241, 117, 0.2);
+}
+
+#exit_crafting_button:hover {
+	background-color: rgba(255, 241, 117, 0.4);
+}
+
+
+#combat_div {
+	width: 400px;
+	height: 560px;
+	position: relative;
+	left: 410px;
+	top: 68px;
+}
+		.enemy_div {
+			color: white;
+			display: var(--enemy_div_display);
+			font-size: 14px;
+			height: 66px;
+			outline: 2px solid silver;
+			width: 100%;
+		}
+				
+				.enemy_name, .enemy_stats, #attack_stats  {
+					height: 18px;
+					width: 400px;
+					overflow: hidden;
+					white-space: nowrap;
+				}
+				.enemy_name {
+					text-align: right;
+					margin-top: 1px;
+					padding-right: 10px;
+					width: 390px;
+				}
+				.enemy_stats {
+					padding-right: 10px;
+				}
+					.enemy_stat, .attack_stat {
+						display: inline-block;
+						text-align: left;
+						font-size: 12px;
+						overflow: hidden;
+						white-space: nowrap;
+					}
+					.enemy_stat_short, .attack_stat_short {
+						width: 65px;
+					}
+					.enemy_stat_long, .attack_stat_long {
+						width: 85px;
+					}
+					.attack_stat_veryshort {
+						width: 52px;
+					}
+
+				.enemy_health_div {
+					margin-bottom: 0px;
+					height: 18px;
+				}
+					.enemy_healthbar_max {
+						border: 2px solid rgb(199, 0, 0);
+						background-color: rgba(255, 46, 46, 0.3);
+						height: 16px;
+					}
+						.enemy_healthbar_current {
+							background-color: red;
+							width: 100%;
+							height: 100%;
+							margin-left: auto;
+						}
+
+					.enemy_health_value {
+						position: relative;
+						top: -18px;
+						width: 100%;
+						text-align: center;
+					}
+				.enemy_attack_bar {
+					background-color: rgb(156, 0, 156);
+					height: 10px;
+					animation-iteration-count: infinite;
+					animation-timing-function: linear;
+					margin-left: auto;
+				}
+
+	#character_combat_stats {
+		width: 400px;
+		top: 150px;
+	}
+
+	#character_combat_management{
+		width: 400px;
+		top: 386px;
+		display: var(--character_combat_div_display);
+	}
+		#character_stance_name {
+			padding: 3px;
+			margin-top: 2px;
+			margin-bottom: 2px;
+			width: 244px;
+			border: 1px solid gray;
+			text-align: center;
+		}
+			#character_stance_selection {
+				display: none;
+				position: absolute;
+				width: fit-content;
+				height: fit-content;
+				outline: 2px solid gray;
+				top: 45px;
+				background-color:#232f47;
+				text-align: left;
+			}
+			#character_stance_name:hover #character_stance_selection, #character_stance_selection:hover {
+				display: block;
+			}
+
+		#character_attack_bar {
+			background-color: rgb(156, 0, 156);
+			height: 20px;
+		}			
+		#attack_stats {
+			text-align: left;
+		}		
+
+#enemy_count_div, #clear_count_div { 
+	width: auto;
+	padding-top: 2px;
+	bottom: 0px;
+	position: absolute;
+	font-size: 17px;
+}
+
+#clear_count_div { 
+	left: 5px;
+}
+
+#enemy_count_div {
+	right: 5px;
+} 
+
+#enemy_count_content {
+	color: white;
+	width: 100%;
+	padding-right: 5px;
+	text-align: right;
+}
+
+#enemies_left_div {
+	width: 80px;
+	display: inline-block;
+	text-align: right;
+}
+
+#inventory_content_div {
+	height: 309px;
+	overflow-y: scroll;
+	overflow-x: visible;
+}
+
+#inventory_control_div {
+	font-size: 20px;
+	position: absolute;
+	top: 351px;
+}
+
+#inventory_div {
+	width: 400px;
+	height: 381px;
+	top: 379px;
+	display: var(--inventory_div_display);
+}
+
+#journal_div {
+	width: 400px;
+	left: 820px;
+	height: 330px;
+	top: 0px
+}
+#journal_content_div {
+	height: 287px;
+}
+	#quests_header {
+		width: 100%;
+		text-align: center;
+		padding-top: 5px;
+		margin-bottom: 5px;
+	}
+	#quest_hiding_div {
+		bottom: 0px;
+		text-align: right;
+		position: absolute;
+		border-top: 1px solid white;
+		width: 385px;
+		padding-right: 15px;
+	}
+		.quest_div {
+			border: 1px solid white;
+			margin-left: 1px;
+			margin-bottom: 3px;
+		}
+		.quest_div :not(.quest_name_div) {
+			display: none;
+		}
+			.quest_div_expanded :not(.quest_name_div) {
+				display: block;
+			}
+			.quest_finished {
+				color: silver;
+				display: var(--completed_quest_display);
+			}
+			.quest_finished .quest_name_div{
+				text-decoration: line-through;
+			}
+		.quest_name_div {
+			font-weight: bold;
+			padding-left: 2px;
+		}
+		.quest_name_div:hover {
+			background-color: var(--active_button_color);
+		}
+		.quest_description_div {
+			font-size: 14px;
+			padding-left: 2px;
+			border-bottom: 1px solid gray;
+			padding-bottom: 5px;
+		}
+		.task_status_icon {
+			float: left;
+		}
+		.task_status_icon i {
+			font-size: 18px;
+		}
+		.task_finished {
+			color: silver;
+		}
+		.task_condition_div {
+			padding-left: 16px;
+		}
+		.task_type_div, .task_target_div {
+			padding-left: 12px;
+		}
+
+	#journal_control_div {
+		font-size: 20px;
+	}
+		.journal_control_button{
+			text-align: center;
+			outline: 1px solid white;
+			cursor: pointer;
+			margin: 1px;
+			font-size: 18px;
+			flex-grow: 1;
+			padding-left: 20px;
+			padding-right: 20px;
+		}
+
+		.journal_control_button:hover{
+			background-color: var(--active_button_color);
+		}
+			#story_box_div {
+				width:100%;
+				height: 255px;
+			}
+
+			#data_box_div, #books_box_div, #bestiary_box_div, #quests_box_div{
+				width: 100%;
+				overflow-y: scroll;
+			}
+
+			#data_box_div, #books_box_div, #bestiary_box_div{
+				height: 284px;
+			}
+
+			#data_box_div, #books_box_div, #bestiary_box_div{
+				display: none;
+			}
+
+			#quests_box_div {
+				display: block;
+				height: 263px;
+			}
+
+				.bestiary_entry_div, .data_entry, .anthology_entry_div {
+					width: 380px;
+					display: flex;
+					box-shadow: 0 -1px 0 gray, 0 1px 0 gray;
+					margin-bottom: 1px;
+				}
+				.bestiary_entry_div:hover, .anthology_entry_div:hover {
+					background-color: var(--active_button_color);
+				}
+					.bestiary_entry_name, .anthology_entry_name {
+						float: left;
+						width:295px;
+						text-align: left;
+						padding-left: 5px;
+					}
+					.bestiary_entry_kill_count {
+						text-align: right;
+						width:90px;
+						padding-right: 5px;
+					}
+
+					.bestiary_entry_tooltip, .anthology_entry_tooltip {
+						display: none;
+						background-color: var(--tooltip_background_color);
+						border-radius: 10px;
+						padding: 5px;
+						position: fixed;
+						z-index: 1000;
+						width: 360px;
+						top: var(--bestiary_entry_tooltip_top);
+						left: var(--bestiary_entry_tooltip_left);
+						pointer-events: none;
+						border: 1px solid white;
+					}
+						.bestiary_entry_div:hover .bestiary_entry_tooltip, .anthology_entry_div:hover .anthology_entry_tooltip {
+							display: block;
+						}
+    #item_log_header {
+        margin-top: 10px;
+        border-bottom: 1px dotted gray;
+        width: 100%;
+        text-align: center;
+    }
+
+    #item_log_table td {
+        border: 1px solid gray;
+        border-collapse: collapse;
+    }
+
+.data_entry_value {
+	width: 90px;
+	text-align: right;
+}
+
+.data_entry_name {
+	width: 300px;
+}
+
+#skills_and_stances_div {
+	left: 820px;
+	top: 340px;
+	width: 400px;
+	height: 420px;
+}
+
+#skill_hiding_div {
+    text-align: right;
+    bottom: 30px;
+    border-top: 1px solid white;
+    width: 385px;
+    padding-right: 15px;
+}
+
+#skill_list_div, #stance_list_div, #magic_list_div {
+	height: 389px;
+}
+		#skill_list {
+			overflow-y: scroll;
+			height: 346px;
+			padding-bottom:3px;
+		}
+
+.skill_xp_gain {
+	padding-bottom: 10px;
+	padding-top: 5px;
+	color: white;
+	font-size: 16px;
+}
+
+#stance_list {
+	font-size: 20px;
+	width: 100%;
+}
+
+.stance_tooltip {
+	display: none;
+	z-index: 1000;
+	width: 300px;
+	font-size: 16px;
+	position: fixed;
+	pointer-events: none;
+	background-color: var(--tooltip_background_color);
+	border-radius: 10px;
+	padding: 5px;
+	top: var(--stance_tooltip_top);
+	left: var(--stance_tooltip_left);
+	text-align: left;
+	border: 1px solid white;
+}
+.stance_list_entry:hover .stance_tooltip {
+	display: block;
+}
+.stance_tooltip:hover {
+	display: none;
+}
+
+.stances_button {
+	text-align: center;
+	border-right: 1px solid gray;
+	border-bottom: 2px dotted gray;
+}
+
+.stance_list_fav, .stance_list_header_fav {
+	width: 50px;
+	border-right: 1px solid gray;
+	border-bottom: 2px dotted gray;
+}
+
+.stance_list_select, .stance_list_header_select {
+	width: 75px;
+	border-right: 1px solid gray;
+	border-bottom: 2px dotted gray;
+}
+
+.stances_name, .stance_list_header_name {
+	width: 300px;
+	padding-left: 10px;
+	text-align: left;
+	border-bottom: 2px dotted gray;
+}
+
+#location_actions_div {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow-y: scroll;
+}
+
+#location_div {
+	width: 400px;
+	height: 297px;
+	left: 410px;
+	top: 36px;
+	border-top: 0px;
+}
+	#location_description_div {
+		height: 113px;
+		font-style: italic;
+		color: rgb(224, 224, 224);
+		padding: 5px;
+		float: none;
+		display: inline-block;
+	}
+	#location_name_div {
+		padding: 4px;
+		width: var(--location_name_div_width);
+		height: fit-content;
+		float: left;
+		z-index: 2;
+		border-bottom: 1px solid white;
+		font-size: 18px;
+	}
+	#location_icon_span i:not(.location_bed_icon):hover {
+		background-color: var(--active_button_color);
+	}
+	#location_icon_span i:not(.location_bed_icon) {
+		cursor: pointer;
+	}
+	#location_types_div {
+		left: 292px;
+		width: 100px;
+		height: 23px;
+		padding: 2px;
+		position: absolute;
+		text-align: right;
+		font-size: 12px;
+		top: 0px;
+	}
+		.location_type_div {
+			float: left;
+			width: 50px;
+		}
+
+			.location_type_tooltip {
+				display: none;
+				background-color: var(--tooltip_background_color);
+				border-radius: 10px;
+				padding: 5px;
+				position: fixed;
+				z-index: 1000;
+				width: 200px;
+				top: var(--location_type_tooltip_top);
+				left: var(--location_type_tooltip_left);
+				pointer-events: none;
+				text-align: left;
+			}
+
+				.location_type_div:hover .location_type_tooltip {
+					display: block;
+				}
+
+
+#time_and_location {
+	left: 410px;
+	width: 400px;
+	font-size: 17px;
+}
+	#time_and_weather_div {
+		border-bottom: 1px solid white;
+		padding: 3px 0px 2px 0px;
+	}
+		#time_div {
+			text-align: left;
+			width: 305px;
+			display: inline-block;
+			padding: 2px;
+		}
+			.icon {
+				position: relative;
+				top: 3px;
+			}
+		#weather_div {
+			width: 80px;
+			display: inline-block;
+			padding: 2px;
+			text-align: right;
+		}
+		#weather_div .icon {
+			font-size: 16px;
+		}
+		.cold_temperature {
+			color: #00acc1;
+		}
+		#temperature_tooltip {
+			display: none;
+			position: fixed;
+			z-index: 1000;
+			font-style: italic;
+			background-color: var(--tooltip_background_color);
+			border-radius: 10px;
+			padding: 5px;
+			width: 300px;
+			height: auto;
+			font-size: 16px;
+			border-radius: 10px;
+			top: var(--temperature_tooltip_top);
+			left: var(--temperature_tooltip_left);
+			text-align: left;
+			border: 1px solid white;
+		}
+		#weather_div:hover #temperature_tooltip {
+			display: block;
+		}
+#location_name_div:hover #location_description_tooltip {
+	display: block;
+}
+
+#location_description_tooltip {
+	font-style: italic;
+	display: none;
+	background-color: var(--tooltip_background_color);
+	border-radius: 10px;
+	margin-left: 30px;
+	padding: 5px;
+	position: absolute;
+	z-index: 1000;
+	max-width: 500px;
+	font-size: 18px;
+	width: fit-content;
+	height: auto;
+}
+
+#main_controller {
+    margin-bottom: 5px;
+    display: flex;
+	height: 40px;
+    width: fit-content;
+
+}
+
+#main_content {
+    position: absolute;
+	top: 5px;
+	left: 5px;
+	/*
+	kinda necessary to set size, just for background gradient to render properly,
+	as all childs are set to `position: absolute` so they are not in the flow (so they dont affect the size)
+	*/
+	width: 1241px;
+	height: 806px;
+}
+
+#message_log_div {
+	top: 0px;
+	width: 400px;
+	height: 760px;
+	left: 1230px;
+	padding-right: 15px;
+	margin-bottom: 20px;
+}
+
+	#message_box_div {
+		width: 415px;
+		height: 734px;
+		overflow-y: scroll;
+		overflow-x: hidden;
+	}
+
+	#message_controls {
+		width: 415px;
+		position: absolute;
+	}
+		.message_control_button {
+			float: left;
+			padding: 3px;
+			padding-left: 4px;
+			padding-right: 4px;
+			min-width: 40px;
+			text-align: center;
+			outline: 1px solid white;
+			margin: 1px;
+			cursor: pointer;
+		}
+		.message_control_button:hover:not(.active_selection_button) {
+			background-color: var(--hovered_button_color);
+            outline: 1px solid gray;
+		}
+	.message_combat {
+		display: var(--message_combat_display);
+	}
+	.message_unlocks {
+		display: var(--message_unlocks_display);
+	}
+	.message_loot {
+		display: var(--message_loot_display);
+	}
+	.message_events {
+		display: var(--message_events_display);
+	}
+	.message_background {
+		display: var(--message_background_display);
+	}
+	.message_crafting {
+		display: var(--message_crafting_display);
+	}
+
+#money_div {
+	color: white;
+	border-bottom: 1px solid white;
+	padding: 2px 5px 2px 5px;
+}
+
+
+#saved_file_input {
+	display: none;
+}
+
+#start_sleeping_div:hover, #action_end_div:hover, #end_sleeping_div:hover, #open_storage_div:hover {
+	background-color: #2c3953;
+}
+
+#trade_div {
+    display: none;
+}
+
+#trader_inventory_div {
+    height: 311px;
+	width: 100%;
+	overflow-y: scroll;
+}
+
+#trade_price_div {
+	color: white;
+	outline: 1px solid white;
+	padding: 2px 1px 2px 1px;
+	width: 261px;
+	float: left;
+	margin: 1px;
+}
+
+#trader_cost_mult {
+	width: 131px;
+	color: white;
+	outline: 1px solid white;
+	padding: 2px 1px 2px 1px;
+	margin: 1px;
+	float:left;
+	color: orange;
+	font-weight: bold;
+}
+
+#trader_cost_mult_text {
+	width: 60px;
+	float: left;
+	padding-left: 5px;
+}
+
+#trader_cost_mult_value {
+	width: 60px;
+	float: left;
+	text-align: right;
+	padding-right: 5px;
+}
+
+#trade_price_text {
+	display: inline-block;
+	width: 80px;
+	padding-left: 5px;
+}
+
+#trade_price_value {
+	width: 164px;
+	display: inline-block;
+	text-align: right;
+	padding-right: 5px;
+}
+
+#storage_div {
+	display: none;
+}
+
+#storage_inventory_div {
+    height: 350px;
+	width: 100%;
+	overflow-y: scroll;
+}
+
+/* scrollbar */
+::-webkit-scrollbar {
+	width: 15px;
+	height: 10px;
+  }
+
+::-webkit-scrollbar-track {
+	background: #191928; 
+  }
+   
+::-webkit-scrollbar-thumb {
+	background: silver; 
+  }
+  
+::-webkit-scrollbar-thumb:hover {
+	background: white; 
+  }

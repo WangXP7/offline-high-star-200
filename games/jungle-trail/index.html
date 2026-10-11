@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jungle Trail</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #05070a; }
+  /* The canvas is the entire experience — no HUD, nothing that would remind
+     you it is a program. What follows dresses the debug overlay, which is not
+     in the document at all until F3 asks for it. */
+  #view { display: block; width: 100vw; height: 100vh; }
+  #boot {
+    position: fixed; inset: 0; display: grid; place-items: center;
+    font: 300 13px/1.7 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .22em; text-transform: uppercase; color: #6d7a63;
+    background: #05070a; pointer-events: none;
+  }
+  .debug-overlay {
+    position: fixed;
+    z-index: 10;
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+    width: min(330px, calc(100vw - 24px));
+    color: #d8e4d1;
+    border: 1px solid rgba(184, 215, 171, .2);
+    border-radius: 10px;
+    background: rgba(7, 12, 9, .86);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .35);
+    backdrop-filter: blur(14px) saturate(.8);
+    font: 500 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    overflow: hidden;
+    user-select: none;
+  }
+  .debug-overlay__header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 40px;
+    padding: 0 12px;
+    color: inherit;
+    border: 0;
+    background: rgba(149, 190, 133, .07);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .debug-overlay__header:hover { background: rgba(149, 190, 133, .13); }
+  .debug-overlay__header:focus-visible {
+    outline: 2px solid #9ac68a;
+    outline-offset: -2px;
+  }
+  .debug-overlay__title {
+    color: #a9d398;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+  .debug-overlay__summary {
+    color: #f0f6ed;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .debug-overlay__chevron {
+    width: 16px;
+    color: #82927d;
+    font-size: 16px;
+    line-height: 1;
+    text-align: center;
+  }
+  .debug-overlay__body { padding: 3px 12px 10px; }
+  .debug-overlay__section {
+    padding: 9px 0 5px;
+    border-top: 1px solid rgba(184, 215, 171, .1);
+  }
+  .debug-overlay__section:first-child { border-top: 0; }
+  .debug-overlay__section h2 {
+    margin: 0 0 6px;
+    color: #70806b;
+    font: inherit;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+  .debug-overlay__row {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 10px;
+    padding: 2px 0;
+  }
+  .debug-overlay__row > span { color: #869381; }
+  .debug-overlay__row output {
+    min-width: 0;
+    color: #d8e4d1;
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .debug-overlay.is-collapsed { width: 148px; }
+  .debug-overlay.is-collapsed .debug-overlay__body { display: none; }
+  @media (max-width: 520px) {
+    .debug-overlay { top: 8px; right: 8px; width: calc(100vw - 16px); }
+    .debug-overlay.is-collapsed { width: 148px; }
+  }
+
+  /* Below here is the phone: the capability screen shown before the scene is
+     built, and the two touch controls. Neither reaches a desktop — the modules
+     that build them are dynamically imported and a mouse never triggers the
+     import — so what follows is about two kilobytes of rules a desktop
+     downloads and never applies, which is the same bargain the overlay above
+     already makes. */
+  @media (pointer: coarse) {
+    html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+    /* The dynamic unit, because a mobile browser's 100vh is the height it has
+       with the address bar hidden and the canvas is sized from innerHeight,
+       which is the height it actually has. The 100vh above stays as the
+       fallback for anything too old to know dvh. */
+    #view { height: 100dvh; touch-action: none; user-select: none; -webkit-user-select: none; }
+  }
+  .gate {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+    /* Declared twice on purpose. A centred grid item that is taller than its
+       container overflows equally in both directions, and the half above the
+       top edge cannot be scrolled back to; `safe` falls back to start
+       alignment exactly then. Anything too old to parse the keyword keeps the
+       line above it, which is the behaviour this had before. */
+    place-items: safe center;
+    overflow-y: auto;
+    touch-action: pan-y;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+             max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    background: radial-gradient(130% 80% at 50% 0%, #0c1411, #05070a 68%);
+    color: #d8e4d1;
+    font: 400 15px/1.62 ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    transition: opacity .4s ease;
+  }
+  .gate.is-leaving { opacity: 0; pointer-events: none; }
+  .gate__card {
+    width: min(460px, 100%);
+    border: 1px solid rgba(184, 215, 171, .16);
+    border-radius: 14px;
+    background: rgba(7, 12, 9, .72);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+    overflow: hidden;
+  }
+  .gate__still { display: block; width: 100%; height: auto; }
+  .gate__body { padding: 18px 20px 22px; }
+  .gate__kicker {
+    margin: 0;
+    color: #7f8f77;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+  }
+  .gate__title {
+    margin: 5px 0 13px;
+    color: #f0f6ed;
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.15;
+  }
+  .gate__lede { margin: 0 0 12px; color: #a4b39e; font-size: 14px; }
+  .gate__keys {
+    margin: 17px 0 20px;
+    padding: 13px 0 3px;
+    border-top: 1px solid rgba(184, 215, 171, .12);
+  }
+  .gate__key {
+    display: grid;
+    grid-template-columns: 122px minmax(0, 1fr);
+    gap: 12px;
+    padding: 3px 0;
+    font: 500 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .gate__key dt { color: #a9d398; }
+  .gate__key dd { margin: 0; color: #869381; }
+  .gate__enter {
+    display: block;
+    width: 100%;
+    min-height: 52px;
+    padding: 0 18px;
+    color: #0a1109;
+    border: 0;
+    border-radius: 10px;
+    background: #9ac68a;
+    font: 600 13px/1 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .gate__enter:active { background: #85b476; }
+  .gate__enter:focus-visible { outline: 2px solid #d8e4d1; outline-offset: 2px; }
+  .gate__note { margin: 13px 0 0; color: #6d7a63; font-size: 12px; text-align: center; }
+  .gate__building {
+    margin: 0;
+    padding: 30px 0;
+    color: #a9d398;
+    text-align: center;
+    font: 500 12px/1 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    animation: gate-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes gate-pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .gate { transition: none; }
+    .gate__building { animation: none; opacity: 1; }
+  }
+  /* A phone held sideways, or a small window. The card is taller than the
+     viewport there and the button ends up below the fold, so the still gives
+     up height first: it is the part of the card that still reads when it is
+     cropped. */
+  @media (max-height: 620px) {
+    .gate__still { max-height: 26vh; object-fit: cover; object-position: 50% 42%; }
+    .gate__body { padding: 14px 18px 16px; }
+    .gate__title { margin: 4px 0 8px; font-size: 21px; }
+    .gate__lede { margin: 0 0 8px; font-size: 13px; }
+    .gate__keys { margin: 12px 0 13px; padding: 10px 0 2px; }
+    .gate__key { padding: 2px 0; }
+    .gate__enter { min-height: 46px; }
+    .gate__note { margin: 10px 0 0; font-size: 11px; }
+  }
+  /* Short and wide is the one shape a stacked card cannot use: the still and
+     the text fight over the same 390 pixels of height. Side by side they do
+     not, and the still gets its height back. */
+  @media (min-width: 640px) and (max-height: 560px) {
+    .gate__card { width: min(900px, 100%); display: grid; grid-template-columns: 38% minmax(0, 1fr); }
+    .gate__still { height: 100%; max-height: none; }
+  }
+  .touch {
+    position: fixed;
+    z-index: 5;
+    left: max(18px, env(safe-area-inset-left));
+    bottom: max(22px, env(safe-area-inset-bottom));
+    /* Only the pad takes input. Everything else on the screen stays a surface
+       you can drag to look, which is the whole point of there being one
+       control rather than two. */
+    pointer-events: none;
+  }
+  .touch__walk {
+    display: grid;
+    place-items: center;
+    width: 84px;
+    height: 84px;
+    padding: 0;
+    color: rgba(232, 243, 226, .62);
+    border: 1px solid rgba(232, 243, 226, .26);
+    border-radius: 50%;
+    background: rgba(10, 16, 12, .22);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    pointer-events: auto;
+    touch-action: none;
+    transition: background .12s ease, border-color .12s ease, transform .12s ease;
+  }
+  .touch__walk.is-down {
+    color: #eaf6e4;
+    border-color: rgba(200, 230, 190, .5);
+    background: rgba(154, 198, 138, .26);
+    transform: scale(.955);
+  }
+  .touch__arrow {
+    width: 17px;
+    height: 17px;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: translateY(3px) rotate(-45deg);
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="view"></canvas>
+<div id="boot">jungle trail</div>
+<script type="module" src="./src/main.js"></script>
+<script src="../__i18n.js"></script></body>
+</html>

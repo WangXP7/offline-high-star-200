@@ -1,0 +1,62 @@
+table.board {
+	border-collapse: collapse;
+
+	td {
+		position: relative;
+		border: 1px solid transparent;
+		padding: 0;
+		--b-thick: calc(1px * var(--border-thick)) solid black;
+		--b-thin: calc(1px * var(--border-thin)) solid black;
+
+		&.signal::after {
+			content: "";
+			display: block;
+			position: absolute;
+			left: 0;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			.-signal(lime);
+		}
+
+		&.center {
+			background-color: var(--center-bg);
+			--suffix: inset red;
+
+			&.left   { box-shadow: 4px 0 1px -2px var(--suffix); }
+			&.right  { box-shadow: -4px 0 1px -2px var(--suffix); }
+			&.top    { box-shadow: 0 4px 1px -2px var(--suffix); }
+			&.bottom { box-shadow: 0 -4px 1px -2px var(--suffix); }
+
+			&.left.top     { box-shadow: 2px 2px 1px var(--suffix); }
+			&.right.top    { box-shadow: -2px 2px 1px var(--suffix); }
+			&.left.bottom  { box-shadow: 2px -2px 1px var(--suffix); }
+			&.right.bottom { box-shadow: -2px -2px 1px var(--suffix); }
+		}
+	}
+
+	tr:not(:first-child):not(:last-child) td:not(:first-child):not(:last-child) {
+		border: var(--b-thin);
+	}
+
+	tr:first-child td:not(:first-child):not(:last-child) {
+		border-bottom: var(--b-thick);
+	}
+
+	tr:last-child td:not(:first-child):not(:last-child) {
+		border-top: var(--b-thick);
+	}
+
+	tr:not(:first-child):not(:last-child) td:first-child {
+		border-right: var(--b-thick);
+	}
+
+	tr:not(:first-child):not(:last-child) td:last-child {
+		border-left: var(--b-thick);
+	}
+
+	.dummy {
+		width: calc(var(--tile-size) * 1px);
+		height: calc(var(--tile-size) * 1px);
+	}
+}

@@ -1,0 +1,60 @@
+#game {
+	.pool {
+		display: flex;
+		padding: 8px 0;
+		border-bottom: 1px solid #000;
+
+		h2 {
+			font-size: inherit;
+			width: calc(var(--tile-size) * 1px);
+			margin: 0;
+			align-self: center;
+		}
+
+		.dice {
+			border: 1px solid #000;
+			border-radius: 6px;
+			background-color: #fff;
+			overflow: hidden;
+
+			&.lake { background-color: rgba(100, 200, 255, 0.2); }
+			&.forest { background-color: rgba(200, 255, 100, 0.2); }
+
+			&.pending {
+				.-signal(lime);
+			}
+
+			&.blocked {
+				.-signal(red);
+			}
+
+			&.disabled {
+				opacity: 0.4;
+			}
+
+			+ .dice { margin-left: 8px; }
+		}
+
+		button {
+			--size: calc(var(--tile-size) + 2);
+			cursor: pointer;
+			margin-left: 8px;
+			width: calc(var(--size) * 1px);
+			height: calc(var(--size) * 1px);
+		}
+	}
+
+	#multi-setup {
+		margin-top: 16px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		min-width: var(--board-width);
+
+		.-menu;
+	}
+
+	.wait {
+		text-align: center;
+	}
+}

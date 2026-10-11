@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talha - Asteroids Game</title>
+
+    <!-- 👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻-->
+    <!-- Also uploaded the demo of this code in a gif : https://c.tenor.com/x8v1oNUOmg4AAAAd/tenor.gif-->
+    <!-- 👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻-->
+
+    <!-- 👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻-->
+    <!-- More html-css-js Games Calculators Games Cards Elements Projects on https://www.github.com/he-is-talha -->
+    <!-- 👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻-->
+
+    <link rel="icon" href="https://i.ibb.co/M6KTWnf/pic.jpg" />
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="wrapper">
+      <div id="levelScreen" class="level-screen">
+        <div class="level-header">
+          <h1>Asteroids</h1>
+          <button type="button" id="helpBtnLevel" class="help-btn" aria-label="How to play">?</button>
+        </div>
+        <p>Choose difficulty</p>
+        <div class="level-buttons">
+          <button type="button" data-level="easy" class="level-btn">
+            <span class="level-name">Easy</span>
+            <span class="level-desc">5 lives · 3 rocks · 3 waves · 0.8× · 220ms · 3 HS</span>
+          </button>
+          <button type="button" data-level="medium" class="level-btn">
+            <span class="level-name">Medium</span>
+            <span class="level-desc">3 lives · 4 rocks · 5 waves · 1.0× · 180ms · UFO@3 · 1 HS</span>
+          </button>
+          <button type="button" data-level="hard" class="level-btn">
+            <span class="level-name">Hard</span>
+            <span class="level-desc">2 lives · 5 rocks · 7 waves · 1.35× · 140ms · UFO@2 · 0 HS</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="gameScreen" class="game-screen hidden">
+        <header class="header">
+          <h1>Asteroids</h1>
+          <button type="button" id="helpBtnGame" class="help-btn" aria-label="How to play">?</button>
+          <span class="level-badge" id="levelBadge">Easy</span>
+          <div class="header-actions">
+            <span id="hud" class="hud">Score: 0 · Lives: 5 · Wave: 1 · HS: 3</span>
+            <button type="button" id="changeLevelBtn" class="btn btn-ghost">Change Level</button>
+            <button type="button" id="newGameBtn" class="btn">New Game</button>
+          </div>
+        </header>
+        <canvas id="gameCanvas" width="480" height="560"></canvas>
+        <div class="touch-controls">
+          <button type="button" id="rotLeftBtn" class="ctrl-btn" aria-label="Rotate left">↺</button>
+          <button type="button" id="rotRightBtn" class="ctrl-btn" aria-label="Rotate right">↻</button>
+          <button type="button" id="thrustBtn" class="ctrl-btn" aria-label="Thrust">▲</button>
+          <button type="button" id="fireBtn" class="ctrl-btn fire" aria-label="Fire">Fire</button>
+          <button type="button" id="hyperspaceBtn" class="ctrl-btn hs" aria-label="Hyperspace">HS</button>
+        </div>
+        <div id="resultOverlay" class="result-overlay hidden">
+          <div class="result-box">
+            <h2 id="resultTitle"></h2>
+            <p id="resultMsg"></p>
+            <div class="result-actions">
+              <button type="button" id="playAgainBtn" class="btn btn-large">Play Again</button>
+              <button type="button" id="changeLevelFromResultBtn" class="btn btn-ghost">Change Level</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="helpOverlay" class="help-overlay hidden">
+      <div class="help-modal">
+        <div class="help-header">
+          <h2>How to play</h2>
+          <button type="button" id="helpClose" class="help-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="help-body">
+          <p>Destroy all asteroids across the wave quota to win. Large rocks split into medium, then small. Avoid collisions and UFO fire.</p>
+          <ul>
+            <li>Rotate with ← → or A/D (or on-screen buttons).</li>
+            <li>Thrust with ↑ or W.</li>
+            <li>Fire with Space.</li>
+            <li>Hyperspace with Shift (when available) — random teleport that avoids rocks when possible.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

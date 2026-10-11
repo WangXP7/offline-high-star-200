@@ -1,0 +1,70 @@
+<html><head>
+	<link rel="stylesheet" type="text/css" href="../style/SeshatPlus/stylesheet.css">
+	<script src="../js/jspdf.umd.min.js"></script>
+  	<script src="../js/svg2pdf.umd.min.js"></script>
+	<script src="../js/svg.js"></script>
+	<script src="../js/SeshatPlus-normal.js"></script>
+	<script src="../js/generator.js"></script>
+	<script src="../js/core.js"></script>
+</head>
+<body onload="onl()">	
+</body><script>
+
+function createDungeon() {
+
+	var core=new Core({
+		root:"../"
+	});
+	core.initialize(()=>{
+		var dungen=core.generateAdventureDaily(0,{
+			footer:"P",
+			svgPatcher:(svg)=>{
+				return svg.replace(/Seshat/g,"SeshatPlus");
+			},
+			symbolsMap:{
+				items:{
+
+					// Poker symbols version
+					// mark:"&#10007;",
+					// map:["0","&#9824;","&#9829;","&#9827;","&#9830;","1","2","3","4","5"],
+					// roomsTable:["[0]","&#9824;","&#9829;","&#9827;","&#9830;","[1]","[2]","[3]","[4]","[5]"]
+					
+					// Capital letters version
+					mark:"&#10799;",
+					map:["0","A","B","C","D","E","F","G","H","I"],
+					roomsTable:["[0]"," &#7424;&#8414; "," &#665;&#8414; "," &#7428;&#8414; "," &#7429;&#8414; "," &#7431;&#8414; "," &#1171;&#8414; "," &#610;&#8414; "," &#668;&#8414; "," &#618;&#8414; "]
+				},
+				rooms:{
+					label:"",
+					symbol:"",
+					markRoom:"&#9746; ",
+					notMarkRoom:"&#9744; ",
+					unspacedLabel:"room"
+				},
+				actions:{
+					then:" &raquo; ",
+					and:" & ",
+					newRule:" &#124; ",
+					or:" or ",
+					move:"move",
+					pay:"&#9995; "
+				},
+				equipment:{
+					pay:"&#9995; ",
+					lose:"&#9746; ",
+					get:"&#9744; "
+				}
+			}
+		});
+		dungen.prepare();
+		dungen.createSVG(svg=>{			
+			dungen.showSVG();
+		});
+	});
+}
+
+function onl() {
+	createDungeon();
+}
+
+</script>

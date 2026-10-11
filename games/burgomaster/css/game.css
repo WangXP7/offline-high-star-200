@@ -1,0 +1,481 @@
+html {
+  height: 100%;
+}
+
+body {
+  font-family: "Arial", sans-serif;
+  line-height: 1.45;
+  min-height: 100%;
+}
+
+
+.btn {
+  background: linear-gradient(#FDFDFD, #F0F0F0);
+  border: 1px solid #999;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #F1F1F1;
+}
+
+.btn:active {
+  box-shadow: inset 0px 0px 6px 1px rgba(99, 99, 99, 0.5);
+}
+
+#saveGameButton,
+#loadGameButton,
+#buttonPutOutFire,
+#buttonDeathPenalty {
+  position: absolute;
+  padding: 4px;
+}
+
+#loadGameButton:hover,
+#saveGameButton:hover {
+  transition: 0.4s;
+  cursor: pointer;
+  background-color: #555; 
+  color: #fff; 
+  border-color: #fff;
+}
+
+#saveGameButton {
+  font-weight: bold;
+  transition: 0.4s;
+  width: 140px;
+  height: 30px;
+  bottom:20px;
+  left: 20px
+}
+
+#loadGameButton {
+  font-weight: bold;
+  width: 140px;
+  height: 30px;
+  bottom: 60px;
+  left: 20px;
+  display: none;
+}
+
+#buttonPutOutFire {
+  top:270px;
+  left: 20px;
+  display: none;
+}
+
+#buttonDeathPenalty {
+  top:360px;
+  left: 20px;
+  display: none;
+}
+
+
+#htmlGame {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.menu-panel {
+  display: flex;
+  border:  1px solid #ccc;
+  border-bottom: none;
+  background: #f1f1f1;
+}
+
+.resource-panel {
+  display: flex;
+  border:  1px solid #ccc;
+  background: #f1f1f1;
+  padding: 6px 12px;
+}
+
+.resource {
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+}
+
+.resource-icon {
+  width: 20px;
+  margin-right: 5px;
+}
+
+.gold-val, .population-val, .gems-val, .time-val {
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+}
+
+#pop_img {
+  width: 17px;
+}
+
+#gems_img {
+  width: 22px;
+}
+
+#Discord {
+  padding: 0;
+}
+
+
+.content-panel {
+  height: 480px;
+  border: 1px solid #ccc;
+  border-top: none;
+  overflow: hidden;
+  position: relative;
+}
+
+.info-panel {
+  border: 1px solid #ccc;
+  border-top: 0;
+}
+
+.info-panel__actions {
+  padding: 2px;
+  display: flex;
+}
+
+.info-panel__actions > button {
+  padding: 4px;
+  min-width: 40px;
+}
+
+.info-panel__history {
+  min-height: 100px;
+  max-height: 150px;
+  height: 100%;
+  overflow-y: auto;
+  border-top: 1px solid #ccc;
+}
+
+.info-panel__history.active {
+  display: none;
+}
+
+.info-panel__form {
+  padding: 2px;
+  border-top: 1px solid #ccc;
+  display: flex;
+}
+
+.info-panel__form-msg {
+  flex: 1 1 auto;
+  margin: 0 10px;
+}
+
+#inp_nickname,
+#btnSend {
+  width: 100px;
+}
+
+#msg_out {
+  width: 100%;
+}
+
+
+.tab-link {
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  font-size: 17px;
+  border: none;
+}
+
+.tab-link:hover {
+  background-color: #ddd;
+}
+
+.tab-link.active {
+  background: #ccc;
+}
+
+.tab {
+  display: none;
+  width: 800px;
+  height: 480px;
+}
+
+.tab.active {
+  display: block;
+  position: relative;
+}
+
+#tabBuilding.active {
+  display: flex;
+  flex-direction: column;
+}
+
+.building-wrapper {
+  flex: 0 0 80%;
+  overflow-y: auto;
+  background-color: #FFFEF5;
+}
+
+.building-list {
+  display: flex;
+  flex-wrap: wrap;
+  width: 80%;
+  justify-content: space-between;
+  padding: 5px 10px 0;
+  margin: 0 auto;
+}
+
+.building-card {
+  max-width: 184px;
+  width: 100%;
+  height: 200px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.building-card__img {
+  display: flex;
+  flex: 1;
+  background-color: #EAE9E1;
+  display: flex;
+  border-radius: 30px 30px 0 0;
+}
+
+.building-card__img > img {
+  margin: auto;
+}
+
+.building-card__action {
+  height: 56px;
+  border-radius: 0 0 30px 30px;
+  overflow: hidden;
+  background-color: #d1cfbd;
+}
+
+#lbl_online {
+  margin-left: 20px;
+}
+
+.building-card__action > button {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #627CDD;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.building-card__action > button:hover {
+  background-color: #4b6ad8;
+}
+
+
+.building-description {
+  flex: 0 0 20%;
+  border-top: 1px solid #ccc;
+  padding: 5px;
+  font-size: 12px;
+}
+
+#tabInn,
+#tabBlackmarket {
+  padding: 12px;
+}
+
+#lblAvailableForHire {
+  margin-top: 20px;
+}
+
+#btnHireHero {
+  width: 160px;
+  margin: 0 auto;
+  display: block;
+}
+
+#pop_img {
+  width: 17px;
+}
+
+#gems_img {
+  width: 22px;
+}
+
+
+#events_graphics {
+  position: absolute;
+  top: 68px;
+  left: 110px;
+}
+
+.canvas-modal {
+  position: absolute;
+  left: 20px;
+  top: 100px;
+  border-radius: 0.3rem;
+  border: 1px solid #333;
+  display:none;
+}
+
+.canvas-modal.active-modal {
+  display: block;
+}
+
+
+.inventory-item {
+  box-sizing: border-box;
+  padding: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  width: 100%;
+  border: 1px solid #333;
+  background-color: #f1f1f1;
+  font-size: 15px;
+}
+
+.inventory-item__wrapper-img {
+  flex: 0 0 40px;
+  height: 40px;
+  border: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #9f9f9f;
+}
+
+.inventory-item__wrapper-desc {
+  display: flex;
+  flex-direction: column;
+  margin-left: 15px;
+  margin-right: 15px;
+  flex: 1 1 100%;
+}
+
+.inventory-item__name {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  margin-top: 0;
+}
+
+.inventory-item__btn {
+  width: 120px;
+  height: 21px;
+  align-self: center;
+}
+
+#tabBlackMarketTraderGoods,
+#tabBlackMarketHeroGoods {
+  overflow-y: auto;
+  height: 100%;
+  max-height: 175px;
+}
+.hiring-grid {
+  grid-template-columns: repeat(80, 1.25%);
+}
+
+.price-val {
+  background-color: #b9b9b9;
+  padding: 2px 8px;
+  margin-left: 12px;
+  font-size: 15px;
+  display: inline-block;
+}
+
+.shop-title {
+  margin: 0 10px 6px;
+}
+
+.dark-theme.inventory-item {
+  background-color: #202020;
+}
+
+.dark-theme.inventory-item__name {
+  color: #fff !important;
+}
+
+#heroEquipment {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  max-height: 100px;
+  overflow: auto;
+}
+
+#heroEquipment > .inventory-item__wrapper-img {
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+
+#aboutGameWrapper {
+  height: 100%;
+  padding: 5px 20px 10px;
+  overflow-y: auto;
+}
+
+#lblAboutGame > h1,
+#lblAboutGame > h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.is-tutorial {
+  visibility: hidden !important;
+}
+
+#tabInn button.btn {
+  font-size: 13px;
+}
+
+#heroUpkeep {
+  margin-top: 10px;
+}
+
+#heroStats {
+  margin: 10px 0;
+}
+
+#tabAutocampaignJournal,
+#tabAutocampaignBattle {
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.dynamicCellsNight {
+  color: #c1c1c1;
+}
+
+.dynamicCellsDay {
+  color: #000000;
+}
+
+#lblGoodsForSale,
+#lblGoodsForBuying {
+  margin-bottom: 12px;
+}
+
+.accordion,
+.accordion-battle {
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.accordion-header,
+.accordion-battle-header {
+  padding: 8px 10px;
+  border: 1px solid #333;
+  background-color: #f1f1f1;
+}
+
+.accordion-body,
+.accordion-battle-body {
+  display: none;
+  padding: 10px;
+}
+
+.accordion.active > .accordion-body,
+.accordion-battle.active > .accordion-battle-body {
+  display: block;
+}

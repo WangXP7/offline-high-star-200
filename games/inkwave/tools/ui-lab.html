@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>INKWAVE — UI Lab</title>
+  <link rel="stylesheet" href="../styles/ui.css">
+  <script type="importmap">{"imports":{"three":"../vendor/three/build/three.module.js","three/addons/":"../vendor/three/jsm/"}}</script>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #7cc8ef; }
+    /* ---- fake "3D scene" behind the UI: busy, bright, saturated — to judge legibility ---- */
+    #scene { position: fixed; inset: 0; overflow: hidden; }
+    #scene .sky { position: absolute; inset: 0; background: linear-gradient(180deg, #5ab8f0 0%, #9fdcff 38%, #e9f7ff 52%); }
+    #scene .sun { position: absolute; left: 70%; top: 8%; width: 16vh; height: 16vh; border-radius: 50%; background: radial-gradient(circle, #fffbe6 0 35%, rgba(255, 248, 200, .55) 36%, transparent 70%); }
+    #scene .cloud { position: absolute; height: 7vh; border-radius: 999px; background: #fff; opacity: .9; filter: blur(1px); animation: cloud 60s linear infinite; }
+    #scene .cloud::before { content: ''; position: absolute; left: 20%; top: -60%; width: 45%; height: 140%; border-radius: 50%; background: #fff; }
+    @keyframes cloud { from { translate: -30vw 0; } to { translate: 130vw 0; } }
+    #scene .skyline { position: absolute; left: 0; right: 0; top: 40%; height: 13%; background:
+      linear-gradient(90deg, transparent 0 4%, #9fb6d8 4% 7%, transparent 7% 11%, #a9bddc 11% 13%, transparent 13% 60%, #9fb6d8 60% 64%, transparent 64% 70%, #b3c6e2 70% 72%, transparent 72% 88%, #a2b8d9 88% 93%, transparent 93%);
+      clip-path: polygon(0 60%, 4% 60%, 4% 10%, 7% 10%, 7% 60%, 11% 60%, 11% 30%, 13% 30%, 13% 60%, 60% 60%, 60% 0, 64% 0, 64% 60%, 70% 60%, 70% 40%, 72% 40%, 72% 60%, 88% 60%, 88% 20%, 93% 20%, 93% 60%, 100% 60%, 100% 100%, 0 100%); opacity: .8; }
+    #scene .sea { position: absolute; left: 0; right: 0; top: 50%; bottom: 0; background: linear-gradient(180deg, #2bb5e8, #1978c8); }
+    #scene .floorwrap { position: absolute; left: -30%; right: -30%; top: 52%; height: 90%; perspective: 60vh; perspective-origin: 50% 0; }
+    #scene .floor { position: absolute; inset: 0; transform: rotateX(62deg); transform-origin: 50% 0; background: #f4ecdc;
+      background-image: linear-gradient(90deg, rgba(0, 0, 0, .06) 2px, transparent 2px), linear-gradient(0deg, rgba(0, 0, 0, .06) 2px, transparent 2px); background-size: 12vh 12vh; }
+    #scene .splat { position: absolute; border-radius: 45% 55% 50% 50% / 55% 45% 55% 45%; opacity: .95; }
+    #scene .crate { position: absolute; background: #fff7e8; border-radius: 1.2vh; box-shadow: 0 1.5vh 0 #d9cbb0, 0 3vh 3vh rgba(0, 0, 0, .15); }
+    #scene .blob { position: absolute; border-radius: 50%; filter: blur(5vh); opacity: .55; mix-blend-mode: multiply; animation: drift 11s ease-in-out infinite alternate; }
+    @keyframes drift { to { translate: 6vw -4vh; scale: 1.15; } }
+    #scene .char { position: absolute; display: none; flex-direction: column; align-items: center; filter: drop-shadow(0 2vh 1.5vh rgba(0, 0, 0, .25)); }
+    #scene .char svg { width: 100%; height: auto; display: block; }
+    #scene .char .w { width: 70%; margin-top: -3vh; }
+    #scene .char .shadow { width: 70%; height: 3vh; margin-top: -1vh; border-radius: 50%; background: rgba(0, 0, 0, .18); }
+    body[data-screen="loadout"] #hero { display: flex; left: 64%; top: 22%; width: 26vh; }
+    body[data-screen="main"] #hero, body[data-screen="setup"] #hero { display: flex; left: 55%; top: 30%; width: 22vh; }
+    body[data-screen="results"] #scene .dancer { display: flex; }
+    #scene .dancer { top: 13%; width: 13vh; animation: dance .6s ease-in-out infinite alternate; }
+    @keyframes dance { to { translate: 0 -2vh; rotate: 6deg; } }
+
+    /* ---- lab control panel ---- */
+    #lab { position: fixed; left: 8px; top: 8px; z-index: 100; width: 250px; max-height: calc(100vh - 16px); overflow: auto; padding: 10px; border-radius: 12px;
+      background: rgba(10, 8, 18, .9); color: #fff; font: 12px/1.3 system-ui, sans-serif; box-shadow: 0 6px 24px rgba(0, 0, 0, .4); }
+    #lab.hidden { display: none; }
+    #lab h4 { margin: 8px 0 4px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; opacity: .6; }
+    #lab button { margin: 2px; padding: 4px 7px; border: 0; border-radius: 6px; background: #2c2540; color: #fff; font: 600 11px system-ui; cursor: pointer; }
+    #lab button:hover { background: #4a3f6a; }
+    #lab .log { margin-top: 6px; padding: 6px; height: 90px; overflow: auto; border-radius: 6px; background: rgba(255, 255, 255, .06); font: 10px/1.35 ui-monospace, monospace; white-space: pre-wrap; }
+    #lab label { display: inline-flex; gap: 4px; align-items: center; margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <div id="scene">
+    <div class="sky"></div><div class="sun"></div>
+    <div class="cloud" style="top:10%;width:18vw;animation-delay:-10s"></div>
+    <div class="cloud" style="top:20%;width:12vw;animation-delay:-38s;animation-duration:80s"></div>
+    <div class="skyline"></div>
+    <div class="sea"></div>
+    <div class="floorwrap"><div class="floor" id="floor"></div></div>
+    <div class="blob" style="left:-5vw;top:30vh;width:40vw;height:40vw;background:var(--lab-a)"></div>
+    <div class="blob" style="right:-8vw;top:45vh;width:44vw;height:44vw;background:var(--lab-b);animation-delay:-5s"></div>
+    <div class="blob" style="left:38vw;top:62vh;width:22vw;height:22vw;background:var(--lab-a);animation-delay:-3s"></div>
+    <div class="char" id="hero"></div>
+    <div class="char dancer" style="left:36%"></div>
+    <div class="char dancer" style="left:44%;animation-delay:-.3s"></div>
+    <div class="char dancer" style="left:52%;animation-delay:-.15s"></div>
+    <div class="char dancer" style="left:60%;animation-delay:-.45s"></div>
+  </div>
+  <div id="ui-root"></div>
+  <div id="lab"></div>
+  <script type="module" src="./ui-lab.js"></script>
+</body>
+</html>

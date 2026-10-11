@@ -1,0 +1,296 @@
+// Is the lesson load-bearing? (#254)
+//
+// The repo already proves levels are WINNABLE. What it has never checked is
+// the other half of the #184 discipline: that a level is LOST when its own
+// mechanic is ignored. A level that passes without the thing it teaches is not
+// a lesson, it is a cutscene with a timer.
+//
+// Measuring that across chapter 2 turned up something the issue did not
+// predict. Two levers are available on every one of these levels: the service
+// the briefing teaches, and the $100 Compute tier (capacity 4 -> 10) that every
+// budget here can afford. Removing them one at a time says which one the level
+// actually turns on (five seeds, with the levels' own burst patterns firing):
+//
+//   level  teaches   taught+tier  tier only  taught only  neither
+//   L3     CDN         5/5          0/5        5/5         0/5
+//   L4     Cache       5/5          5/5        2/5         2/5
+//   L5     Queue       5/5          0/5        0/5         0/5
+//   L6     Replica     5/5          5/5        0/5         0/5
+//   L7     Search      5/5          5/5        0/5         0/5
+//   L8     NoSQL       5/5          5/5        0/5         0/5
+//   L9     API GW      5/5          0/5        0/5         0/5
+//   L12    2nd WAF     5/5          0/5        0/5         0/5
+//
+// L4 still passes on an untouched board. On three more (6, 7, 8) the taught
+// node is decorative in BOTH directions: without the tier they lose even when
+// it is correctly wired, and with the tier they win without it. The cause is
+// capacity — Compute runs 4 concurrent at 600ms, about 6.7 req/s, and those
+// levels arrive at 6-7 rps — so Compute binds before any downstream store can
+// matter. For those four, chapter 2 mechanically teaches "buy a bigger box".
+//
+// L3, L5 and L12 are what a working lesson looks like: withhold the CDN, the
+// queue or the second WAF and the level is lost, whatever else is bought.
+// Neither a spike nor a malicious share is something more CPU absorbs.
+//
+// L3 is the strongest shape of the three, and the only one where the taught
+// node is not merely necessary but SUFFICIENT: the CDN alone wins 5/5 while
+// the Compute tier alone, a DB tier, auto-scaling, and tier-plus-auto-scaling
+// each lose 5/5. It got there by making its own briefing true — "your site
+// went viral" is a spike, and it did not have one.
+//
+// L9 was BROKEN — no legal build won it — until its gateway was recalibrated
+// (#276): the tier-1 API Gateway limit sat at 30 req/s, above even a tier-3
+// Compute's 30 req/s ceiling, so the limiter never engaged and the burst
+// reached Compute intact. Dropped to 15 (src/config.js, campaign-tier only —
+// survival's upgraded tiers are untouched), the gateway now throttles the
+// burst instead of letting it hard-fail, and the level's own lesson finally
+// binds: reference build 5/5, gateway withheld 0/5.
+//
+// An earlier revision of this file recorded L5 as hollow and L9 as winnable.
+// Both were wrong for the same reason: `burstPattern` schedules its spawns on
+// real setTimeout, the harness ran a synchronous loop, and all five burst
+// levels were measured as if they had no bursts. campaign-play.mjs now
+// advances timers per frame, calibrated on L21.
+//
+// The only shipped tuning this suite's history has touched is L3's spike
+// (#254) and L9's gateway limit (#276), each with its own reason recorded in
+// the level or the config. Everything else it pins rather than moves: the
+// hollow set can only ever SHRINK, and the reference solutions must keep
+// winning.
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { achievements } from "../../src/achievements/achievements.js";
+import { createConnection, deleteConnection } from "../../src/sim/topology.js";
+import { REAL_RANDOM, placeAt, play, svc } from "../helpers/campaign-play.mjs";
+import { STATE, resetWorld } from "../helpers/sim-world.mjs";
+
+// Every test here plays several full campaign levels end to end, which is
+// seconds of simulation rather than milliseconds of assertion. Vitest's 5s
+// default is comfortable on an idle machine and not on a busy one: measured
+// here, the same tests run about ten times slower when the CPU is saturated,
+// which is exactly the condition a shared CI runner is in. A flake that only
+// appears under load is worse than a slow test, so the budget is explicit.
+vi.setConfig({ testTimeout: 60_000 });
+
+const SEEDS = [1, 2, 42];
+
+// Each level's own briefed lesson, split into the two levers so either can be
+// withheld. `taught` places and wires the service the level is about; `tier`
+// buys the Compute upgrade.
+const tier = () => {
+    const compute = svc("compute");
+    const before = compute.tier;
+    compute.upgrade();
+    // Service.upgrade() returns silently when the money is not there, so a
+    // level whose budget cannot afford its own reference build quietly
+    // measures something other than the row it is printed under. L3 sat like
+    // that: budget 150 against a $60 CDN plus a $100 tier, so every number it
+    // ever produced in the "taught + tier" column was really taught-only, and
+    // nothing said so. Loud is better.
+    if (compute.tier === before) {
+        throw new Error(
+            `L${STATE.campaign.level?.id}: the Compute tier did not land ` +
+                `($${Math.round(STATE.money)} left) — this level cannot afford ` +
+                `the build this file claims to measure`
+        );
+    }
+};
+
+const LEVELS = {
+    3: {
+        teaches: "CDN",
+        taught: () => {
+            const cdn = placeAt("cdn", -15, 12);
+            createConnection("internet", cdn.id);
+            createConnection(cdn.id, svc("s3").id);
+        },
+    },
+    4: {
+        teaches: "Cache",
+        taught: () => {
+            const cache = placeAt("cache", 5, 8);
+            createConnection(svc("compute").id, cache.id);
+            createConnection(cache.id, svc("db").id);
+        },
+    },
+    5: {
+        teaches: "Queue",
+        taught: () => {
+            const sqs = placeAt("sqs", -5, 10);
+            createConnection(svc("alb").id, sqs.id);
+            createConnection(sqs.id, svc("compute").id);
+        },
+    },
+    6: {
+        teaches: "Replica",
+        taught: () => {
+            const replica = placeAt("replica", 12, 10);
+            createConnection(replica.id, svc("db").id);
+            createConnection(svc("cache").id, replica.id);
+        },
+    },
+    7: {
+        teaches: "Search",
+        taught: () => {
+            const search = placeAt("search", 12, -10);
+            createConnection(svc("compute").id, search.id);
+        },
+    },
+    8: {
+        teaches: "NoSQL",
+        taught: () => {
+            const nosql = placeAt("nosql", 12, 10);
+            createConnection(svc("compute").id, nosql.id);
+        },
+    },
+    9: {
+        teaches: "API Gateway",
+        taught: () => {
+            // alb -> apigw is not a legal edge (src/sim/topology.js
+            // isValidEdge — a gateway sits BEFORE a balancer, never after
+            // one), so an earlier version of this recipe that wired it that
+            // way silently failed to connect: createConnection() rejects an
+            // invalid pair without throwing. The gateway sat on the board
+            // receiving no traffic at all, which is a stronger and false
+            // form of "hollow" than any measurement here was meant to prove.
+            // The level's own pre-built waf -> alb edge has to come out too,
+            // or the balancer round-robins between the direct path and the
+            // gateway and only half the traffic is ever rate-limited.
+            const waf = svc("waf");
+            const alb = svc("alb");
+            deleteConnection(waf.id, alb.id);
+            const gw = placeAt("apigw", -15, 8);
+            createConnection(waf.id, gw.id);
+            createConnection(gw.id, alb.id);
+        },
+    },
+    12: {
+        teaches: "a second WAF",
+        taught: () => {
+            const waf2 = placeAt("waf", -20, 10);
+            createConnection("internet", waf2.id);
+            createConnection(waf2.id, svc("alb").id);
+        },
+    },
+};
+
+// Today's answer, measured. Membership means "this level still wins with its
+// own lesson withheld". The assertion below lets this set shrink and never
+// grow, so fixing a level is a one-line deletion and shipping a new hollow one
+// is a red build. L9 is absent because it wins with NOTHING withheld either
+// (#276) — broken is a different state from hollow, and it is asserted apart.
+const KNOWN_HOLLOW = new Set([4, 6, 7, 8]);
+
+// Every test below asks one of four questions about a level, and several ask
+// the same one: "the hollow set never grows" replays every tier-only build the
+// per-level tests have just played, and the L5/L12 and Compute-tier blocks
+// repeat others. That was 114 full campaign plays for 69 distinct answers, and
+// the replaying test was the one that timed out on a busy machine.
+//
+// A play is a pure function of (level, seed, build) — the PRNG is pinned, the
+// timers are fake and play() resets the world first — so each answer is
+// computed once per file and reused. A test run on its own with -t simply
+// computes what it needs.
+const BUILDS = {
+    briefed: (id) => () => {
+        LEVELS[id].taught();
+        tier();
+    },
+    tierOnly: () => tier,
+    taughtOnly: (id) => LEVELS[id].taught,
+    untouched: () => () => {},
+};
+
+const answers = new Map();
+
+function winRate(id, build) {
+    const key = `${id}:${build}`;
+    if (!answers.has(key)) {
+        const recipe = BUILDS[build](Number(id));
+        answers.set(
+            key,
+            SEEDS.filter((seed) => play(Number(id), seed, recipe).outcome === "win").length
+        );
+    }
+    return answers.get(key);
+}
+
+afterEach(() => {
+    Math.random = REAL_RANDOM;
+    resetWorld();
+    achievements._reloadForTests();
+});
+
+describe("every reference solution wins the level it belongs to (#254)", () => {
+    for (const [id, level] of Object.entries(LEVELS)) {
+        it(`L${id} — ${level.teaches}, played as briefed`, () => {
+            expect(winRate(id, "briefed")).toBe(SEEDS.length);
+        });
+    }
+});
+
+describe("and the level is LOST when its own mechanic is ignored", () => {
+    for (const [id, level] of Object.entries(LEVELS)) {
+        const n = Number(id);
+        it(`L${id} — ${level.teaches} withheld, everything else the same`, () => {
+            const wins = winRate(id, "tierOnly");
+            if (KNOWN_HOLLOW.has(n)) {
+                // Recorded, not endorsed. The failure this guards against is a
+                // level QUIETLY joining the set — so the only thing asserted
+                // here is that the level is still in the state we wrote down.
+                expect(wins, `L${id} is recorded as hollow`).toBeGreaterThan(0);
+            } else {
+                expect(wins, `L${id}'s lesson must be load-bearing`).toBe(0);
+            }
+        });
+    }
+
+    it("the hollow set never grows", () => {
+        const measured = Object.keys(LEVELS)
+            .map(Number)
+            .filter((id) => winRate(id, "tierOnly") > 0);
+        const unexpected = measured.filter((id) => !KNOWN_HOLLOW.has(id));
+        expect(
+            unexpected,
+            "a level began passing without the service it teaches — either the " +
+                "tuning drifted or a new level shipped hollow"
+        ).toEqual([]);
+    });
+
+    it("L5 and L12 show the shape a fixed level has", () => {
+        // Withhold the queue and the level is lost however much Compute is
+        // bought: a spike is not something a faster box absorbs. This is the
+        // row that was recorded backwards before the harness ran the timers.
+        expect(winRate(5, "tierOnly")).toBe(0);
+        expect(winRate(5, "briefed")).toBe(SEEDS.length);
+    });
+
+    it("L12 shows it too, against a malicious share instead of a spike", () => {
+        // Kept explicit because it is the target, not a passing detail: what a
+        // second WAF defends against cannot be absorbed by a faster box, so no
+        // amount of vertical scaling substitutes for it.
+        expect(winRate(12, "tierOnly")).toBe(0);
+        expect(winRate(12, "briefed")).toBe(SEEDS.length);
+    });
+});
+
+describe("the Compute tier is the lever chapter 2 actually turns on", () => {
+    // The finding in one assertion. On these three the taught service loses on
+    // its own and the tier wins on its own — the level is a vertical-scaling
+    // exercise wearing an architecture briefing.
+    for (const id of [6, 7, 8]) {
+        it(`L${id} — ${LEVELS[id].teaches} alone loses, the tier alone wins`, () => {
+            expect(winRate(id, "taughtOnly"), `L${id} taught-only`).toBe(0);
+            expect(winRate(id, "tierOnly"), `L${id} tier-only`).toBe(SEEDS.length);
+        });
+    }
+
+    it("one level still passes on a board the player never touched", () => {
+        const untouched = [3, 4, 5, 9].filter((id) => winRate(id, "untouched") > 0);
+        // Asserting the defect so the fix has something to turn red. When a
+        // level here stops passing untouched, this list is what to edit — L3
+        // just did. L5 and L9 are probed and expected to be absent: L5's burst
+        // makes its queue load-bearing, and L9's recalibrated gateway (#276)
+        // means an untouched board drowns.
+        expect(untouched).toEqual([4]);
+    });
+});

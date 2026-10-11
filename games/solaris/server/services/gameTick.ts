@@ -1,0 +1,1139 @@
+import { DBObjectId } from "./types/DBObjectId";
+import { Carrier } from "./types/Carrier";
+import { Game } from "./types/Game";
+import { User } from "./types/User";
+import AIService from "./ai";
+import BattleRoyaleService from "./battleRoyale";
+import CarrierService from "./carrier";
+import DiplomacyService from "./diplomacy";
+import { DistanceService } from "@solaris/common";
+import GameService from "./game";
+import GameStateService from "./gameState";
+import { GameTypeService } from "@solaris/common";
+import HistoryService from "./history";
+import LeaderboardService, { GameWinner } from "./leaderboard";
+import StarMovementService from "./starMovement";
+import PlayerService from "./player";
+import ReputationService from "./reputation";
+import ResearchService from "./research";
+import SpecialistService from "./specialist";
+import StarService from "./star";
+import StarUpgradeService from "./starUpgrade";
+import { TechnologyService } from "@solaris/common";
+import UserService from "./user";
+import { CarrierActionWaypoint } from "./types/GameTick";
+import { Star } from "./types/Star";
+import { GameRankingResult } from "@solaris/common";
+import DiplomacyUpkeepService from "./diplomacyUpkeep";
+import CarrierGiftService from "./carrierGift";
+import CarrierMovementService, {
+    CarrierMovementReport,
+} from "./carrierMovement";
+import PlayerCycleRewardsService from "./playerCycleRewards";
+import StarContestedService from "./starContested";
+import PlayerReadyService from "./playerReady";
+import PlayerGalacticCycleCompletedEvent from "./types/internalEvents/PlayerGalacticCycleComplete";
+import InternalGamePlayerDefeatedEvent from "./types/internalEvents/GamePlayerDefeated";
+import InternalGamePlayerAFKEvent from "./types/internalEvents/GamePlayerAFK";
+import InternalGameEndedEvent from "./types/internalEvents/GameEnded";
+import PlayerAfkService from "./playerAfk";
+import ShipService from "./ship";
+import ScheduleBuyService from "./scheduleBuy";
+import { DateTime } from "luxon";
+import GameLockService from "./gameLock";
+import { logger } from "../utils/logging";
+import WaypointActionService from "./waypointAction";
+import CullWaypointsService from "./cullWaypoints";
+import { IStatisticsService } from "./types/IStatisticsService";
+import { CarrierTravelService } from "@solaris/common";
+import { INotificationService } from "./types/INotificationService";
+import { IEmailService } from "./types/IEmailService";
+
+import EventEmitter from "events";
+import CarrierCombatService from "./carrierCombat";
+import CombatProcessingService from "./combatProcessing";
+import { GameTickContext } from "./gameProcessing/context";
+import { IEventService } from "./types/IEventService";
+import { EventService } from "./event";
+import StatisticsService from "./statistics";
+import { NotificationService } from "./notification";
+import { EmailService } from "./email";
+
+const log = logger("Game Tick Service");
+
+export const GameTickServiceEvents = {
+    onGameEnded: "onGameEnded",
+};
+
+export default class GameTickService extends EventEmitter {
+    distanceService: DistanceService;
+    starService: StarService;
+    carrierService: CarrierService;
+    researchService: ResearchService;
+    playerService: PlayerService;
+    playerAfkService: PlayerAfkService;
+    historyService: HistoryService;
+    leaderboardService: LeaderboardService;
+    userService: UserService;
+    gameService: GameService;
+    technologyService: TechnologyService;
+    specialistService: SpecialistService;
+    starUpgradeService: StarUpgradeService;
+    reputationService: ReputationService;
+    aiService: AIService;
+    battleRoyaleService: BattleRoyaleService;
+    starMovementService: StarMovementService;
+    diplomacyService: DiplomacyService;
+    gameTypeService: GameTypeService;
+    gameStateService: GameStateService;
+    playerCycleRewardsService: PlayerCycleRewardsService;
+    diplomacyUpkeepService: DiplomacyUpkeepService;
+    carrierMovementService: CarrierMovementService;
+    carrierGiftService: CarrierGiftService;
+    starContestedService: StarContestedService;
+    playerReadyService: PlayerReadyService;
+    shipService: ShipService;
+    scheduleBuyService: ScheduleBuyService;
+    gameLockService: GameLockService;
+    waypointActionService: WaypointActionService;
+    cullWaypointsService: CullWaypointsService;
+    carrierTravelService: CarrierTravelService<DBObjectId>;
+    carrierCombatService: CarrierCombatService;
+    combatProcessingService: CombatProcessingService;
+
+    constructor(
+        distanceService: DistanceService,
+        starService: StarService,
+        carrierService: CarrierService,
+        researchService: ResearchService,
+        playerService: PlayerService,
+        playerAfkService: PlayerAfkService,
+        historyService: HistoryService,
+        leaderboardService: LeaderboardService,
+        userService: UserService,
+        gameService: GameService,
+        technologyService: TechnologyService,
+        specialistService: SpecialistService,
+        starUpgradeService: StarUpgradeService,
+        reputationService: ReputationService,
+        aiService: AIService,
+        battleRoyaleService: BattleRoyaleService,
+        starMovementService: StarMovementService,
+        diplomacyService: DiplomacyService,
+        gameTypeService: GameTypeService,
+        gameStateService: GameStateService,
+        playerCycleRewardsService: PlayerCycleRewardsService,
+        diplomacyUpkeepService: DiplomacyUpkeepService,
+        carrierMovementService: CarrierMovementService,
+        carrierGiftService: CarrierGiftService,
+        starContestedService: StarContestedService,
+        playerReadyService: PlayerReadyService,
+        shipService: ShipService,
+        scheduleBuyService: ScheduleBuyService,
+        gameLockService: GameLockService,
+        waypointActionService: WaypointActionService,
+        cullWaypointsService: CullWaypointsService,
+        carrierTravelService: CarrierTravelService<DBObjectId>,
+        carrierCombatService: CarrierCombatService,
+        combatProcessingService: CombatProcessingService,
+    ) {
+        super();
+
+        this.distanceService = distanceService;
+        this.starService = starService;
+        this.carrierService = carrierService;
+        this.researchService = researchService;
+        this.playerService = playerService;
+        this.playerAfkService = playerAfkService;
+        this.historyService = historyService;
+        this.leaderboardService = leaderboardService;
+        this.userService = userService;
+        this.gameService = gameService;
+        this.technologyService = technologyService;
+        this.specialistService = specialistService;
+        this.starUpgradeService = starUpgradeService;
+        this.reputationService = reputationService;
+        this.aiService = aiService;
+        this.battleRoyaleService = battleRoyaleService;
+        this.starMovementService = starMovementService;
+        this.diplomacyService = diplomacyService;
+        this.gameTypeService = gameTypeService;
+        this.gameStateService = gameStateService;
+        this.playerCycleRewardsService = playerCycleRewardsService;
+        this.diplomacyUpkeepService = diplomacyUpkeepService;
+        this.carrierMovementService = carrierMovementService;
+        this.carrierGiftService = carrierGiftService;
+        this.starContestedService = starContestedService;
+        this.playerReadyService = playerReadyService;
+        this.shipService = shipService;
+        this.gameLockService = gameLockService;
+        this.scheduleBuyService = scheduleBuyService;
+        this.waypointActionService = waypointActionService;
+        this.cullWaypointsService = cullWaypointsService;
+        this.carrierTravelService = carrierTravelService;
+        this.carrierCombatService = carrierCombatService;
+        this.combatProcessingService = combatProcessingService;
+    }
+
+    async tick(
+        gameId: DBObjectId,
+        eventService: EventService,
+        statisticsService: StatisticsService,
+        notificationService: NotificationService,
+        emailService: EmailService,
+    ) {
+        const game = await this.gameService.getByIdAll(gameId);
+
+        if (!game) {
+            log.error(`Game not found: ${gameId}`);
+            return;
+        }
+
+        // Double check the game isn't locked.
+        if (!(await this.gameLockService.isLockedInDatabase(game._id))) {
+            throw new Error(`The game is not locked.`);
+        }
+
+        const startTime = process.hrtime();
+        log.info(
+            {
+                gameId: game._id,
+                gameName: game.settings.general.name,
+            },
+            `[${game.settings.general.name}] - Game tick started at ${new Date().toISOString()}`,
+        );
+
+        game.state.lastTickDate = DateTime.utc().toJSDate();
+        game.state.forceTick = false;
+
+        let taskTime = process.hrtime();
+        let taskTimeEnd: [number, number] | null = null;
+
+        const logTime = (taskName: string) => {
+            taskTimeEnd = process.hrtime(taskTime);
+            taskTime = process.hrtime();
+            log.info(
+                {
+                    gameId: game._id,
+                    gameName: game.settings.general.name,
+                    tick: game.state.tick,
+                },
+                `[${game.settings.general.name}] - ${taskName}: %ds %dms'`,
+                taskTimeEnd[0],
+                taskTimeEnd[1] / 1000000,
+            );
+        };
+
+        logTime("Loaded game users");
+
+        const context = await GameTickContext.load(
+            this.userService,
+            game,
+            emailService,
+            notificationService,
+            eventService,
+            statisticsService,
+        );
+
+        await this._processTick(game, context, logTime, startTime);
+    }
+
+    private async _processTick(
+        game: Game,
+        context: GameTickContext,
+        logTime: (msg: string) => void,
+        startTime: [number, number],
+    ) {
+        let iterations = 1;
+
+        // If we are in turn based mode, we need to repeat the tick X number of times.
+        if (this.gameTypeService.isTurnBasedGame(game)) {
+            iterations = game.settings.gameTime.turnJumps;
+
+            // Increment missed turns for players so that they can be kicked for being AFK later.
+            this.playerService.incrementMissedTurns(game);
+        }
+
+        // Check if win condition was reached before the tick (for example due to RTQ)
+        const hasWinnerBeforeTick = await this._gameWinCheck(
+            game,
+            context.getGameUsers(),
+            context.getEventService(),
+            context.getStatisticsService(),
+            context.getNotificationService(),
+            context.getEmailService(),
+        );
+        if (hasWinnerBeforeTick) {
+            log.info(
+                {
+                    gameId: game._id,
+                    gameName: game.settings.general.name,
+                    tick: game.state.tick,
+                },
+                `Game has reached a win condition before the tick. Tick processing will be skipped.`,
+            );
+            iterations = 0;
+        }
+
+        let hasProductionTicked: boolean = false;
+
+        while (iterations > 0) {
+            if (!(await this.gameLockService.isLockedInDatabase(game._id))) {
+                throw new Error(
+                    `The game was not locked after game processing, concurrency issue?`,
+                );
+            }
+
+            await this.scheduleBuyService.buyScheduledInfrastructure(
+                game,
+                context.getEventService(),
+                context.getStatisticsService(),
+            );
+            logTime("Buy scheduled infrastructure");
+
+            game.state.tick++;
+
+            logTime(`Tick ${game.state.tick}`);
+
+            await this._scuttleCarriers(game);
+
+            await this._captureAbandonedStars(
+                game,
+                context.getGameUsers(),
+                context.getStatisticsService(),
+            );
+            logTime("Capture abandoned stars");
+
+            this._transferGiftsInOrbit(
+                game,
+                context.getGameUsers(),
+                context.getEventService(),
+                context.getStatisticsService(),
+            );
+            logTime("Transfer gifts in orbit");
+
+            await this._combatCarriers(
+                game,
+                context.getGameUsers(),
+                context.getEventService(),
+                context.getStatisticsService(),
+            );
+            logTime("Combat carriers");
+
+            await this._moveCarriers(
+                game,
+                context.getGameUsers(),
+                context.getEventService(),
+                context.getStatisticsService(),
+            );
+            logTime("Move carriers and produce ships");
+
+            const ticked = await this._endOfGalacticCycleCheck(
+                game,
+                context.getEventService(),
+                context.getNotificationService(),
+            );
+            logTime("Galactic cycle check");
+
+            if (ticked && !hasProductionTicked) {
+                hasProductionTicked = true;
+            }
+
+            await this._gameLoseCheck(
+                game,
+                context.getGameUsers(),
+                context.getEventService(),
+            );
+            logTime("Game lose check");
+
+            await this._playAI(context.getEventService(), game);
+            logTime("AI controlled players turn");
+
+            this.researchService.conductResearchAll(
+                game,
+                context.getGameUsers(),
+                context.getEventService(),
+                context.getStatisticsService(),
+                context.getNotificationService(),
+            );
+            logTime("Conduct research");
+
+            this._orbitGalaxy(game);
+            logTime("Orbital mechanics");
+
+            this.cullWaypointsService.cullAllWaypointsByHyperspaceRange(game);
+            logTime("Sanitise all carrier waypoints");
+
+            this._applyTickBasedSpecialistEffects(
+                game,
+                context.getEventService(),
+            );
+            logTime("Apply tick effects of specialists");
+
+            this._clearExpiredSpecialists(game);
+            logTime("Clear expired specialists");
+
+            this._countdownToEndCheck(game);
+            logTime("Countdown to end check");
+
+            let hasWinner = await this._gameWinCheck(
+                game,
+                context.getGameUsers(),
+                context.getEventService(),
+                context.getStatisticsService(),
+                context.getNotificationService(),
+                context.getEmailService(),
+            );
+            logTime("Game win check");
+
+            await this._logHistory(game);
+            logTime("Log history");
+
+            if (hasWinner) {
+                break;
+            }
+
+            iterations--;
+        }
+
+        this._sanitiseDarkModeCarrierWaypoints(game);
+        logTime("Sanitise dark mode carrier waypoints");
+
+        this.playerReadyService.resetReadyStatuses(game, hasProductionTicked);
+
+        if (!(await this.gameLockService.isLockedInDatabase(game._id))) {
+            throw new Error(
+                `The game was not locked after game processing, concurrency issue?`,
+            );
+        }
+
+        await game.save();
+        logTime("Save game");
+
+        await context.save();
+        logTime("Save context");
+
+        await this._emitEvents(game, context.getNotificationService());
+
+        const endTime = process.hrtime(startTime);
+
+        log.info(
+            {
+                gameId: game._id,
+                gameName: game.settings.general.name,
+            },
+            `[${game.settings.general.name}] - Game tick ended: %ds %dms'`,
+            endTime[0],
+            endTime[1] / 1000000,
+        );
+    }
+
+    canTick(game: Game) {
+        // Cannot perform a game tick on a locked, paused or completed game.
+        if (game.state.locked || game.state.paused || game.state.endDate) {
+            return false;
+        }
+
+        // Cannot perform a game tick as this game has not yet started.
+        if (
+            DateTime.fromJSDate(game.state.startDate!)
+                .toUTC()
+                .diff(DateTime.utc()).milliseconds > 0
+        ) {
+            return false;
+        }
+
+        if (this.gameService.isReadyToQuitImmediateEnd(game)) {
+            return true;
+        }
+
+        if (game.state.forceTick) {
+            return true;
+        }
+
+        let lastTick = DateTime.fromJSDate(game.state.lastTickDate!).toUTC();
+        let nextTick: DateTime;
+
+        if (this.gameTypeService.isRealTimeGame(game)) {
+            // If in real time mode, then calculate when the next tick will be and work out if we have reached that tick.
+            nextTick = lastTick.plus({ seconds: game.settings.gameTime.speed });
+        } else if (this.gameTypeService.isTurnBasedGame(game)) {
+            // If in turn based mode, then check if all undefeated players are ready
+            // OR the max time wait limit has been reached.
+            let isAllPlayersReady =
+                this.gameService.isAllUndefeatedPlayersReady(game);
+
+            if (isAllPlayersReady) {
+                return true;
+            }
+
+            nextTick = lastTick.plus({
+                minutes: game.settings.gameTime.maxTurnWait,
+            });
+        } else {
+            throw new Error(`Unsupported game type.`);
+        }
+
+        return nextTick.diff(DateTime.utc(), "seconds").seconds <= 0;
+    }
+
+    async _combatCarriers(
+        game: Game,
+        gameUsers: User[],
+        eventService: IEventService,
+        statisticsService: IStatisticsService,
+    ) {
+        if (game.settings.specialGalaxy.carrierToCarrierCombat !== "enabled") {
+            return;
+        }
+
+        await this.carrierCombatService.combatCarriers(
+            game,
+            gameUsers,
+            eventService,
+            statisticsService,
+        );
+    }
+
+    async _moveCarriers(
+        game: Game,
+        gameUsers: User[],
+        eventService: IEventService,
+        statisticsService: IStatisticsService,
+    ) {
+        // 1. Get all carriers that have waypoints ordered by the distance
+        // they need to travel.
+        // Note, we order by distance ascending for 2 reasons:
+        //  1. To prevent carriers hopping over combat.
+        //  2. To ensure that carriers who are closest to their destinations
+        // land before any other carriers due to land in the same tick.
+        let carriersInTransit: Carrier[] = [];
+
+        let carriersWithWaypoints = game.galaxy.carriers.filter(
+            (c) => c.waypoints.length,
+        );
+
+        for (let i = 0; i < carriersWithWaypoints.length; i++) {
+            let carrier = carriersWithWaypoints[i];
+            let waypoint = carrier.waypoints[0];
+
+            // If the waypoint has a delay on it for a carrier that is stationed
+            // at a star, then we need to wait until there are no more delay ticks.
+            if (waypoint.delayTicks && carrier.orbiting) {
+                waypoint.delayTicks--;
+                continue;
+            }
+
+            let destinationStar = this.starService.getById(
+                game,
+                waypoint.destination,
+            )!;
+
+            // Save the distance travelled so it can be used later for combat.
+            carrier.distanceToDestination =
+                this.distanceService.getDistanceBetweenLocations(
+                    carrier.location,
+                    destinationStar.location,
+                );
+
+            carriersInTransit.push(carrier);
+        }
+
+        // Carriers in transit will prioritize carriers with the most ships first.
+        // This is to ensure that capturing of unclaimed stars uses this priority.
+        // TODO: This is more of a bodge to get around the unclaimed stars thing, it would
+        // be better to refactor the capturing of unclaimed stars to occur after all movements
+        // have taken place.
+        carriersInTransit = carriersInTransit.sort((a, b) => {
+            // Sort by ship count (highest ships first)
+            if (a.ships! > b.ships!) return -1;
+            if (a.ships! < b.ships!) return 1;
+
+            // Then by distance (closest carrier first)
+            return (
+                (a.distanceToDestination || 0) - (b.distanceToDestination || 0)
+            );
+        });
+
+        // 2. Iterate through each carrier, move it, then check for combat.
+        // (DO NOT do any combat yet as we have to wait for all of the carriers to move)
+        // Because carriers are ordered by distance to their destination,
+        // this means that always the carrier that is closest to its destination
+        // will land first. This is important for unclaimed stars and defender bonuses.
+
+        const combatStars: Star[] = [];
+        let actionWaypoints: CarrierActionWaypoint[] = [];
+
+        const arrivals: CarrierMovementReport[] = [];
+
+        for (let i = 0; i < carriersInTransit.length; i++) {
+            const carrierInTransit = carriersInTransit[i];
+
+            const carrierMovementReport =
+                this.carrierMovementService.moveCarrier(
+                    game,
+                    gameUsers,
+                    carrierInTransit,
+                    eventService,
+                    statisticsService,
+                );
+
+            if (!carrierMovementReport) {
+                continue;
+            }
+
+            // If the carrier has arrived at the star then
+            // append the movement waypoint to the array of action waypoints so that we can deal with it after combat.
+            if (carrierMovementReport.arrivedAtStar) {
+                actionWaypoints.push({
+                    carrier: carrierInTransit,
+                    star: carrierMovementReport.destinationStar,
+                    waypoint: carrierMovementReport.waypoint,
+                });
+
+                arrivals.push(carrierMovementReport);
+            }
+
+            // Check if combat is required, if so add the destination star to the array of combat stars to check later.
+            if (
+                carrierMovementReport.combatRequiredStar &&
+                combatStars.indexOf(carrierMovementReport.destinationStar) < 0
+            ) {
+                combatStars.push(carrierMovementReport.destinationStar);
+            }
+        }
+
+        // Check for scenario where a player changes diplomatic status to another player.
+        // Perform combat at contested stars.
+        const contestedStars =
+            this.starContestedService.listContestedStars(game);
+
+        for (let i = 0; i < contestedStars.length; i++) {
+            const { star: contestedStar } = contestedStars[i];
+
+            if (!combatStars.includes(contestedStar)) {
+                combatStars.push(contestedStar);
+            }
+        }
+
+        // 3. Now that all carriers have finished moving, perform combat.
+        for (let i = 0; i < combatStars.length; i++) {
+            const combatStar = combatStars[i];
+
+            // Get all carriers orbiting the star and perform combat.
+            const carriersAtStar = game.galaxy.carriers.filter(
+                (c) =>
+                    c.orbiting &&
+                    c.orbiting.toString() === combatStar._id.toString(),
+            );
+
+            // properly handle combat at unclaimed stars!
+            await this.combatProcessingService.performCombat(
+                game,
+                gameUsers,
+                combatStar,
+                carriersAtStar,
+                eventService,
+                statisticsService,
+            );
+        }
+
+        // There may be carriers in the waypoint list that do not have any remaining ships or have been rerouted, filter them out.
+        actionWaypoints = actionWaypoints.filter(
+            (x) => x.carrier.orbiting && x.carrier.ships! > 0,
+        );
+
+        // reset specialist enemy tracking
+        for (let arrival of arrivals) {
+            arrival.carrier.specialistTargetedPlayers = [];
+        }
+
+        // 4a. Now that combat is done, perform any carrier waypoint actions.
+        // Do the drops first
+        this.waypointActionService.performWaypointActionsDrops(
+            game,
+            actionWaypoints,
+        );
+
+        // 4b. Build ships at star.
+        this.shipService.produceShips(game);
+
+        // 4c. Do the rest of the waypoint actions.
+        this.waypointActionService.performWaypointActionsCollects(
+            game,
+            actionWaypoints,
+        );
+        this.waypointActionService.performWaypointActionsGarrisons(
+            game,
+            actionWaypoints,
+        );
+    }
+
+    async _captureAbandonedStars(
+        game: Game,
+        gameUsers: User[],
+        statisticsService: IStatisticsService,
+    ) {
+        // Note: Capturing abandoned stars in this way is only possible in the scenario
+        // where a player has abandoned a star for an ally to capture who is already in orbit.
+        if (!this.diplomacyService.isFormalAlliancesEnabled(game)) {
+            return;
+        }
+
+        const contestedAbandonedStars =
+            this.starContestedService.listContestedUnownedStars(game);
+
+        for (let i = 0; i < contestedAbandonedStars.length; i++) {
+            const contestedStar = contestedAbandonedStars[i];
+
+            // The player who owns the carrier with the most ships will capture the star.
+            const carrier = contestedStar.carriersInOrbit.sort(
+                (a: Carrier, b: Carrier) => b.ships! - a.ships!,
+            )[0];
+
+            this.starService.claimUnownedStar(
+                game,
+                gameUsers,
+                contestedStar.star,
+                carrier,
+                statisticsService,
+            );
+        }
+    }
+
+    _sanitiseDarkModeCarrierWaypoints(game: Game) {
+        if (this.gameTypeService.isDarkMode(game)) {
+            this.cullWaypointsService.sanitiseAllCarrierWaypointsByScanningRange(
+                game,
+            );
+        }
+    }
+
+    async _endOfGalacticCycleCheck(
+        game: Game,
+        eventService: IEventService,
+        notificationService: INotificationService,
+    ): Promise<boolean> {
+        let hasProductionTicked: boolean =
+            game.state.tick % game.settings.galaxy.productionTicks === 0;
+
+        // Check if we have reached the production tick.
+        if (hasProductionTicked) {
+            game.state.productionTick++;
+
+            // For each player, perform the end of cycle actions.
+            // Give each player money.
+            // Conduct experiments.
+            for (let i = 0; i < game.galaxy.players.length; i++) {
+                let player = game.galaxy.players[i];
+
+                let creditsResult =
+                    this.playerCycleRewardsService.givePlayerCreditsEndOfCycleRewards(
+                        game,
+                        player,
+                    );
+                let experimentResult = this.researchService.conductExperiments(
+                    game,
+                    player,
+                );
+                let carrierUpkeepResult =
+                    this.playerService.deductCarrierUpkeepCost(game, player);
+                let allianceUpkeepResult: {
+                    allianceCount: number;
+                    totalCost: number;
+                } | null = null;
+
+                if (this.diplomacyUpkeepService.isAllianceUpkeepEnabled(game)) {
+                    let allianceCount = this.diplomacyService.getAlliesOfPlayer(
+                        game,
+                        player,
+                    ).length;
+
+                    allianceUpkeepResult =
+                        this.diplomacyUpkeepService.deductTotalUpkeep(
+                            game,
+                            player,
+                            creditsResult.creditsTotal,
+                            allianceCount,
+                        );
+                }
+
+                // Raise an event if the player isn't defeated, AI doesn't care about events.
+                if (!player.defeated) {
+                    let e: PlayerGalacticCycleCompletedEvent = {
+                        gameId: game._id,
+                        gameTick: game.state.tick,
+                        playerId: player._id,
+                        creditsEconomy: creditsResult.creditsFromEconomy,
+                        creditsBanking: creditsResult.creditsFromBanking,
+                        creditsSpecialists:
+                            creditsResult.creditsFromSpecialistsTechnology,
+                        experimentTechnology: experimentResult.technology,
+                        experimentTechnologyLevel: experimentResult.level,
+                        experimentAmount: experimentResult.amount,
+                        experimentLevelUp: experimentResult.levelUp,
+                        experimentResearchingNext:
+                            experimentResult.researchingNext,
+                        carrierUpkeep: carrierUpkeepResult,
+                        allianceUpkeep: allianceUpkeepResult,
+                    };
+
+                    await eventService.createPlayerGalacticCycleCompleteEvent(
+                        e,
+                    );
+                    await notificationService.onPlayerGalacticCycleCompleted(e);
+                }
+            }
+
+            // Destroy stars for battle royale mode.
+            if (game.settings.general.mode === "battleRoyale") {
+                this.battleRoyaleService.performBattleRoyaleTick(game);
+            }
+
+            // Stars can be looted once per cycle, so reset that
+            for (const star of game.galaxy.stars) {
+                star.canBeLooted = true;
+            }
+        }
+
+        return hasProductionTicked;
+    }
+
+    async _logHistory(game: Game) {
+        await this.historyService.log(game);
+    }
+
+    async _gameLoseCheck(
+        game: Game,
+        gameUsers: User[],
+        eventService: IEventService,
+    ) {
+        // Check to see if anyone has been defeated.
+        // A player is defeated if they have no stars and no carriers remaining.
+        const isTutorialGame = this.gameTypeService.isTutorialGame(game);
+        const undefeatedPlayers = game.galaxy.players.filter(
+            (p) => !p.defeated,
+        );
+
+        // If the player is defeated but the slot is open,
+        // and the player has lost their home star in capital elimination mode, or if they have no stars/carriers, close the slot.
+        const openSlotDefeatedPlayersToClose = game.galaxy.players.filter(
+            (p) =>
+                p.defeated &&
+                p.isOpenSlot &&
+                !this.playerService.canSlotBeOpen(game, p),
+        );
+
+        for (let i = 0; i < openSlotDefeatedPlayersToClose.length; i++) {
+            this.playerService.setSlotOpen(
+                openSlotDefeatedPlayersToClose[i],
+                false,
+            );
+        }
+
+        for (let i = 0; i < undefeatedPlayers.length; i++) {
+            let player = undefeatedPlayers[i];
+
+            this.playerAfkService.performDefeatedOrAfkCheck(game, player);
+
+            if (player.defeated) {
+                game.state.players--; // Deduct number of active players from the game.
+
+                let user = gameUsers.find(
+                    (u) =>
+                        player.userId &&
+                        u._id.toString() === player.userId.toString(),
+                );
+
+                if (player.afk) {
+                    // Keep a log of players who have been afk so they cannot rejoin.
+                    if (player.userId) {
+                        game.afkers.push(player.userId);
+                    }
+
+                    if (user && !isTutorialGame) {
+                        this.playerAfkService.incrementAfkCount(user);
+                    }
+
+                    let e: InternalGamePlayerAFKEvent = {
+                        gameId: game._id,
+                        gameTick: game.state.tick,
+                        playerId: player._id,
+                        playerAlias: player.alias,
+                    };
+
+                    await eventService.createPlayerAfkEvent(e);
+                } else {
+                    if (user && !isTutorialGame) {
+                        user.achievements.defeated++;
+
+                        if (this.gameTypeService.is1v1Game(game)) {
+                            user.achievements.defeated1v1++;
+                        }
+                    }
+
+                    let e: InternalGamePlayerDefeatedEvent = {
+                        gameId: game._id,
+                        gameTick: game.state.tick,
+                        playerId: player._id,
+                        playerAlias: player.alias,
+                        openSlot: false,
+                    };
+
+                    await eventService.createPlayerDefeatedEvent(e);
+                }
+            }
+        }
+
+        this.gameStateService.updateStatePlayerCount(game);
+    }
+
+    async _gameWinCheck(
+        game: Game,
+        gameUsers: User[],
+        eventService: IEventService,
+        statisticsService: IStatisticsService,
+        notificationService: INotificationService,
+        emailService: IEmailService,
+    ) {
+        const isTutorialGame = this.gameTypeService.isTutorialGame(game);
+
+        // Update the leaderboard state here so we can keep track of positions
+        // without having to actually calculate it.
+        const leaderboard =
+            this.leaderboardService.getGameLeaderboard(game).leaderboard;
+
+        game.state.leaderboard = leaderboard.map((l) => l.player._id);
+
+        if (
+            game.settings.general.readyToQuit === "enabled" &&
+            this.gameService.checkReadyToQuit(game, leaderboard)
+        ) {
+            const ticksRemaining =
+                (game.settings.general.readyToQuitTimerCycles || 0) *
+                game.settings.galaxy.productionTicks;
+            if (game.state.ticksToEnd || game.state.ticksToEnd === 0) {
+                game.state.ticksToEnd = Math.min(
+                    ticksRemaining,
+                    game.state.ticksToEnd,
+                );
+            } else {
+                game.state.ticksToEnd = ticksRemaining;
+            }
+        }
+
+        let winner: GameWinner | null;
+
+        if (this.gameTypeService.isTeamConquestGame(game)) {
+            const teamLeaderboard =
+                this.leaderboardService.getTeamLeaderboard(game)!.leaderboard;
+
+            game.state.teamLeaderboard = teamLeaderboard.map((t) => t.team._id);
+
+            winner = this.leaderboardService.getGameWinnerTeam(
+                game,
+                teamLeaderboard,
+            );
+        } else {
+            winner = this.leaderboardService.getGameWinner(game, leaderboard);
+        }
+
+        if (winner) {
+            this.gameStateService.finishGame(game, winner);
+
+            await statisticsService.closeStatsSlicesForGame(game);
+
+            for (const player of game.galaxy.players) {
+                if (this.playerAfkService.isAIControlled(game, player)) {
+                    this.aiService.cleanupState(player);
+                }
+            }
+
+            if (!isTutorialGame) {
+                let rankingResult: GameRankingResult<DBObjectId> | null = null;
+
+                if (this.gameTypeService.isRankedGame(game)) {
+                    rankingResult = this._awardEndGameRank(
+                        game,
+                        gameUsers,
+                        true,
+                    );
+                }
+
+                // Mark all players as established regardless of game length.
+                this.leaderboardService.markNonAFKPlayersAsEstablishedPlayers(
+                    game,
+                    gameUsers,
+                );
+                this.leaderboardService.incrementPlayersCompletedAchievement(
+                    game,
+                    gameUsers,
+                );
+
+                const e: InternalGameEndedEvent = {
+                    gameId: game._id,
+                    gameTick: game.state.tick,
+                    rankingResult,
+                };
+
+                this.emit(GameTickServiceEvents.onGameEnded, e);
+                await eventService.createGameEndedEvent(e);
+                await notificationService.onGameEnded(e);
+                await emailService.sendGameFinishedEmail(e.gameId);
+            } else if (winner.kind === "player") {
+                // game is tutorial
+                const userId = winner.player.userId;
+                const user = gameUsers.find(
+                    (u) => userId && u._id.toString() === userId.toString(),
+                );
+                const tutorialKey = game.settings.general.createdFromTemplate;
+
+                if (user && tutorialKey) {
+                    if (!user.tutorialsCompleted) {
+                        user.tutorialsCompleted = [];
+                    }
+                    if (!user.tutorialsCompleted.includes(tutorialKey)) {
+                        user.tutorialsCompleted.push(tutorialKey);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    _awardEndGameRank(game: Game, gameUsers: User[], awardCredits: boolean) {
+        let rankingResult: GameRankingResult<DBObjectId> | null = null;
+
+        // There must have been at least X production ticks in order for
+        // rankings to be added to players. This is to slow down players
+        // should they wish to cheat the system.
+        const productionTickCap = this.gameTypeService.is1v1Game(game) ? 1 : 2;
+        const canAwardRank =
+            this.gameTypeService.isRankedGame(game) &&
+            game.state.productionTick > productionTickCap;
+
+        if (canAwardRank) {
+            if (this.gameTypeService.isTeamConquestGame(game)) {
+                const teamLeaderboard =
+                    this.leaderboardService.getTeamLeaderboard(
+                        game,
+                    )!.leaderboard;
+
+                rankingResult = this.leaderboardService.addTeamRankings(
+                    game,
+                    gameUsers,
+                    teamLeaderboard,
+                );
+            } else {
+                const leaderboard =
+                    this.leaderboardService.getGameLeaderboard(
+                        game,
+                    ).leaderboard;
+
+                rankingResult = this.leaderboardService.addGameRankings(
+                    game,
+                    gameUsers,
+                    leaderboard,
+                );
+                this.leaderboardService.incrementGameWinnerAchievements(
+                    game,
+                    gameUsers,
+                    leaderboard[0].player,
+                    awardCredits,
+                );
+            }
+        }
+
+        // If the game is anonymous, then ranking results should be omitted from the game ended event.
+        if (this.gameTypeService.isAnonymousAfterEnd(game)) {
+            rankingResult = null;
+        }
+
+        return rankingResult;
+    }
+
+    async _playAI(eventService: IEventService, game: Game) {
+        for (let player of game.galaxy.players.filter((p) =>
+            this.playerAfkService.isAIControlled(game, p),
+        )) {
+            await this.aiService.play(eventService, game, player);
+        }
+    }
+
+    _applyTickBasedSpecialistEffects(game: Game, eventService: IEventService) {
+        this.starService.applyStarSpecialistSpecialModifiers(
+            game,
+            eventService,
+        );
+        this.playerCycleRewardsService.giveFinancialAnalystCredits(game);
+        this.starMovementService.moveStellarEngines(game);
+        this.starService.pairWormHoleConstructors(game);
+    }
+
+    _clearExpiredSpecialists(game: Game) {
+        this.specialistService.clearExpiredSpecialists(game);
+    }
+
+    _orbitGalaxy(game: Game) {
+        if (this.gameTypeService.isOrbitalMode(game)) {
+            this.starMovementService.orbitGalaxy(game);
+        }
+    }
+
+    _countdownToEndCheck(game: Game) {
+        if (
+            this.gameStateService.isCountingDownToEnd(game) || // Is already counting down
+            (this.gameTypeService.isKingOfTheHillMode(game) &&
+                this.playerService.getKingOfTheHillPlayer(game)) // Is KotH and there is a king
+        ) {
+            this.gameStateService.countdownToEnd(game);
+        }
+    }
+
+    _transferGiftsInOrbit(
+        game: Game,
+        gameUsers: User[],
+        eventService: IEventService,
+        statisticsService: IStatisticsService,
+    ) {
+        const carriers = this.carrierService.listGiftCarriersInOrbit(game);
+
+        for (let carrier of carriers) {
+            const star = this.starService.getById(game, carrier.orbiting!);
+
+            this.carrierGiftService.transferGift(
+                game,
+                gameUsers,
+                star,
+                carrier,
+                eventService,
+                statisticsService,
+            );
+        }
+    }
+
+    async _emitEvents(game: Game, notificationService: INotificationService) {
+        if (this.gameTypeService.isTurnBasedGame(game)) {
+            await notificationService.onGameTurnEnded({
+                gameId: game._id,
+                gameTick: game.state.tick,
+            });
+        }
+    }
+
+    private async _scuttleCarriers(game: Game) {
+        const carriersMarkedForScuttle = game.galaxy.carriers.filter(
+            (c) => c.isScuttled,
+        );
+
+        for (let carrier of carriersMarkedForScuttle) {
+            game.galaxy.carriers.splice(
+                game.galaxy.carriers.indexOf(carrier),
+                1,
+            );
+        }
+    }
+}

@@ -1,0 +1,179 @@
+import { Actor } from "./Actor";
+import { Game } from "../Game";
+import { NetworkEvents } from "../network/Client";
+import { Camera } from "./Camera";
+import { Line } from "./Line";
+import { SceneObject } from "./SceneObject";
+import { ActorGroup } from "./ActorGroup";
+import { MapWrap } from "../map/MapWrap";
+
+export abstract class Scene {
+  protected static ExitReceipt = new (class {})();
+
+  protected storedEvents: Map<string, Function[]>;
+  protected firstLoad: boolean;
+  protected systemMenuOpen: boolean;
+  private camera: Camera;
+  private oldCamera: Camera;
+  private sceneObjects: SceneObject[];
+  private name: string;
+
+  private worldHidden = false;
+
+  constructor() {
+    this.storedEvents = new Map<string, Function[]>();
+    this.sceneObjects = [];
+    this.firstLoad = true;
+  }
+
+  private static isWorldObject(object: SceneObject): boolean {
+    return object instanceof Line || (object instanceof Actor && object.isCameraApplied());
+  }
+
+  public setName(name: string) {
+    this.name = name;
+  }
+
+  public getName() {
+    return this.name;
+  }
+
+  public addLine(line: Line) {
+    this.sceneObjects.push(line);
+    this.sortSceneObjects();
+    Game.getInstance().addLine(line);
+  }
+
+  public removeLine(line: Line) {
+    this.sceneObjects = this.sceneObjects.filter((element) => element !== line);
+    this.sortSceneObjects();
+    Game.getInstance().removeLine(line);
+  }
+
+  public addActor(actor: Actor) {
+    this.sceneObjects.push(actor);
+    this.sortSceneObjects();
+    Game.getInstance().addActor(actor);
+  }
+
+  public removeActor(actor: Actor) {
+    if (!actor) return;
+
+    this.sceneObjects = this.sceneObjects.filter((element) => element !== actor);
+    this.sortSceneObjects();
+    Game.getInstance().removeActor(actor);
+  }
+
+  public gameLoop() {
+    if (this.camera) {
+      this.camera.updateOffset();
+    }
+
+    const game = Game.getInstance();
+    const canvasContext = game.getCanvasContext();
+    // One entry ([0]) unless the map wraps, in which case the world repeats to fill the viewport.
+    const worldOffsets = MapWrap.getDrawOffsets();
+
+    this.sceneObjects.forEach((object: SceneObject) => {
+      if (!Scene.isWorldObject(object)) {
+        object.draw(canvasContext);
+        return;
+      }
+
+      if (this.worldHidden) return;
+
+      for (const offsetX of worldOffsets) {
+        game.setWorldDrawOffsetX(offsetX);
+        object.draw(canvasContext);
+      }
+      game.setWorldDrawOffsetX(0);
+    });
+  }
+
+  // Skips drawing camera-space objects (the map) while a full-screen opaque window covers them.
+  public setWorldHidden(hidden: boolean) {
+    this.worldHidden = hidden;
+  }
+
+  public redraw() {
+    this.onDestroyed(this);
+    this.onInitialize();
+  }
+
+  public onInitialize() {}
+
+  public onDestroyed(newScene: Scene): typeof Scene.ExitReceipt {
+    this.sceneObjects.forEach((object) => {
+      if (object instanceof Actor || object instanceof ActorGroup) {
+        const actor = object as Actor;
+        actor.call("mouse_exit");
+        this.removeActor(object);
+      }
+    });
+
+    if (this.camera) {
+      this.oldCamera = this.camera;
+    }
+
+    this.camera = undefined;
+    this.worldHidden = false;
+    this.sceneObjects = [];
+    this.storedEvents.clear();
+    NetworkEvents.clear();
+
+    this.firstLoad = false;
+    return Scene.ExitReceipt;
+  }
+
+  public call<T = any>(eventName: string, options?: T) {
+    if (this.storedEvents.has(eventName)) {
+      //Call the stored callback function
+      const functions = this.storedEvents.get(eventName);
+      for (let currentFunction of functions) {
+        currentFunction(options);
+      }
+    }
+  }
+
+  public on<T = any>(eventName: string, callback: (options: T) => void) {
+    //Get the list of stored callback functions or an empty list
+    let functions: Function[] = this.storedEvents.get(eventName) ?? [];
+    // Append the to functions
+    functions.push(callback);
+    this.storedEvents.set(eventName, functions);
+  }
+
+  public hasActor(actor: Actor) {
+    const actorIndex = this.sceneObjects.indexOf(actor);
+    if (actorIndex < 0) return false;
+
+    return true;
+  }
+
+  public setCamera(camera: Camera) {
+    this.camera = camera;
+  }
+
+  public getCamera() {
+    return this.camera;
+  }
+
+  public restoreCamera() {
+    this.camera = Camera.fromCamera(this.oldCamera);
+    // Shift the camera position to account for our new window size (We do this for alignment)
+    const wDiff = Game.getInstance().getWidth() - Game.getInstance().getOldWidth();
+    const hDiff = Game.getInstance().getHeight() - Game.getInstance().getOldHeight();
+
+    this.camera.setPosition(this.camera.getX() + wDiff / 2, this.camera.getY() + hDiff / 2);
+  }
+
+  public sortSceneObjects() {
+    this.sceneObjects.sort((obj1, obj2) => {
+      return obj1.getZIndex() - obj2.getZIndex();
+    });
+  }
+
+  public hasSystemMenuOpen() {
+    return this.systemMenuOpen;
+  }
+}

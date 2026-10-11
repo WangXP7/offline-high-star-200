@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talha - Mahjong Solitaire Game</title>
+    <link rel="icon" href="https://i.ibb.co/M6KTWnf/pic.jpg" />
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- More games https://www.github.com/he-is-talha -->
+    <div class="wrapper">
+      <div id="levelScreen" class="level-screen">
+        <div class="level-header">
+          <h1>Mahjong Solitaire</h1>
+          <button type="button" id="helpBtnLevel" class="help-btn" aria-label="How to play">?</button>
+        </div>
+        <p>Match free tile pairs. Clear the board to win.</p>
+        <div class="level-buttons">
+          <button type="button" data-level="easy" class="level-btn">
+            <span class="level-name">Easy</span>
+            <span class="level-desc">72 tiles · Hint 5s CD · Undo ∞ · Reshuffle ×2 · No timer</span>
+          </button>
+          <button type="button" data-level="medium" class="level-btn">
+            <span class="level-name">Medium</span>
+            <span class="level-desc">144 tiles · Hint ×3 · Undo ×5 · Reshuffle ×1 · 12 min warn</span>
+          </button>
+          <button type="button" data-level="hard" class="level-btn">
+            <span class="level-name">Hard</span>
+            <span class="level-desc">144 tiles · No Hint · No Undo · No Reshuffle · 8 min</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="gameScreen" class="game-screen hidden">
+        <header class="header">
+          <div class="header-top">
+            <h1>Mahjong Solitaire</h1>
+            <button type="button" id="helpBtnGame" class="help-btn" aria-label="How to play">?</button>
+            <span class="level-badge" id="levelBadge">Easy</span>
+          </div>
+          <div class="header-actions">
+            <span id="hud" class="hud">Tiles: 0</span>
+            <button type="button" id="hintBtn" class="btn">Hint</button>
+            <button type="button" id="undoBtn" class="btn">Undo</button>
+            <button type="button" id="reshuffleBtn" class="btn">Reshuffle</button>
+            <button type="button" id="changeLevelBtn" class="btn btn-ghost">Change Level</button>
+            <button type="button" id="newGameBtn" class="btn">New Game</button>
+          </div>
+        </header>
+
+        <p id="warnText" class="warn-text hidden" role="status"></p>
+
+        <div class="board-scroll">
+          <div id="board" class="board" aria-label="Mahjong board"></div>
+        </div>
+
+        <div id="resultOverlay" class="result-overlay hidden">
+          <div class="result-box">
+            <h2 id="resultTitle"></h2>
+            <p id="resultMsg"></p>
+            <div class="result-actions">
+              <button type="button" id="playAgainBtn" class="btn btn-large">Play Again</button>
+              <button type="button" id="reshuffleFromResultBtn" class="btn btn-large hidden">Reshuffle</button>
+              <button type="button" id="changeLevelFromResultBtn" class="btn btn-ghost">Change Level</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="helpOverlay" class="help-overlay hidden">
+      <div class="help-modal">
+        <div class="help-header">
+          <h2>How to play</h2>
+          <button type="button" id="helpClose" class="help-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="help-body">
+          <p>
+            Clear the board by matching pairs of identical tiles. A tile is free if nothing
+            covers it and at least one side (left or right) is open.
+          </p>
+          <ul>
+            <li>Tap a free tile to select it, then tap its matching free partner to remove both.</li>
+            <li>Tap a different free tile to change selection.</li>
+            <li>Hint highlights a valid pair (limited by level).</li>
+            <li>Undo restores the last removed pair (limited by level).</li>
+            <li>Reshuffle redistributes remaining tiles on the same slots.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

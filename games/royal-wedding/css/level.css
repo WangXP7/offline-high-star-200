@@ -1,0 +1,70 @@
+#level {
+	position: absolute;
+	overflow: hidden;
+	width: 60%;
+	height: 80%;
+	right: 0;
+	top: 0;
+}
+
+#level section {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	-webkit-transition: -webkit-transform 2s, opacity 2s;
+	-moz-transition: -moz-transform 2s, opacity 2s;
+	transition: transform 2s, opacity 2s;
+}
+
+#level section.west {
+	-webkit-transform: translate(-100%, 0);
+	-moz-transform: translate(-100%, 0);
+	transform: translate(-100%, 0);
+}
+
+#level section.east {
+	-webkit-transform: translate(100%, 0);
+	-moz-transform: translate(100%, 0);
+	transform: translate(100%, 0);
+}
+
+#level section.north {
+	-webkit-transform: translate(0, -100%);
+	-moz-transform: translate(0, -100%);
+	transform: translate(0, -100%);
+}
+
+#level section.south {
+	-webkit-transform: translate(0, 100%);
+	-moz-transform: translate(0, 100%);
+	transform: translate(0, 100%);
+}
+
+#level section.fade {
+	opacity: 0;
+}
+
+#level section canvas {
+	display: block;
+	margin: auto;
+	position: relative;
+}
+
+#legend {
+	position: absolute;
+	overflow: hidden;
+	width: 60%;
+	height: 20%;
+	right: 0;
+	bottom: 0;
+	color: #777;
+}
+
+#legend p {
+	display: inline-block;
+	margin: 0 0 0 1em;
+}
+
+#legend span {
+	vertical-align: middle;
+}

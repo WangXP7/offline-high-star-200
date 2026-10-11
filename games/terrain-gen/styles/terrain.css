@@ -1,0 +1,7 @@
+html{background:#ccc;}
+
+#imgSave{
+  box-shadow: 1px 2px 3px 1px #000;
+}
+
+canvas{display:none;}

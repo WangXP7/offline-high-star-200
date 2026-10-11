@@ -1,0 +1,66 @@
+import type { Metadata } from "next";
+import { allStages } from "~/levels";
+import { getPageUrl } from "~/lib/site";
+
+interface Props {
+    params: Promise<{ level: string }>;
+}
+
+export function generateStaticParams() {
+    const stageIds = Object.values(allStages).map(stage => stage.id.toLowerCase());
+    const staticLevels = Array.from(new Set([...stageIds, "level"]));
+
+    return staticLevels.map(level => ({ level }));
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { level } = await params;
+
+    const levelNames: Record<string, string> = {
+        intro: "Introduction to Git",
+        files: "Working with Files",
+        branches: "Git Branches",
+        merge: "Merging Changes",
+        rebase: "Rebasing",
+        remote: "Remote Repositories",
+    };
+
+    const levelName = levelNames[level] || `Level ${level}`;
+
+    return {
+        title: `${levelName} - Git Mastery | Interactive Git Learning`,
+        description: `Learn ${levelName.toLowerCase()} through interactive Git challenges. Practice Git commands in a safe environment with step-by-step guidance.`,
+        openGraph: {
+            title: `${levelName} - Git Mastery`,
+            description: `Learn ${levelName.toLowerCase()} through interactive Git challenges`,
+            url: getPageUrl(`/${level}`),
+            siteName: "Git Mastery",
+            images: [
+                {
+                    url: "/og-cover.jpg",
+                    width: 1200,
+                    height: 630,
+                    alt: `Git Mastery - ${levelName}`,
+                },
+            ],
+            type: "website",
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: `${levelName} - Git Mastery`,
+            description: `Learn ${levelName.toLowerCase()} through interactive Git challenges`,
+            images: ["/og-cover.jpg"],
+        },
+        alternates: {
+            canonical: `/${level}`,
+        },
+        robots: {
+            index: true,
+            follow: true,
+        },
+    };
+}
+
+export default function LevelLayout({ children }: { children: React.ReactNode }) {
+    return children;
+}

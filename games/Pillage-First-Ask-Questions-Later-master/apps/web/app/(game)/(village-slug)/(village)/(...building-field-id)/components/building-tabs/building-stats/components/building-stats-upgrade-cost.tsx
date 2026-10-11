@@ -1,0 +1,107 @@
+import { use } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  calculateBuildingCostForLevel,
+  getBuildingDefinition,
+} from '@pillage-first/game-assets/utils/buildings';
+import { formatNumber } from '@pillage-first/utils/format';
+import { BuildingFieldContext } from 'app/(game)/(village-slug)/(village)/(...building-field-id)/providers/building-field-context';
+import {
+  OverflowContainer,
+  Section,
+  SectionContent,
+} from 'app/(game)/(village-slug)/components/building-layout';
+import { InformationPopover } from 'app/(game)/components/information-popover';
+import { Icon } from 'app/components/icon';
+import { Text } from 'app/components/text';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+} from 'app/components/ui/table';
+
+export const BuildingStatsUpgradeCost = () => {
+  const { t } = useTranslation();
+  const { buildingField } = use(BuildingFieldContext);
+  const { buildingId, level } = buildingField!;
+  const building = getBuildingDefinition(buildingId);
+
+  return (
+    <Section>
+      <SectionContent>
+        <InformationPopover ariaLabel={t('Upgrade cost')}>
+          <Text>
+            {t(
+              'This section displays the resource costs required to upgrade a building at each level. It includes a breakdown of wood, clay, iron, and wheat needed for each level from 1 upward.',
+            )}
+          </Text>
+        </InformationPopover>
+        <Text as="h2">{t('Upgrade cost')}</Text>
+      </SectionContent>
+      <SectionContent>
+        <OverflowContainer>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHeaderCell>{t('Level')}</TableHeaderCell>
+                <TableHeaderCell>
+                  <Icon
+                    className="inline-flex size-6"
+                    type="wood"
+                  />
+                </TableHeaderCell>
+                <TableHeaderCell>
+                  <Icon
+                    className="inline-flex size-6"
+                    type="clay"
+                  />
+                </TableHeaderCell>
+                <TableHeaderCell>
+                  <Icon
+                    className="inline-flex size-6"
+                    type="iron"
+                  />
+                </TableHeaderCell>
+                <TableHeaderCell>
+                  <Icon
+                    className="inline-flex size-6"
+                    type="wheat"
+                  />
+                </TableHeaderCell>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: building.maxLevel }, (_, index) => {
+                const buildingLevel = index + 1;
+
+                const cost = calculateBuildingCostForLevel(
+                  building.id,
+                  buildingLevel,
+                );
+
+                return (
+                  <TableRow
+                    // biome-ignore lint/suspicious/noArrayIndexKey: It's a static list, it's fine
+                    key={index}
+                    {...(buildingLevel === level && {
+                      className: 'bg-muted',
+                    })}
+                  >
+                    <TableHeaderCell>{buildingLevel}</TableHeaderCell>
+                    <TableCell>{formatNumber(cost[0])}</TableCell>
+                    <TableCell>{formatNumber(cost[1])}</TableCell>
+                    <TableCell>{formatNumber(cost[2])}</TableCell>
+                    <TableCell>{formatNumber(cost[3])}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </OverflowContainer>
+      </SectionContent>
+    </Section>
+  );
+};

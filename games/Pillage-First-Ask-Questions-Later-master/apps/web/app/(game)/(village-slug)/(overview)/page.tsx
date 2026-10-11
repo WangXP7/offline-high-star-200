@@ -1,0 +1,221 @@
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { Route } from '@react-router/types/app/(game)/(village-slug)/(overview)/+types/page';
+import { TroopTrainingQueue } from 'app/(game)/(village-slug)/(overview)/components/troop-training-queue';
+import { AcademyResearchTable } from 'app/(game)/(village-slug)/components/academy-research-table';
+import {
+  Section,
+  SectionContent,
+} from 'app/(game)/(village-slug)/components/building-layout';
+import { GatherersHutGatheringExpeditionTable } from 'app/(game)/(village-slug)/components/gatherers-hut-gathering-expedition-table';
+import { HuntersLodgeHuntingPartyTable } from 'app/(game)/(village-slug)/components/hunters-lodge-hunting-party-table';
+import { MainBuildingDemolitionTable } from 'app/(game)/(village-slug)/components/main-building-demolition-table';
+import { MerchantMovementTable } from 'app/(game)/(village-slug)/components/merchant-movement-table';
+import { SmithyImprovementTable } from 'app/(game)/(village-slug)/components/smithy-improvement-table';
+import { VillageConstructionTable } from 'app/(game)/(village-slug)/components/village-construction-table';
+import { useCurrentVillage } from 'app/(game)/(village-slug)/hooks/current-village/use-current-village';
+import { useTribe } from 'app/(game)/(village-slug)/hooks/use-tribe';
+import { InformationPopover } from 'app/(game)/components/information-popover';
+import { PageContents } from 'app/components/page-contents';
+import { Text } from 'app/components/text';
+import { Alert } from 'app/components/ui/alert';
+import { Separator } from 'app/components/ui/separator';
+
+const OverviewPage = ({ params }: Route.ComponentProps) => {
+  const { serverSlug, villageSlug } = params;
+
+  const { t } = useTranslation();
+  const { currentVillage } = useCurrentVillage();
+  const tribe = useTribe();
+
+  const [
+    doesAcademyExist,
+    doesSmithyExist,
+    doesMarketplaceExist,
+    doesBreweryExist,
+    doesHuntersLodgeExist,
+    doesGatherersHutExist,
+    isMainBuildingAboveLevel10,
+  ] = useMemo(() => {
+    const fields = currentVillage.buildingFields;
+
+    let hasAcademyBuilding = false;
+    let hasSmithyBuilding = false;
+    let hasMarketplaceBuilding = false;
+    let hasBreweryBuilding = false;
+    let hasHuntersLodgeBuilding = false;
+    let hasGatherersHutBuilding = false;
+    let hasMainBuildingAboveLevel10 = false;
+
+    for (const field of fields) {
+      const id = field.buildingId;
+
+      switch (id) {
+        case 'ACADEMY': {
+          hasAcademyBuilding = true;
+          break;
+        }
+        case 'SMITHY': {
+          hasSmithyBuilding = true;
+          break;
+        }
+        case 'MARKETPLACE': {
+          hasMarketplaceBuilding = true;
+          break;
+        }
+        case 'BREWERY': {
+          hasBreweryBuilding = true;
+          break;
+        }
+        case 'HUNTERS_LODGE': {
+          hasHuntersLodgeBuilding = true;
+          break;
+        }
+        case 'GATHERERS_HUT': {
+          hasGatherersHutBuilding = true;
+          break;
+        }
+        case 'MAIN_BUILDING': {
+          hasMainBuildingAboveLevel10 = field.level >= 10;
+          break;
+        }
+      }
+    }
+
+    return [
+      hasAcademyBuilding,
+      hasSmithyBuilding,
+      hasMarketplaceBuilding,
+      hasBreweryBuilding,
+      hasHuntersLodgeBuilding,
+      hasGatherersHutBuilding,
+      hasMainBuildingAboveLevel10,
+    ];
+  }, [currentVillage.buildingFields]);
+
+  const mainBuildingName = t('BUILDINGS.MAIN_BUILDING.NAME');
+  const academyName = t('BUILDINGS.ACADEMY.NAME');
+  const smithyName = t('BUILDINGS.SMITHY.NAME');
+  const marketplaceName = t('BUILDINGS.MARKETPLACE.NAME');
+  const breweryName = t('BUILDINGS.BREWERY.NAME');
+  const huntersLodgeName = t('BUILDINGS.HUNTERS_LODGE.NAME');
+  const gatherersHutName = t('BUILDINGS.GATHERERS_HUT.NAME');
+
+  const title = `${t('Overview')} | Pillage First! - ${serverSlug} - ${villageSlug}`;
+
+  return (
+    <PageContents>
+      <title>{title}</title>
+      <InformationPopover
+        ariaLabel={t('Village overview')}
+        className="top-2 right-2"
+      >
+        <Text>
+          {t(
+            'Village overview allows you to track construction queue, active troop training, smithy and academy queues, monitor merchant availability and movements, hunting parties, gathering expeditions and ongoing celebrations.',
+          )}
+        </Text>
+      </InformationPopover>
+      <Text as="h1">{t('Village overview')}</Text>
+      <Section>
+        <SectionContent>
+          <Text as="h2">{t('Construction')}</Text>
+          <VillageConstructionTable />
+        </SectionContent>
+        <Separator orientation="horizontal" />
+        <SectionContent>
+          <Text as="h2">{t('Demolition')}</Text>
+          {!isMainBuildingAboveLevel10 &&
+            t(
+              'You need to upgrade the {{buildingName}} to level 10 before you can start demolishing buildings.',
+              { buildingName: mainBuildingName },
+            )}
+          {isMainBuildingAboveLevel10 && <MainBuildingDemolitionTable />}
+        </SectionContent>
+        <Separator orientation="horizontal" />
+        <SectionContent>
+          <Text as="h2">{t('Troop training')}</Text>
+          <TroopTrainingQueue buildingId="BARRACKS" />
+          <Separator orientation="horizontal" />
+          <TroopTrainingQueue buildingId="STABLE" />
+          <Separator orientation="horizontal" />
+          <TroopTrainingQueue buildingId="WORKSHOP" />
+          <Separator orientation="horizontal" />
+          <TroopTrainingQueue buildingId="GREAT_BARRACKS" />
+          <Separator orientation="horizontal" />
+          <TroopTrainingQueue buildingId="GREAT_STABLE" />
+          <Separator orientation="horizontal" />
+          <TroopTrainingQueue buildingId="RESIDENCE" />
+        </SectionContent>
+        <Separator orientation="horizontal" />
+        <SectionContent>
+          <Text as="h2">{huntersLodgeName}</Text>
+          {!doesHuntersLodgeExist &&
+            t(
+              'You need to build the {{buildingName}} before you can start hunting parties.',
+              { buildingName: huntersLodgeName },
+            )}
+          {doesHuntersLodgeExist && <HuntersLodgeHuntingPartyTable />}
+        </SectionContent>
+        <Separator orientation="horizontal" />
+        <SectionContent>
+          <Text as="h2">{gatherersHutName}</Text>
+          {!doesGatherersHutExist &&
+            t(
+              'You need to build the {{buildingName}} before you can start gathering expeditions.',
+              { buildingName: gatherersHutName },
+            )}
+          {doesGatherersHutExist && <GatherersHutGatheringExpeditionTable />}
+        </SectionContent>
+        <Separator orientation="horizontal" />
+        <SectionContent>
+          <Text as="h2">{academyName}</Text>
+          {!doesAcademyExist &&
+            t(
+              'You need to build the {{buildingName}} before you can start research.',
+              { buildingName: academyName },
+            )}
+          {doesAcademyExist && <AcademyResearchTable />}
+        </SectionContent>
+        <Separator orientation="horizontal" />
+        <SectionContent>
+          <Text as="h2">{smithyName}</Text>
+          {!doesSmithyExist &&
+            t(
+              'You need to build the {{buildingName}} before you can improve troops.',
+              { buildingName: smithyName },
+            )}
+          {doesSmithyExist && <SmithyImprovementTable />}
+        </SectionContent>
+        <Separator orientation="horizontal" />
+        <SectionContent>
+          <Text as="h2">{marketplaceName}</Text>
+          {!doesMarketplaceExist &&
+            t(
+              'You need to build the {{buildingName}} before you can dispatch merchants.',
+              { buildingName: marketplaceName },
+            )}
+          {doesMarketplaceExist && <MerchantMovementTable />}
+        </SectionContent>
+        {tribe === 'teutons' && (
+          <>
+            <Separator orientation="horizontal" />
+            <Section>
+              <Text as="h2">{breweryName}</Text>
+              {!doesBreweryExist &&
+                t(
+                  'You need to build the {{buildingName}} before you can organize celebrations.',
+                  { buildingName: breweryName },
+                )}
+              <Alert variant="warning">
+                {t('This section is still under development')}
+              </Alert>
+            </Section>
+          </>
+        )}
+      </Section>
+    </PageContents>
+  );
+};
+
+export default OverviewPage;

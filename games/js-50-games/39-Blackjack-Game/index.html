@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talha - Blackjack Game</title>
+
+    <!-- 👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻-->
+    <!-- Also uploaded the demo of this code in a gif : https://c.tenor.com/x8v1oNUOmg4AAAAd/tenor.gif-->
+    <!-- 👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻-->
+
+    <!-- 👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻-->
+    <!-- More html-css-js Games Calculators Games Cards Elements Projects on https://www.github.com/he-is-talha -->
+    <!-- 👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻-->
+
+    <link rel="icon" href="https://i.ibb.co/M6KTWnf/pic.jpg" />
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="wrapper">
+      <div id="levelScreen" class="level-screen">
+        <div class="level-header">
+          <h1>Blackjack</h1>
+          <button type="button" id="helpBtnLevel" class="help-btn" aria-label="How to play">?</button>
+        </div>
+        <p>Choose difficulty</p>
+        <div class="level-buttons">
+          <button type="button" data-level="easy" class="level-btn">
+            <span class="level-name">Easy</span>
+            <span class="level-desc">1000 chips · min $10 · hints</span>
+          </button>
+          <button type="button" data-level="medium" class="level-btn">
+            <span class="level-name">Medium</span>
+            <span class="level-desc">500 chips · min $25</span>
+          </button>
+          <button type="button" data-level="hard" class="level-btn">
+            <span class="level-name">Hard</span>
+            <span class="level-desc">200 chips · min $50</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="gameScreen" class="game-screen hidden">
+        <header class="header">
+          <h1>Blackjack</h1>
+          <button type="button" id="helpBtnGame" class="help-btn" aria-label="How to play">?</button>
+          <span class="level-badge" id="levelBadge">Easy</span>
+          <div class="header-actions">
+            <span id="chipCount" class="chips">Chips: 1000</span>
+            <button type="button" id="changeLevelBtn" class="btn btn-ghost">Level</button>
+            <button type="button" id="newGameBtn" class="btn">New Game</button>
+          </div>
+        </header>
+
+        <main class="table">
+          <section class="hand-area">
+            <h2>Dealer <span id="dealerTotal" class="total"></span></h2>
+            <div id="dealerHand" class="hand"></div>
+          </section>
+          <section class="hand-area">
+            <h2>You <span id="playerTotal" class="total"></span></h2>
+            <div id="playerHand" class="hand"></div>
+          </section>
+
+          <div id="betPanel" class="bet-panel">
+            <p>Bet: <strong id="betDisplay">10</strong></p>
+            <div class="bet-controls">
+              <button type="button" id="betMinus" class="btn btn-ghost">−</button>
+              <button type="button" id="betPlus" class="btn btn-ghost">+</button>
+              <button type="button" id="dealBtn" class="btn btn-large">Deal</button>
+            </div>
+          </div>
+
+          <div id="actionPanel" class="action-panel hidden">
+            <button type="button" id="hitBtn" class="btn btn-large">Hit</button>
+            <button type="button" id="standBtn" class="btn btn-large">Stand</button>
+            <button type="button" id="doubleBtn" class="btn">Double</button>
+            <button type="button" id="hintBtn" class="btn btn-ghost hidden">Hint</button>
+          </div>
+          <p id="hintText" class="hint-text hidden"></p>
+          <p id="statusText" class="status-text"></p>
+        </main>
+
+        <div id="resultOverlay" class="result-overlay hidden">
+          <div class="result-box">
+            <h2 id="resultTitle"></h2>
+            <p id="resultMsg"></p>
+            <div class="result-actions">
+              <button type="button" id="nextRoundBtn" class="btn btn-large">Next Round</button>
+              <button type="button" id="changeLevelFromResultBtn" class="btn btn-ghost">Change Level</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="helpOverlay" class="help-overlay hidden" aria-hidden="true">
+      <div class="help-modal" role="dialog" aria-modal="true">
+        <div class="help-header">
+          <h2>How to play</h2>
+          <button type="button" id="helpClose" class="help-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="help-body">
+          <p>Beat the dealer without going over 21. Blackjack pays 3:2. Dealer stands on all 17.</p>
+          <ul>
+            <li><strong>Hit</strong> — take another card. <strong>Stand</strong> — keep your hand.</li>
+            <li><strong>Double</strong> — double your bet and take exactly one more card (first two cards only).</li>
+            <li>Easy includes a Hint button. Hard starts with fewer chips.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+# local scratch
+_*.js
+_*.png
+_og/
+*.local.*
+
+# editor and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# dependency dirs, should never appear in this project
+node_modules/
+dist-wavedash/

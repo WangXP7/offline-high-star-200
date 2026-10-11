@@ -1,0 +1,3 @@
+- Read @README.md and @DOCUMENTATION.md
+- After finishing a group of work, run `bun run check` followed by `bun run test`.
+- Don't attempt to git commit or run the dev server

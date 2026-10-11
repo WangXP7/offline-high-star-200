@@ -1,0 +1,16 @@
+use solaris;
+
+let userId = db.games.findOne({
+    _id: ObjectId('676e1fa1b800f965b09fab1e'),
+    'galaxy.players.alias': 'Urineol'
+}, {
+    'galaxy.players.$': 1
+}).galaxy.players[0].userId;
+
+let username = db.users.findOne({
+    _id: userId
+}, {
+    username: 1
+}).username;
+
+print(username);

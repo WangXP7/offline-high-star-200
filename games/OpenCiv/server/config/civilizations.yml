@@ -1,0 +1,189 @@
+civilizations:
+  - name: Rome
+    icon_name: ICON_ROME
+    inside_border_color: rgba(70,0,118,0.20 )
+    outside_border_color: rgb(240,199,0)
+    start_bias: none
+    start_bias_desc: No start bias
+    unique_unit_descs:
+      - Balista (Replaces Catapult)
+      - Legion (Replaces Swordsman)
+    ability_descs:
+      - +25% production towards any buildings that already exist in the capital.
+    cities:
+      - Rome
+      - Antium
+      - Cumae
+      - Neapolis
+      -	Ravenna
+      - Arretium
+      - Mediolanum
+      - Arpinum
+      - Circei
+      - Setia
+  - name: Mongolia
+    icon_name: ICON_MONGOLIA
+    inside_border_color: rgba(81,0,9,0.25)
+    outside_border_color: rgb(255,120,0)
+    start_bias: plains
+    start_bias_desc: "Start bias for: Plains"
+    unique_unit_descs:
+      - Keshik (Replaces Knight)
+      - Kahn (Replaces Great General)
+    ability_descs:
+      - +30% Combat Strength when fighting City-States.
+      - All cavalry units have +1 movement.
+    cities:
+      - Karakorum
+      - Beshbalik
+      - Turfan
+      - Hsia
+      - Old Sarai
+      -	New Sarai
+      - Tabriz
+      - Tiflis
+      - Otrar
+      - Sanchu
+  - name: Mamluks
+    icon_name: ICON_MAMLUKS
+    inside_border_color: rgba(255,252,3,0.25)
+    outside_border_color: rgb(255,255,255)
+    start_bias: desert
+    start_bias_desc: "Start bias for: Desert"
+    unique_unit_descs:
+      - Salihi (Replaces Knight)
+    unique_building_descs:
+      - Madrasah (Replaces University)
+    ability_descs:
+      - Forts provide +1 production, an additional +1 gold during war.
+      - Receive free mounted units whenever a Great Prophet is born.
+    cities:
+      - Cairo
+      - Damascus
+      - Aleppo
+      - Hama
+      - Alexandria
+      - Gaza
+      - Tripoli
+      - Jerusalem
+      - Aswan
+      - Mosul
+  - name: America
+    icon_name: ICON_AMERICA
+    inside_border_color: rgba(31,51,120,0.35)
+    outside_border_color: rgb(255,255,255)
+    start_bias: none
+    start_bias_desc: No start bias
+    unique_unit_descs:
+      - B17 Bomber (Replaces Bomber)
+      - Minuteman (Replaces Musketman)
+    ability_descs:
+      - All land military units have +1 sight.
+      - +50% Discount when purchasing tiles.
+    cities:
+      - Washington
+      - New York
+      - Boston
+      - Philadelphia
+      - Atlanta
+      - Chicago
+      - Seattle
+      - San Francisco
+      - Los Angeles
+      - Houston
+  - name: Germany
+    icon_name: ICON_GERMANY
+    inside_border_color: rgba(179,178,184,0.35)
+    outside_border_color: rgb(37,43,33)
+    start_bias: none
+    start_bias_desc: No start bias
+    unique_unit_descs:
+      - Landsknecht (Replaces Pikeman)
+      - Panzer (Replaces Tank)
+    unique_building_descs:
+      - Hanse (Replaces Bank)
+    ability_descs:
+      - Ability to convert barbarian camps to German units.
+      - +25% Less unit maintenance costs.
+    cities:
+      - Berlin
+      - Hamburg
+      - Munich
+      - Cologne
+      - Frankfurt
+      - Essen
+      - Dortmund
+      - Stuttgart
+      - Düsseldorf
+      - Bremen
+  - name: England
+    inside_border_color: rgba(109,2,0,0.30)
+    outside_border_color: rgb(255,255,255)
+    icon_name: ICON_ENGLAND
+    start_bias: shallow_ocean
+    start_bias_desc: "Start bias for: Shallow Ocean"
+    unique_unit_descs:
+      - Longbowman (Replaces Crossbowman)
+      - Ship of the Line (Replaces Frigate)
+    ability_descs:
+      - +2 Movement for all naval units.
+      - +1 Extra spy.
+    cities:
+      - London
+      - York
+      - Nottingham
+      - Hastings
+      - Canterbury
+      - Coventry
+      - Warwick
+      - Newcastle
+      - Oxford
+      - Liverpool
+  - name: Cuba
+    icon_name: ICON_CUBA
+    inside_border_color: rgba(31,51,120,0.35)
+    outside_border_color: blue
+    start_bias: shallow_ocean
+    start_bias_desc: "Start bias for: Shallow Ocean"
+    unique_unit_descs:
+      - Guerrillero (Replaces Great War Infrantry)
+    unique_building_descs:
+      - Dance Hall (Replaces Opera House)
+    ability_descs:
+      - +20% Combat strength for land units adjacent to shallow ocean tiles.
+    cities:
+      - Havana
+      - Santiago de Cuba
+      - Camagüey
+      - Holguín
+      - Santa Clara
+      - Guantanamo
+      - Bayamo
+      - Cienfuegos
+      - Pinar del Río
+      - Matanzas
+  - name: Canada
+    icon_name: ICON_CANADA
+    inside_border_color: rgba(255,255,255,0.25)
+    outside_border_color: red
+    start_bias: tundra
+    start_bias_desc: "Start bias for: Tundra"
+    unique_unit_descs:
+      - Mountie (Replaces Light Cavalry)
+      - Great Voyageur (Replaces Great Merchant)
+    unique_building_descs:
+      - Hudson's Bay Company (Replaces Bank)
+    ability_descs:
+      - Cannot declare war on city-states.
+      - Can build farms on tundra tiles.
+    cities:
+      - Toronto
+      - Montréal
+      - Quebec City
+      - Hamilton
+      - Winnipeg
+      - Halifax
+      - Saint John
+      - Vancouver
+      - Victoria
+      - Kingston

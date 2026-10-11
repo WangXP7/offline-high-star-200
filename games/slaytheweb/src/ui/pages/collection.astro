@@ -1,0 +1,40 @@
+---
+import Layout from '../layouts/Layout.astro'
+import '../styles/index.css'
+
+import {cards} from '../../content/cards.js'
+import CardPair from '../components/card-pair.js'
+---
+
+<Layout title="Collection, Slay the Web">
+	<article class="Container">
+		<p><a class="Button" href="/">&larr; Menu</a></p>
+
+		<header class="Header">
+			<h1 medium>Slay the Web</h1>
+			<h2>{cards.length} Card Collection</h2>
+		</header>
+
+		<div class="Box Box--text">
+			<p>Would you like to create your own card? Or tune an existing one?</p>
+			<p>
+				This game is <a href="https://github.com/oskarrough/slaytheweb" rel="noreferrer" target="_blank"
+					>is open source</a
+				>. You can change any part of the game. If you like, there's a chat on <a
+					href="https://matrix.to/#/#slaytheweb:matrix.org"
+					rel="noreferrer"
+					target="_blank"
+				>
+					#slaytheweb:matrix.org
+				</a> and I'll help you get started.
+			</p>
+			<p></p>
+		</div>
+
+		<div class="Box Box--text Box--full">
+			<div class="Cards Cards--grid Cards--withUpgrades">
+				{cards.map((card) => <CardPair card={card} gameState={{}} client:load />)}
+			</div>
+		</div>
+	</article>
+</Layout>

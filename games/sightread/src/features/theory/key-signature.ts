@@ -1,0 +1,245 @@
+export type KEY_SIGNATURE =
+  | 'Cb'
+  | 'Gb'
+  | 'Db'
+  | 'Ab'
+  | 'Eb'
+  | 'Bb'
+  | 'F'
+  | 'C'
+  | 'G'
+  | 'D'
+  | 'A'
+  | 'E'
+  | 'B'
+  | 'F#'
+  | 'C#'
+
+export function getKeySignatures(): KEY_SIGNATURE[] {
+  return ['Cb', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F', 'C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#']
+}
+
+export type Note = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'
+
+// TODO
+function inferKey(): KEY_SIGNATURE {
+  return 'C'
+}
+
+type KeyAlterationMap = {
+  [keyname in KEY_SIGNATURE]: KeyDetails
+}
+
+export type KeyDetails = {
+  type: 'sharp' | 'flat'
+  notes: Note[]
+}
+
+const keyToNotes: { [sig in KEY_SIGNATURE]: string[] } = {
+  // Sharps
+  C: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+  G: ['C', 'C#', 'D', 'D#', 'E', 'F♮', 'F', 'G', 'G#', 'A', 'A#', 'B'],
+  D: ['C♮', 'C', 'D', 'D#', 'E', 'F♮', 'F', 'G', 'G#', 'A', 'A#', 'B'],
+  A: ['C♮', 'C', 'D', 'D#', 'E', 'F♮', 'F', 'G♮', 'G', 'A', 'A#', 'B'],
+  E: ['C♮', 'C', 'D♮', 'D', 'E', 'F♮', 'F', 'G♮', 'G', 'A', 'A#', 'B'],
+  B: ['C♮', 'C', 'D♮', 'D', 'E', 'F♮', 'F', 'G♮', 'G', 'A♮', 'A', 'B'],
+  'F#': ['C♮', 'C', 'D♮', 'D', 'E♮', 'E', 'F', 'G♮', 'G', 'A♮', 'A', 'B'],
+  'C#': ['B', 'C', 'D♮', 'D', 'E♮', 'E', 'F', 'G♮', 'G', 'A♮', 'A', 'B♮'],
+
+  // Flats
+  F: ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B', 'B♮'],
+  Bb: ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'],
+  Eb: ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'],
+  Ab: ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'],
+  Db: ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'],
+  Gb: ['C♭', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'],
+  Cb: ['C♭', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'],
+}
+
+let keyDetailsMap: KeyAlterationMap = getKeyDetailsMap()
+function getKeyDetailsMap(): KeyAlterationMap {
+  const alterMap: KeyAlterationMap = {
+    // Sharps
+    C: { notes: [], type: 'sharp' },
+    G: { notes: ['F'], type: 'sharp' },
+    D: { notes: ['F', 'C'], type: 'sharp' },
+    A: { notes: ['F', 'C', 'G'], type: 'sharp' },
+    E: { notes: ['F', 'C', 'G', 'D'], type: 'sharp' },
+    B: { notes: ['F', 'C', 'G', 'D', 'A'], type: 'sharp' },
+    'F#': { notes: ['F', 'C', 'G', 'D', 'A', 'E'], type: 'sharp' },
+    'C#': { notes: ['F', 'C', 'G', 'D', 'A', 'E', 'B'], type: 'sharp' },
+
+    // Flats
+    F: { notes: ['B'], type: 'flat' },
+    Bb: { notes: ['B', 'E'], type: 'flat' },
+    Eb: { notes: ['B', 'E', 'A'], type: 'flat' },
+    Ab: { notes: ['B', 'E', 'A', 'D'], type: 'flat' },
+    Db: { notes: ['B', 'E', 'A', 'D', 'G'], type: 'flat' },
+    Gb: { notes: ['B', 'E', 'A', 'D', 'G', 'C'], type: 'flat' },
+    Cb: { notes: ['B', 'E', 'A', 'D', 'G', 'C', 'F'], type: 'flat' },
+  }
+
+  return alterMap
+}
+
+const midiToSigMap: { [num: number]: KEY_SIGNATURE } = {
+  '-7': 'Cb',
+  '-6': 'Gb',
+  '-5': 'Db',
+  '-4': 'Ab',
+  '-3': 'Eb',
+  '-2': 'Bb',
+  '-1': 'F',
+  '0': 'C',
+  '1': 'G',
+  '2': 'D',
+  '3': 'A',
+  '4': 'E',
+  '5': 'B',
+  '6': 'F#',
+  '7': 'C#',
+}
+const keySigToFifth = Object.fromEntries(Object.entries(midiToSigMap).map(([k, v]) => [v, k]))
+
+export function getKeyDetails(key: KEY_SIGNATURE): KeyDetails {
+  return keyDetailsMap[key]
+}
+
+const keySignatureToPitchClass: Record<KEY_SIGNATURE, number> = {
+  C: 0,
+  G: 7,
+  D: 2,
+  A: 9,
+  E: 4,
+  B: 11,
+  'F#': 6,
+  'C#': 1,
+  F: 5,
+  Bb: 10,
+  Eb: 3,
+  Ab: 8,
+  Db: 1,
+  Gb: 6,
+  Cb: 11,
+}
+
+const pitchClassToSignature: Record<
+  number,
+  { sharp?: KEY_SIGNATURE; flat?: KEY_SIGNATURE; default: KEY_SIGNATURE }
+> = {
+  0: { default: 'C' },
+  1: { sharp: 'C#', flat: 'Db', default: 'C#' },
+  2: { default: 'D' },
+  3: { flat: 'Eb', default: 'Eb' },
+  4: { default: 'E' },
+  5: { flat: 'F', default: 'F' },
+  6: { sharp: 'F#', flat: 'Gb', default: 'F#' },
+  7: { default: 'G' },
+  8: { flat: 'Ab', default: 'Ab' },
+  9: { default: 'A' },
+  10: { flat: 'Bb', default: 'Bb' },
+  11: { sharp: 'B', flat: 'Cb', default: 'B' },
+}
+
+export function transposeKeySignature(
+  keySignature: KEY_SIGNATURE,
+  semitones: number,
+): KEY_SIGNATURE {
+  if (semitones === 0) {
+    return keySignature
+  }
+  const pitchClass = keySignatureToPitchClass[keySignature]
+  const shifted = (((pitchClass + semitones) % 12) + 12) % 12
+  const preference = getKeyDetails(keySignature).type
+  const options = pitchClassToSignature[shifted]
+
+  if (preference === 'sharp' && options.sharp) {
+    return options.sharp
+  }
+  if (preference === 'flat' && options.flat) {
+    return options.flat
+  }
+  return options.default
+}
+
+export function transposeMidi(midiNote: number, semitones: number): number {
+  const transposed = midiNote + semitones
+  if (transposed < 0) {
+    return 0
+  }
+  if (transposed > 127) {
+    return 127
+  }
+  return transposed
+}
+
+export function getKeySignatureFromMidi(key: number, scale: number): KEY_SIGNATURE {
+  return midiToSigMap[key]
+}
+
+function circleOfFifths(fifth: number) {
+  fifth = fifth % 8
+  const cScale = [0, 2, 4, 5, 7, 9, 11]
+  const fifthSemitones = 7
+  return cScale.map((n) => (((n + fifth * fifthSemitones) % 12) + 12) % 12)
+}
+
+export function getRandomNote(minOctave: number, maxOctave: number, keySignature: KEY_SIGNATURE) {
+  const fifth = +keySigToFifth[keySignature]
+  const scale = circleOfFifths(fifth)
+  const C0 = 24
+  return C0 + (randomInt(minOctave, maxOctave) - 1) * 12 + scale[randomInt(0, 6)]
+}
+
+function randomInt(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1) + min)
+}
+
+//  TO BE MOVED
+// E.g. A0 --> 0, C8 --> 108.
+const keyToNote: { [key: string]: number } = {}
+const noteToKey: { [note: number]: string } = {}
+
+// noteToKey specifically for soundfonts.
+;(function () {
+  const A0 = 21 // first note
+  const C8 = 108 // last note
+  const number2Key = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+  for (let n = A0; n <= C8; n++) {
+    const octave = ((n - 12) / 12) >> 0
+    const name = number2Key[n % 12] + octave
+    keyToNote[name] = n
+    noteToKey[n] = name
+  }
+})()
+
+export function getNote(key: string): number {
+  return keyToNote[key]
+}
+
+export function getKey(note: number, keySignature: KEY_SIGNATURE = 'C'): string {
+  return keyToNotes[keySignature][note % 12]
+}
+
+export function getOctave(note: number): number {
+  return Math.floor((note - 12) / 12)
+}
+
+export type NOTE_LABELS = 'alphabetical' | 'fixed-do' | 'none'
+
+const alphabetToFixedDoKey: { [key: string]: string } = {
+  C: 'Do',
+  D: 'Re',
+  E: 'Mi',
+  F: 'Fa',
+  G: 'Sol',
+  A: 'La',
+  B: 'Si',
+}
+
+export function getFixedDoNoteFromKey(key: string): string {
+  const step = key[0]
+  const accidental = key.length === 2 ? key[1] : undefined
+
+  return `${alphabetToFixedDoKey[step] ?? step}${accidental ?? ''}`
+}

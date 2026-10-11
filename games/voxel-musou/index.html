@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>趙雲 — Voxel Musou</title>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/" } }
+</script>
+<style>
+  html, body { margin: 0; height: 100%; background: #1a120d; overflow: hidden; }
+  canvas#c { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
+
+  /* ---- HUD (owned by the hud part). DW8 layout, concept calligraphy. 1rem = 1/72 viewport height (10 px @720p). ---- */
+  html { font-size: calc(100vh / 72); }
+  :root { --brush: "Xingkai SC", "STXingkai", "HudBrush", serif; --kai: "Kaiti SC", "STKaiti", "KaiTi", "HudBrush", serif;
+    --sans: "Avenir Next", "Helvetica Neue", sans-serif; }
+  /* Portable brush fallback for machines without the macOS Xingkai/Kaiti assets: Yuji Boku (SIL OFL 1.1, Kinuta Font
+     Factory), subset to the HUD's glyphs (src/ui/brush.woff2). Only fetched when the fonts before it are missing.
+     When you add HUD text with new CJK characters, re-subset (Google Fonts css2?family=Yuji+Boku&text=...). */
+  @font-face { font-family: "HudBrush"; src: url(./src/ui/brush.woff2) format("woff2"); font-display: swap; }
+  #hud { position: fixed; inset: 0; pointer-events: none; color: #f4ead8; user-select: none; overflow: hidden;
+    --gold: #f2c14e; --teal: #3fb8b0; --seal: #b3261e;
+    font-family: var(--kai); text-shadow: 0 .2rem .3rem rgba(0,0,0,.7); }
+  #hud > * { position: absolute; }
+  /* hidden (pause, screens) fades instead of display:none, so un-pausing doesn't replay the entry below */
+  #hud { transition: opacity .25s, visibility 0s; }
+  #hud[hidden] { display: block; opacity: 0; visibility: hidden; transition: opacity .2s, visibility 0s .2s; }
+  /* battle entry (main.js flow.go replays .in): the intro card brushes in, the bands slide in from their edges, staggered */
+  #hud.in .h-intro { animation: hudBrush .7s cubic-bezier(.3,0,.2,1) .15s backwards; }
+  #hud.in .h-player { animation: hudUp .55s cubic-bezier(.2,0,.2,1) .3s backwards; }
+  #hud.in :is(.h-map, .h-ko) { animation: hudIn .55s cubic-bezier(.2,0,.2,1) .42s backwards; }
+  @keyframes hudBrush { from { clip-path: inset(0 100% 0 0); opacity: 0; } }
+  @keyframes hudUp { from { translate: 0 6rem; opacity: 0; } }
+  @keyframes hudIn { from { translate: 8rem 0; opacity: 0; } }
+  #hud .seal { display: inline-block; --sz: 1.3rem; --pad: .3rem .22rem; --rad: .25rem; --glyph: 248 230 210; --r1: .14rem; --r2: .24rem;
+    --drop: 0 .15rem .4rem rgba(0,0,0,.5); }
+  #hud .bar { position: relative; background: rgba(10,7,6,.75); box-shadow: 0 0 0 .1rem rgba(0,0,0,.6), 0 .2rem .5rem rgba(0,0,0,.45); }
+  #hud .bar i, #hud .bar em { position: absolute; inset: 0; transform-origin: 0 50%; }
+  #hud .bar em { background: #f7efe2; }
+
+  /* intro card: title + controls (concept top-left typography) */
+  /* one ink plate behind the whole card (name, romanisation, epithet, keys): readable over any crowd */
+  #hud .h-intro { left: 0; top: 1.4rem; padding: .6rem 9rem 1rem 2.6rem;
+    background: linear-gradient(90deg, rgba(10,7,5,.9), rgba(10,7,5,.84) calc(100% - 10rem), rgba(10,7,5,0));
+    box-shadow: inset .3rem 0 0 var(--seal); }
+  #hud .h-intro .zh { display: inline-block; font: 700 8rem/1 var(--brush); letter-spacing: .3rem; color: #f7f1e8;
+    text-shadow: 0 0 .1rem #000, .3rem .4rem 0 rgba(0,0,0,.5), 0 0 2rem rgba(0,0,0,.4); }
+  #hud .h-intro .seal { vertical-align: 1.2rem; margin-left: .6rem; }
+  #hud .h-intro .en { font: 600 max(13px, 1.45rem)/1 var(--sans); letter-spacing: .5em; margin: .4rem 0 0 .5rem; color: #f4e2b8; }
+  #hud .h-intro .sub { font-size: max(15px, 1.75rem); letter-spacing: .3rem; margin: 1rem 0 0 .4rem; color: #fbf3e4;
+    text-shadow: 0 .1rem .2rem #000, 0 0 .6rem rgba(0,0,0,.9); }
+  #hud .h-intro .keys { font: 500 max(13px, 1.3rem)/2.2 var(--sans); margin: 1rem 0 0 .2rem; padding: .4rem 0 0; color: #f1e6d2;
+    border-top: .1rem solid rgba(214,170,90,.4); }
+  #hud kbd { font: 600 1.05rem/1 var(--sans); padding: .2rem .45rem; border: .1rem solid rgba(239,227,207,.55); border-radius: .3rem;
+    background: rgba(0,0,0,.4); margin-right: .15rem; }
+
+  /* player: pixel portrait badge, brush name, long teal HP bar, 3-segment musou gauge (DW8 bottom band) */
+  #hud .h-player { left: 0; right: 0; bottom: 0; height: 20rem; }
+  #hud .badge { position: absolute; left: 3.4rem; bottom: 4.2rem; width: 11rem; height: 11rem; border-radius: 50%; overflow: hidden;
+    background: radial-gradient(circle at 50% 38%, #3c6f72, #16262a 70%); border: .35rem solid #d9d2c6;
+    box-shadow: 0 0 0 .2rem #1a1210, 0 0 0 .38rem #b8893a, 0 .4rem 1rem rgba(0,0,0,.6); }
+  #hud .badge canvas { position: absolute; left: 1.1rem; bottom: -.3rem; width: 8.8rem; height: 8.8rem; image-rendering: pixelated; }
+  #hud .h-player.hurt .badge { border-color: #ff6a4a; }
+  #hud .h-player.low .badge { box-shadow: 0 0 0 .2rem #1a1210, 0 0 0 .38rem #d23a24, 0 0 1.6rem rgba(230,60,30,.7); }
+  #hud .name { position: absolute; left: 16rem; bottom: 8.9rem; font: 700 3.8rem/1 var(--brush); color: #f7f1e8;
+    text-shadow: 0 0 .1rem #000, .2rem .3rem 0 rgba(0,0,0,.55); }
+  #hud .hp { position: absolute; left: 16%; right: 22%; bottom: 6.8rem; height: 1.4rem;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 1rem) 100%, 0 100%);
+    background: linear-gradient(rgba(58,46,38,.88), rgba(20,15,12,.88)); }   /* empty track: readable length */
+  #hud .hp::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 .12rem rgba(214,184,130,.6); }
+  #hud .hp em { opacity: .8; background: repeating-linear-gradient(90deg, rgba(0,0,0,.2) 0 .2rem, transparent .2rem .6rem),
+    linear-gradient(#ffe6c0, #d8a060); }                                                  /* damage chunk (lags, then drains) */
+  #hud .hp i { background: linear-gradient(#aef3e6 0 18%, #3fc2b4 30%, #1f8a82 85%, #146058); }
+  #hud .h-player.low .hp i { background: linear-gradient(#ffb09a 0 18%, #e2402a 30%, #9a1c10 85%); }
+  #hud .mu { position: absolute; left: 15%; width: 30%; bottom: 4.7rem; height: 1.3rem; display: flex; gap: .4rem; --p: 0; }
+  #hud .mu div { position: relative; flex: 1; background: rgba(10,7,6,.75); box-shadow: 0 0 0 .1rem #6b4a1c, 0 0 0 .2rem rgba(0,0,0,.6);
+    transform: skewX(-24deg); }
+  #hud .mu i { position: absolute; inset: .15rem; transform-origin: 0 50%;
+    background: repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 .2rem, transparent .2rem .6rem), linear-gradient(#fff2b8, #f2c14e 45%, #b8791c); }
+  #hud .mu span { position: absolute; left: calc(100% + 1.2rem); top: -1.1rem; white-space: nowrap; font: 700 2.4rem/1 var(--brush); color: #cdb994;
+    text-shadow: 0 0 .15rem #000, 0 0 .4rem #000, .15rem .2rem 0 rgba(0,0,0,.85); }   /* empty gauge: dim but legible over sunlit ground */
+  #hud .mu.full div { box-shadow: 0 0 0 .1rem #ffe8a0, 0 0 calc(.6rem + var(--p) * 1.4rem) rgba(255,200,80,.95); }
+  #hud .mu.full i { background: linear-gradient(100deg, transparent calc(var(--s, -50%) - 18%), rgba(255,255,240,.9) var(--s, -50%), transparent calc(var(--s, -50%) + 18%)),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.14) 0 .2rem, transparent .2rem .6rem), linear-gradient(#fffbe0, #ffd45e 45%, #d08a1c); }
+  #hud .mu.full span { color: #ffe3a0; text-shadow: 0 0 calc(.4rem + var(--p) * 1.2rem) #ffb030, .2rem .3rem 0 rgba(0,0,0,.6); }
+  #hud .mu.active i { background: linear-gradient(#ffffff, #bfe8ff 45%, #4aa2ff); }
+  #hud .mu.active span { color: #d8f2ff; text-shadow: 0 0 1rem #58b2ff; }
+
+  /* Heavy numerals (KO, chain, milestone): DW8's weight in brush calligraphy. <b class="dig" data-t="N"><span>N</span></b>:
+     ::before is a dark rim + halo (thick stroke, drop shadows) so digits read over white musou flashes and dark crowds;
+     the span is a bevelled vertical gradient, fattened by an edge stroke in the mid tone. */
+  #hud .dig { position: relative; isolation: isolate; padding: 0 .12em; --rw: .6rem; --ew: .16rem;
+    --hi: #fffbe0; --mid: #ffd865; --lo: #b8680e; --rim: #2a1204; --edge: #f2b440; }
+  #hud .dig::before { content: attr(data-t); position: absolute; left: 0; top: 0; padding: inherit; z-index: -1; text-shadow: none;
+    color: var(--rim); -webkit-text-stroke: var(--rw) var(--rim); filter: drop-shadow(0 0 .7rem rgba(0,0,0,.65)) drop-shadow(.3rem .4rem 0 rgba(0,0,0,.5)); }
+  #hud .dig span { text-shadow: none; color: transparent; -webkit-text-stroke: var(--ew) var(--edge);
+    background: linear-gradient(var(--hi), var(--mid) 40%, color-mix(in srgb, var(--mid), var(--lo)) 62%, var(--lo));
+    -webkit-background-clip: text; background-clip: text; }
+
+  /* counters: KO bottom right (gold), chain left (ice cyan) — brush numerals, ghost layer <u> */
+  #hud .num { position: relative; display: inline-block; }
+  #hud .num b, #hud .num u { display: inline-block; font: 700 6.6rem/1 var(--brush); text-decoration: none; }
+  #hud .num u { position: absolute; right: 0; top: 0; opacity: 0; }
+  #hud .h-ko { right: 6.5%; bottom: 5.4rem; text-align: right; }
+  #hud .h-ko b { transform-origin: 100% 85%; }
+  #hud .h-ko u { color: #ffd66a; transform-origin: 100% 85%; padding: 0 .12em; text-shadow: 0 0 1.4rem rgba(255,190,60,.9); }
+  #hud small { display: block; font: 700 1.15rem/1 var(--sans); letter-spacing: .3em; text-shadow: 0 0 .3rem #000, 0 .15rem .3rem rgba(0,0,0,.8); }
+  #hud small em { font: 700 1.9rem/1 var(--brush); font-style: normal; letter-spacing: .1em; margin-right: .5rem; vertical-align: -.3rem; }
+  #hud .h-ko small { color: #ffe0a0; margin-top: -.4rem; }
+  #hud .h-chain { left: 11%; top: 45%; }
+  #hud .h-chain b { transform-origin: 0 85%; --hi: #f4feff; --mid: #9aeaff; --lo: #1d78c0; --rim: #041a2e; --edge: #5cc8f4; }
+  /* chain ghosts (pool of 3, one per tick): pale cyan digit with a DW8 motion smear trailing up-right, where it came from */
+  #hud .h-chain u { transform-origin: 0 100%; color: #f4feff; -webkit-text-stroke: .22rem #3aa6f0; padding: 0 .12em;
+    text-shadow: .12em -.1em 0 rgba(130,220,255,.55), .24em -.2em 0 rgba(110,205,255,.3), .36em -.3em .1rem rgba(90,190,255,.14),
+      0 0 1.2rem rgba(90,200,255,.9); }
+  #hud .h-chain small { color: #bfeeff; margin: -.3rem 0 0 .3rem; }
+
+  /* KO milestone: centre, heavy gold brush number (digits ~13 % H like DW8) + red 擊破 seal stamp */
+  #hud .h-mile { right: calc(2.4% + 24rem); top: 3.4rem; text-align: right; opacity: 0; transform-origin: 70% 50%; }
+  #hud .h-mile b { display: inline-block; font: 700 11rem/1 var(--brush); --rw: 1rem; --ew: .3rem; --hi: #fffdf0; --mid: #ffdc6a;
+    vertical-align: middle; }
+  #hud .h-mile b::before { filter: drop-shadow(0 0 1.4rem rgba(0,0,0,.8)) drop-shadow(.5rem .6rem 0 rgba(0,0,0,.5)); }
+  #hud .h-mile .seal { font-size: 3.3rem; padding: .6rem .45rem; vertical-align: middle; margin-left: .2rem; }
+
+  /* system banner: full-width band y 64-71 %; dialogue: portrait + 2 lines, lower left */
+  #hud .h-band { left: 0; right: 0; top: 64%; padding: .6rem 0 .7rem; text-align: center; opacity: 0;
+    background: linear-gradient(90deg, rgba(10,6,4,0), rgba(10,6,4,.72) 22%, rgba(10,6,4,.72) 78%, rgba(10,6,4,0));
+    border-image: linear-gradient(90deg, transparent, rgba(214,170,90,.8) 30%, rgba(214,170,90,.8) 70%, transparent) 1; border-width: .1rem 0; border-style: solid; }
+  #hud .h-band p { margin: 0; font: 700 2.6rem/1.15 var(--kai); letter-spacing: .4rem; }
+  #hud .h-band p em { font-style: normal; color: #ff5b3c; }
+  #hud .h-band small { margin-top: .35rem; opacity: .8; font-weight: 500; }
+  #hud .h-dlg { left: 2.6rem; top: 9.6rem; display: flex; gap: 1.2rem; align-items: center; opacity: 0; padding: .6rem 6rem .6rem 1rem;
+    background: linear-gradient(90deg, rgba(10,6,4,.8), rgba(10,6,4,.6) 65%, rgba(10,6,4,0)); border-left: .25rem solid var(--teal); }
+  #hud .h-dlg canvas { width: 5.6rem; height: 5.6rem; image-rendering: pixelated; background: #1d3a3c; box-shadow: 0 0 0 .15rem #d9d2c6; }
+  #hud .h-dlg b { font: 700 2rem/1 var(--brush); color: #9fe6de; }
+  #hud .h-dlg b span { font: 600 .95rem/1 var(--sans); letter-spacing: .3em; color: #9fe6de; opacity: .8; margin-left: .5rem; }
+  #hud .h-dlg p { margin: .4rem 0 .35rem; font: 700 2.3rem/1.1 var(--kai); letter-spacing: .12rem; white-space: nowrap; }
+  #hud .h-dlg small { font-weight: 600; letter-spacing: .06em; font-size: 1.6rem; white-space: nowrap; color: #f4ead8; }
+  /* story NPCs speak under a carved name seal (Shu: jade ink, Wei: vermilion); an enemy line turns the rule and name red */
+  #hud .h-dlg .dseal { display: none; width: 5.6rem; height: 5.6rem; flex: none; box-sizing: border-box; font: 700 3.9rem/5.1rem var(--brush);
+    font-style: normal; text-align: center; color: #f3e6cf; background: #1f5a52; border-radius: .35rem; text-shadow: none;
+    box-shadow: inset 0 0 0 .22rem #1f5a52, inset 0 0 0 .38rem rgba(243,230,207,.8), 0 0 0 .15rem #d9d2c6, 0 .3rem .6rem rgba(0,0,0,.5); }
+  #hud .h-dlg.wei { border-left-color: #d4412c; }
+  #hud .h-dlg.wei b, #hud .h-dlg.wei b span { color: #ffb09a; }
+  #hud .h-dlg.wei .dseal { background: var(--seal); box-shadow: inset 0 0 0 .22rem var(--seal), inset 0 0 0 .38rem rgba(248,230,210,.8),
+    0 0 0 .15rem #d9d2c6, 0 .3rem .6rem rgba(0,0,0,.5); }
+  /* big band: commander intro / 討取 banner, DW8's slain-officer weight */
+  #hud .h-band.lo { left: 26%; right: 26%; top: 27%; padding: .4rem 0 .5rem;
+    background: linear-gradient(90deg, rgba(10,6,4,0), rgba(10,6,4,.78) 18%, rgba(10,6,4,.78) 82%, rgba(10,6,4,0)); }
+  #hud .h-band.lo p { font-size: 2.2rem; }
+  #hud .h-band.big { padding: 1rem 0 1.1rem; }
+  #hud .h-band.big p { font: 700 5.2rem/1.1 var(--brush); letter-spacing: .6rem; color: #ffe3a0;
+    text-shadow: 0 0 .1rem #000, .25rem .35rem 0 rgba(0,0,0,.6), 0 0 2rem rgba(255,170,60,.45); }
+  #hud .h-band.big small { font-size: 1.4rem; letter-spacing: .4em; }
+
+  /* musou: concept's vertical copy on the right */
+  #hud .h-copy { right: 3.2%; top: 44%; writing-mode: vertical-rl; font: 700 3.4rem/1.3 var(--brush); letter-spacing: .5rem; opacity: 0;
+    color: #f7f1e8; text-shadow: 0 0 .1rem #000, .2rem .3rem 0 rgba(0,0,0,.55), 0 0 1.4rem rgba(120,200,255,.5);
+    border-top: .15rem solid rgba(247,241,232,.7); border-bottom: .15rem solid rgba(247,241,232,.7); padding: 1rem 0; }
+
+  /* officer target bar (top left) + floating officer tags */
+  #hud .h-target { left: 2.6rem; top: 5rem; width: 36%; opacity: 0; }
+  /* objective line (story lane: dialogue/objective parts) */
+  #hud .h-obj { left: 2.6rem; top: 1.6rem; opacity: 0; font: 700 1.8rem/1 var(--kai); padding: .5rem 3rem .5rem .8rem;
+    background: linear-gradient(90deg, rgba(12,8,6,.6), rgba(12,8,6,0)); color: #f4ead8; white-space: nowrap; }
+  #hud .h-obj i { font-style: normal; color: var(--gold); margin-right: .5rem; }
+  #hud .h-obj small { font: 600 max(13px, 1.3rem)/1 var(--sans); letter-spacing: .1em; margin-left: .8rem; color: #e6d8bc; }
+  #hud .h-obj small, #hud .h-obj .go { display: inline-block; }
+  #hud .h-obj b { transition: color .6s; }
+  #hud .h-obj.new b { color: #ffe08a; text-shadow: 0 0 1rem rgba(255,190,60,.8), 0 .2rem .3rem rgba(0,0,0,.7); }
+  #hud .h-obj .go { margin-left: 1.2rem; font: 700 max(13px, 1.3rem)/1 var(--sans); letter-spacing: .1em; color: var(--gold); vertical-align: .1rem; }
+  #hud .h-obj .ar { display: inline-block; width: 0; height: 0; margin: 0 .5rem -.1rem 0; border: .55rem solid transparent;
+    border-bottom: 1.1rem solid var(--gold); border-top-width: 0; transform-origin: 50% 60%; filter: drop-shadow(0 0 .2rem #000); }
+  /* objective countdown (story obj.timer, hud.js): a vermilion-edged tag with brush m:ss, pulsing red over the last 10 s */
+  #hud .h-obj .tm { display: inline-block; margin-left: 1.4rem; padding: .2rem .8rem .25rem .6rem; vertical-align: .05rem;
+    background: rgba(12,8,6,.6); box-shadow: inset .25rem 0 0 var(--seal); }
+  #hud .h-obj .tm i { margin-right: .6rem; vertical-align: .35rem; font: 700 1.2rem/1 var(--kai); color: #ffb49a; }
+  #hud .h-obj .tm b { font: 700 2.4rem/1 var(--brush); letter-spacing: .1rem; color: #ffe08a; font-variant-numeric: tabular-nums; }
+  #hud .h-obj .tm.low b { color: #ff5b3c; animation: tmPulse 1s ease-in-out infinite; }
+  @keyframes tmPulse { 50% { opacity: .45; } }
+  /* defend point (story `defend`, hud.js): name + HP bar under the minimap, our teal; vermilion below 30 % */
+  #hud .h-def { right: 2.4%; top: 27.4rem; width: 22.5rem; white-space: nowrap; opacity: 0; transition: opacity .4s; }   /* the minimap's width */
+  #hud .h-def .seal { margin-right: .6rem; padding: .2rem .25rem; vertical-align: .35rem; writing-mode: horizontal-tb; }
+  #hud .h-def b { font: 700 2.2rem/1 var(--brush); color: #c8f4ec; }
+  #hud .h-def span { margin-left: .6rem; font: 600 .95rem/1 var(--sans); letter-spacing: .2em; opacity: .85; }
+  #hud .h-def .bar { height: .9rem; margin-top: .45rem; clip-path: polygon(0 0, 100% 0, calc(100% - .6rem) 100%, 0 100%); }
+  #hud .h-def .bar i { background: linear-gradient(#c8fff6 0 20%, #3fb8b0 40%, #1f5f5c); }
+  #hud .h-def.low .bar i { background: linear-gradient(#ffb49a 0 20%, #e0442e 35%, #8e1c10); }
+  #hud .h-target .seal { font-size: 1.6rem; vertical-align: .6rem; margin-right: .6rem; writing-mode: horizontal-tb; padding: .25rem .3rem; }
+  #hud .h-target b { font: 700 2.8rem/1 var(--brush); color: #ffe3b0; }
+  #hud .h-target span { font: 600 1rem/1 var(--sans); letter-spacing: .35em; margin-left: .8rem; opacity: .85; }
+  #hud .h-target .bar { height: 1rem; margin-top: .5rem; clip-path: polygon(0 0, 100% 0, calc(100% - .7rem) 100%, 0 100%); }
+  #hud .h-target .bar i { background: linear-gradient(#ffb49a 0 20%, #e0442e 35%, #8e1c10); }
+  #hud .h-target .bar em { background: #ffcf8a; }
+  #hud .h-target strong { position: absolute; left: 14rem; top: -.6rem; font: 700 4rem/1 var(--brush); color: #ff5b3c; opacity: 0;
+    transform: rotate(-8deg); -webkit-text-stroke: .2rem #3a0a04; paint-order: stroke fill; }
+  #hud .h-target.ko strong { opacity: 1; }
+  /* actors lane: boss bar (top, left of the minimap: clear of the objective line): brush name + red seal + romanisation, a
+     long red HP bar with the white lag chunk, the gold poise bar under it; pulses red while he is enraged (--p from JS).
+     Friendly hero-model officers' floating tags: a jade name, no ▼▼ / HP; the one in the boss bar: ▼▼ only */
+  #hud .h-boss { right: calc(2.4% + 24.5rem); top: 1.4rem; width: 38rem; opacity: 0; transition: opacity .3s; }
+  #hud .h-boss b { font: 700 3.4rem/1 var(--brush); letter-spacing: .3rem; color: #ffe3b0;
+    text-shadow: 0 0 .1rem #000, .2rem .3rem 0 rgba(0,0,0,.55), 0 0 1.4rem rgba(200,40,20,.45); }
+  #hud .h-boss .seal { font-size: 1.4rem; margin: 0 .7rem; vertical-align: .4rem; padding: .25rem .2rem; }
+  #hud .h-boss span { font: 600 1.05rem/1 var(--sans); letter-spacing: .4em; opacity: .85; vertical-align: 1rem; }
+  #hud .h-boss .bhp { height: 1.4rem; margin-top: .45rem; clip-path: polygon(.8rem 0, 100% 0, calc(100% - .8rem) 100%, 0 100%); }
+  #hud .h-boss .bhp i { background: linear-gradient(#ff9a7a 0 18%, #d0301c 42%, #6e140c); }
+  #hud .h-boss .bhp em { background: #ffcf8a; }
+  #hud .h-boss .bpo { height: .45rem; margin: .35rem 1.2rem 0 .5rem; }
+  #hud .h-boss .bpo i { background: linear-gradient(#fff4c8, #e0a640); }
+  #hud .h-boss.rage .bhp i { filter: brightness(calc(1 + .7 * var(--p, .5))) saturate(1.3); }
+  #hud .h-boss.rage b { color: #ffb49a; }
+  #hud .off.ally .mk, #hud .off.ally .bar, #hud .off.boss .bd, #hud .off.boss .ld { display: none; }
+  #hud .off.ally b { color: #b4f0bc; }
+  #hud .h-offs { inset: 0; }
+  #hud .off { position: absolute; left: 0; top: 0; width: 0; height: 0; opacity: 0; }
+  /* anchor = the ▼▼ tip on the officer's head; .bd (name, romanisation, HP bar ~16 % W) is a 0×0 box at the anchor,
+     moved/scaled from JS; .ld is the 1 px leader drawn when the body had to leave the ▼▼ */
+  #hud .off .bd { position: absolute; left: 0; bottom: 0; width: 0; height: 0; }
+  #hud .off b, #hud .off span, #hud .off .bar { position: absolute; left: -11rem; width: 22rem; text-align: center; }
+  #hud .off b { bottom: 2.75rem; font: 700 2.5rem/1 var(--brush); color: #ffd9a8; }
+  #hud .off span { bottom: 1.3rem; font: 700 1.3rem/1 var(--sans); letter-spacing: .24em; color: #f6e6d2; }
+  #hud .off .bar { bottom: .2rem; left: -10.5rem; width: 21rem; height: .8rem; clip-path: polygon(0 0, 100% 0, calc(100% - .5rem) 100%, 0 100%); }
+  #hud .off .bar i { background: linear-gradient(#ffb49a 0 20%, #e0442e 35%, #8e1c10); }
+  #hud .off .mk { position: absolute; left: 0; bottom: 0; transform-origin: 50% 100%; font: 700 1.6rem/1 var(--sans); color: #ff4a2e;
+    letter-spacing: -.2rem; white-space: nowrap; text-shadow: 0 0 .2rem #000, 0 .1rem .2rem rgba(0,0,0,.8); }
+  #hud .off .ld { position: absolute; left: -.07rem; bottom: 0; width: .14rem; height: 1px; transform-origin: 50% 100%;
+    background: rgba(255,217,168,.75); box-shadow: 0 0 .15rem rgba(0,0,0,.8); }
+
+  /* minimap: square battlefield map + ally / foe morale bar (top right; army colours --ally / --foe (ui) and --ally-d /
+     --foe-d (flag) set by hud.js from game.army) */
+  #hud .h-map { right: 2.4%; top: 4.2rem; width: 20rem; }
+  #hud .h-map canvas { display: block; width: 20rem; height: 20rem; box-shadow: 0 0 0 .1rem rgba(214,184,130,.75), 0 0 0 .25rem rgba(0,0,0,.45), 0 .4rem 1rem rgba(0,0,0,.4); }
+  #hud .morale { position: relative; height: .5rem; margin: 0 0 .7rem; background: linear-gradient(var(--foe), var(--foe-d)); box-shadow: 0 0 0 .1rem rgba(0,0,0,.6); }
+  #hud .morale i { position: absolute; inset: 0; background: linear-gradient(var(--ally), var(--ally-d)); transform-origin: 0 50%; }
+  #hud .morale span { position: absolute; top: -.6rem; font: 700 1.5rem/1 var(--brush); text-shadow: 0 0 .2rem #000; }
+  #hud .morale span:first-of-type { left: -2rem; color: var(--ally); }
+  #hud .morale span:last-of-type { right: -2rem; color: var(--foe); }
+  #hud .h-map .seal { position: absolute; left: .5rem; bottom: .5rem; font-size: 1.05rem; padding: .2rem .15rem; opacity: .9; }
+  /* start / pause menu: the sim waits behind it (Esc reopens it). Ink band + brush name, the title's menu vocabulary */
+  #menu { position: fixed; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: center; padding: 0 0 0 9vw;
+    color: #f4ead8; font-family: var(--kai); user-select: none;
+    background: linear-gradient(90deg, rgba(12,8,6,.92) 0, rgba(12,8,6,.78) 40%, rgba(12,8,6,.15) 75%, rgba(12,8,6,0)); }
+  #menu[hidden] { display: none; }
+  /* open: the ink band fades in over a light blur of the frozen field and its lines slide in, staggered (--d, inline in the
+     markup); close: fades out (display held for it: allow-discrete) */
+  #menu { backdrop-filter: blur(.3rem); transition: opacity .22s, backdrop-filter .3s, display .22s allow-discrete; }
+  #menu[hidden] { opacity: 0; backdrop-filter: blur(0); }
+  @starting-style { #menu { opacity: 0; backdrop-filter: blur(0); } }
+  #menu > * { animation: menuIn .45s cubic-bezier(.2,0,.2,1) var(--d, 0s) backwards; }   /* restarts on every open (display) */
+  #menu > table { animation-name: tableIn; --d: .1s; }
+  @keyframes tableIn { from { opacity: 0; translate: 3rem 0; } }
+  #menu .t { font: 700 13rem/1 var(--brush); letter-spacing: 1rem; color: #f7f1e8;
+    text-shadow: .4rem .5rem 0 rgba(0,0,0,.55), 0 0 3rem rgba(0,0,0,.5); }
+  #menu .t i { display: inline-block; vertical-align: 3rem; margin-left: 1.2rem; letter-spacing: 0;
+    --sz: 2.4rem; --pad: .5rem .35rem; --glyph: 248 230 210; --r1: .2rem; --r2: .35rem; }
+  #menu .en { font: 500 1.8rem/1 var(--sans); letter-spacing: 1.1em; margin: .6rem 0 0 .6rem; opacity: .85; }
+  #menu .sub { font: 700 2.4rem/1 var(--kai); letter-spacing: .6rem; margin: 1.6rem 0 0 .4rem; color: #f2c14e; }
+  #menu .sub small { font: 600 1.2rem/1 var(--sans); letter-spacing: .16em; margin-left: 1rem; color: var(--dim); }
+  #menu table { position: absolute; right: 6rem; top: 50%; transform: translateY(-50%); align-self: flex-start; border-collapse: collapse;
+    font: 500 1.45rem/1 var(--sans); border-left: .3rem solid #b3261e;
+    background: linear-gradient(90deg, rgba(12,8,6,.86), rgba(12,8,6,.7)); box-shadow: 0 0 4rem 2rem rgba(12,8,6,.5); }
+  #menu td { padding: .6rem 1.4rem; white-space: nowrap; }
+  #menu td:first-child { font: 700 2.2rem/1 var(--kai); color: #f2c14e; }
+  #menu td:first-child small { font: 500 1.3rem/1 var(--sans); letter-spacing: .15em; color: #cdbb9c; margin-left: .8rem; }
+  #menu td.pad { color: #c9b995; }
+  #menu td:nth-child(2) { white-space: normal; max-width: 34rem; line-height: 1.45; }   /* the pad column must not push the table over the name */
+  /* 繼續 / 撤退 (#go / #quit): brush items; the focused one (main.js pause nav, .on) gets the title menu's red diamond + a
+     gold swash, nudged right */
+  #menu button { position: relative; align-self: flex-start; margin: 1rem 0 0 .2rem; padding: .6rem 0 1rem 3rem; cursor: pointer; border: 0;
+    border-radius: 0; background: none; font: 700 4rem/1 var(--brush); letter-spacing: .4rem; color: rgba(244,234,216,.6);
+    text-shadow: 0 .3rem .6rem rgba(0,0,0,.7); transition: transform .2s cubic-bezier(.3,0,.2,1), color .2s; }
+  #menu #go { margin-top: 3.6rem; }
+  #menu button small { font: 600 max(13px, 1.3rem)/1 var(--sans); letter-spacing: .12em; margin-left: 1rem; opacity: .85; }
+  #menu button:focus-visible { outline: none; }
+  #menu button::before { content: ""; position: absolute; left: .6rem; top: 1.9rem; width: 1.1rem; height: 1.1rem; background: var(--sealr);
+    box-shadow: 0 0 0 .15rem #f2c14e; transform: rotate(45deg) scale(0); transition: transform .2s; }
+  #menu button::after { content: ""; position: absolute; left: 2.2rem; right: -4rem; bottom: .3rem; height: .5rem; z-index: -1;
+    background: linear-gradient(90deg, #f2c14e, rgba(242,193,78,0)); transform: skewX(-30deg) scaleX(0); transform-origin: 0 50%; transition: transform .3s; }
+  #menu button.on { color: #fff6e0; transform: translateX(1.2rem); text-shadow: 0 0 1.4rem rgba(255,200,90,.5), 0 .3rem .6rem rgba(0,0,0,.7); }
+  #menu button.on::before { transform: rotate(45deg) scale(1); }
+  #menu button.on::after { transform: skewX(-30deg) scaleX(1); }
+  #menu #quit.arm { color: #ffb49a; }
+  #menu #quit.arm small { display: block; margin: .7rem 0 0; color: #f4d8b8; }
+  #menu #quit.arm::after { background: linear-gradient(90deg, #d23a24, rgba(210,58,36,0)); }
+  #menu .hint { margin: 3rem 0 0 .4rem; font: 500 max(13px, 1.4rem)/1.5 var(--sans); letter-spacing: .08em; opacity: .85; }
+
+  /* ---- flow screens (main.js): one fixed full-screen layer each, shown one at a time (hidden attribute);
+     ui lane: #title #select · story lane: #prologue #result — each lane styles its own screen below its own marker. */
+  .scr { position: fixed; inset: 0; z-index: 3; color: #f4ead8; font-family: var(--kai); user-select: none; }
+  /* ui lane: #title / #select styles (+ #ink wipe, .ui-foot prompts, .ui-stamp seal, #menu look). Ink-wash + lacquer +
+     gold leaf in the HUD's language: brush calligraphy (--brush / --kai), red seals, gold-leaf gradients; 1rem = 1/72 vh. */
+  :root { --leaf: linear-gradient(#fffbe0, #ffd865 42%, #d69a2c 64%, #9a5a10); --paper: #f4ead8; --dim: #b9a888; --sealr: #b3261e; --shu: #2c6a48; }
+  #title, #select { overflow: hidden; }
+  #title button, #select button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+  #title button:focus-visible, #select button:focus-visible { outline: .15rem solid rgba(242,193,78,.7); outline-offset: .3rem; }
+  .t-veil, .s-veil { position: absolute; inset: 0; pointer-events: none; }
+  /* key chips on the screens and the pause menu (the HUD has its own, #hud kbd); .pad = a round gamepad face button */
+  .scr kbd, #menu kbd { display: inline-block; font: 600 max(12px, 1.3rem)/1 var(--sans); padding: .3rem .5rem; margin-right: .3rem; min-width: 1rem;
+    text-align: center; border: .12rem solid rgba(239,227,207,.6); border-radius: .35rem; background: rgba(0,0,0,.45); color: var(--paper); }
+  #title kbd, #prologue kbd { border-color: rgba(239,227,207,.75); background: rgba(0,0,0,.6); }
+  #select kbd { font-size: 1.2rem; border-color: rgba(239,227,207,.55); background: rgba(0,0,0,.4); }
+  #prologue kbd { margin-right: .4rem; min-width: auto; text-align: inherit; text-shadow: none; color: #f6ecd9; }
+  #menu kbd { display: inline; font-size: 1.5rem; padding: .3rem .6rem; border-radius: .4rem; min-width: auto; text-align: inherit; color: inherit; }
+  #menu .hint kbd { font-size: max(12px, 1.3rem); }
+  #title kbd.pad, #select kbd.pad, #menu kbd.pad { border-radius: 50%; min-width: 0; width: max(12px, 1.3rem); padding: .3rem; color: #1a120d;
+    background: #e9dcc2; border-color: #e9dcc2; }
+  #select kbd.pad { width: 1.2rem; }
+
+  /* prompts strip along the bottom (console-style button legend) */
+  .ui-foot { position: absolute; left: 7rem; right: 6rem; bottom: 2.6rem; display: flex; justify-content: flex-end; gap: 3.2rem;
+    padding-top: 1.1rem; font: 700 1.7rem/1 var(--kai); color: var(--paper);
+    border-top: .1rem solid; border-image: linear-gradient(90deg, transparent, rgba(214,170,90,.7) 40%, rgba(214,170,90,.7)) 1; }
+  .ui-foot small { font: 600 max(13px, 1.3rem)/1 var(--sans); letter-spacing: .1em; margin-left: .5rem; color: #dccdb0; }
+  /* red seals (HUD, menu, stamp, ink wait, title, select, loading, prologue): vertical brush glyphs on vermilion inside a
+     pale ring. Each sets --sz, --pad and, where it differs, --lh, --rad, --glyph (glyph + ring rgb), --r1 / --r2 (ring
+     edges), --ra (ring alpha), --drop (outer shadow). :where = no specificity, so every site's own rules win */
+  :where(#hud .seal, #menu .t i, .ui-stamp, .ink-wait i, .t-seal, .t-tag i, .t-cname i, .s-card > i, .s-seal, .l-seal, .l-tip span, #prologue .pl-stamp i) {
+    --glyph: 251 233 214; font: 700 var(--sz)/var(--lh, 1.05) var(--brush); font-style: normal; writing-mode: vertical-rl; padding: var(--pad);
+    border-radius: var(--rad, .3rem); color: rgb(var(--glyph)); background: var(--sealr); text-shadow: none;
+    box-shadow: inset 0 0 0 var(--r1) var(--sealr), inset 0 0 0 var(--r2) rgb(var(--glyph) / var(--ra, .75)), var(--drop, 0 0 #0000); }
+  /* slammed on a confirm (menu.js stamp) */
+  .ui-stamp { position: absolute; z-index: 2; pointer-events: none; white-space: nowrap; letter-spacing: 0;
+    --sz: 3rem; --pad: .45rem .35rem; --rad: .35rem; --r1: .2rem; --r2: .34rem; --ra: .8; --drop: 0 .3rem 1rem rgba(0,0,0,.55); }
+  /* ink wipe layer (menu.js inkWipe): ragged dry-brush edges via an SVG mask set from JS. .boot: the page opens under it */
+  #ink { position: fixed; top: 0; left: 0; width: 230vw; height: 100vh; z-index: 10; pointer-events: none; will-change: transform;
+    background: repeating-linear-gradient(177deg, rgba(255,240,210,.02) 0 .2rem, transparent .2rem 1.1rem), linear-gradient(#17100c, #0c0806 55%, #17100c);
+    -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; transform: translateX(100vw); }
+  #ink.boot { transform: translateX(-60vw); }
+  /* waiting seal, centred on the screen while the ink holds (x = 60vw + 50vw along the layer); shows only on a hold > .3 s */
+  .ink-wait { position: absolute; left: 110vw; top: 50%; width: 15rem; height: 15rem; margin: -7.5rem 0 0 -7.5rem; display: grid; place-items: center;
+    opacity: 0; transition: opacity .2s; background: radial-gradient(closest-side, rgba(120,60,20,.28), transparent); }
+  .inkhold .ink-wait { opacity: 1; transition: opacity .4s .3s; }
+  .ink-wait svg { position: absolute; inset: 0; width: 100%; height: 100%; animation: inkTurn 2.4s linear infinite; }
+  .ink-wait circle { fill: none; stroke: #d9a53a; stroke-linecap: round; filter: drop-shadow(0 0 .4rem rgba(242,193,78,.5)); }
+  .ink-wait p { width: 40rem; text-align: center; font: 700 3rem/1.4 var(--kai); color: #f4ead8; }
+  .ink-wait p small { display: block; font-size: 1.3rem; color: #cfc1a2; }
+  .ink-wait i, .t-seal { --sz: 3.4rem; --lh: 1.02; --pad: .7rem .5rem; --rad: .4rem; --r1: .24rem; --r2: .42rem; --ra: .85;
+    --drop: 0 .4rem 1.2rem rgba(0,0,0,.6); transform: rotate(-5deg); }   /* the title logo's 三國 seal too */
+  @keyframes inkTurn { to { transform: rotate(1turn); } }
+  /* under a holding ink the entered screen's intros wait, then play as it is revealed (menu.js hold) */
+  .inkhold :is(.scr, #hud) *, .inkhold .scr::before { animation-play-state: paused !important; }
+  .swash { position: absolute; pointer-events: none; fill: #d9a53a; filter: drop-shadow(0 0 .6rem rgba(242,193,78,.45));
+    clip-path: inset(0 100% 0 0); transition: clip-path .38s cubic-bezier(.5,0,.2,1); }
+  @keyframes fadeIn { from { opacity: 0; } }
+
+  /* ---- title: key art (two officers large on the right, live field behind), ink scrim band on the left with the logo
+     and menu. Legibility: every text sits on ≥ 85 % ink; small text ≥ 13 px and ≥ 7:1 on the band. */
+  #title .t-veil { background:
+      radial-gradient(46rem 30rem at 24rem 20rem, rgba(110,34,8,.22), transparent 70%),
+      linear-gradient(90deg, rgba(9,6,4,.95) 0, rgba(9,6,4,.9) 26rem, rgba(9,6,4,.72) 44rem, rgba(9,6,4,.32) 60rem, rgba(9,6,4,0) 76rem),
+      linear-gradient(0deg, rgba(8,5,4,.96) 0, rgba(8,5,4,.9) 7.5rem, rgba(8,5,4,.5) 12rem, transparent 20rem),
+      linear-gradient(rgba(8,5,4,.55), transparent 11rem),
+      radial-gradient(130% 100% at 66% 45%, transparent 55%, rgba(6,4,3,.55)); }
+  .t-band { position: absolute; left: 7rem; top: 4.6rem; bottom: 9rem; display: flex; flex-direction: column; }
+  .t-logo { position: relative; flex: none; }
+  .t-logo h1 { position: relative; isolation: isolate; margin: 0 0 0 5.2rem; font: 700 20rem/1 var(--brush); letter-spacing: -.4rem; white-space: nowrap; }
+  .t-logo h1::before { content: attr(data-t); position: absolute; left: 0; top: 0; z-index: -1; color: #150903;
+    -webkit-text-stroke: 1.2rem #150903; filter: drop-shadow(.5rem .7rem 0 rgba(0,0,0,.5)); }
+  .t-logo h1 span { color: transparent; background: var(--leaf); -webkit-background-clip: text; background-clip: text; }   /* no stroke: the brush font's glyphs are overlapping stroke contours, each got its own gold outline */
+  .t-seal { position: absolute; left: 0; top: 2.2rem; z-index: 1; }   /* seal look: with .ink-wait i above */
+  .t-en { display: flex; align-items: center; gap: 1.4rem; margin: .2rem 0 0 5.6rem; font: 700 max(14px, 2rem)/1 var(--sans); letter-spacing: .62em;
+    color: #f6e6c0; text-shadow: 0 .15rem .3rem rgba(0,0,0,.9); white-space: nowrap; }
+  .t-en::after { content: ""; width: 6rem; height: .14rem; background: linear-gradient(90deg, #f2c14e, transparent); }
+  #title.in .t-logo h1 { animation: inkIn 1.1s cubic-bezier(.3,0,.2,1) both; }
+  #title.in .t-seal { animation: sealIn .32s cubic-bezier(.3,0,.6,1) .75s both; }
+  #title.in .t-en { animation: fadeIn .8s ease 1s both; }
+  @keyframes inkIn { from { clip-path: inset(0 100% 0 0); filter: blur(.8rem); opacity: .2; } 60% { filter: blur(0); opacity: 1; } to { clip-path: inset(-20% -10% -20% -5%); } }
+  @keyframes sealIn { from { transform: scale(2.4) rotate(3deg); opacity: 0; } 60% { transform: scale(.92) rotate(-6deg); opacity: 1; } to { transform: rotate(-5deg); } }
+
+  /* first boot: press-any-key card where the menu will be */
+  .t-press { position: absolute; left: 1rem; top: 36rem; color: var(--paper); opacity: 0; pointer-events: none; transition: opacity .3s; white-space: nowrap; }
+  .t-press b { display: block; font: 700 4.4rem/1 var(--brush); letter-spacing: .7rem; color: #fff6e0;
+    text-shadow: 0 0 1.6rem rgba(255,190,80,.5), .2rem .3rem 0 rgba(0,0,0,.7); }
+  .t-press small { display: flex; align-items: center; gap: .6rem; margin-top: 1.4rem; font: 700 max(13px, 1.5rem)/1 var(--sans); letter-spacing: .32em;
+    text-transform: uppercase; color: #e6d7b8; }
+  .t-press::before { content: ""; position: absolute; left: -1rem; right: -3rem; top: 5.8rem; height: .14rem; background: linear-gradient(90deg, #f2c14e, transparent); }
+  #title.pre .t-press { opacity: 1; }
+  #title.pre .t-press b { animation: breathe 2.2s ease-in-out 1.2s infinite; }
+  @keyframes breathe { 50% { opacity: .55; } }
+
+  .t-menu { display: flex; flex-direction: column; gap: .4rem; margin-top: 4rem; transition: opacity .3s; }
+  #title .t-menu button { position: relative; isolation: isolate; display: block; padding: .7rem 0 1.3rem 4rem; color: #ddd0b4;
+    transition: color .2s, transform .25s cubic-bezier(.3,0,.2,1), opacity .4s; }
+  .t-menu b { display: block; font: 700 4.3rem/1 var(--brush); letter-spacing: .3rem; white-space: nowrap; text-shadow: .15rem .25rem 0 rgba(0,0,0,.75); }
+  .t-menu b, .t-menu small { width: max-content; }   /* title.js measures the menu text's right edge (name tag clearance) */
+  .t-menu small { display: block; margin-top: .6rem; font: 600 max(13px, 1.4rem)/1.1 var(--sans); letter-spacing: .1em; color: #c4b596; white-space: nowrap; }
+  .t-menu .swash { left: 3rem; bottom: 2.9rem; width: 32rem; height: 2rem; z-index: -1; }
+  .t-menu button::before { content: ""; position: absolute; left: .6rem; top: 2.3rem; width: 1.1rem; height: 1.1rem; background: var(--sealr);
+    box-shadow: 0 0 0 .15rem rgba(251,233,214,.8), 0 0 .8rem rgba(179,38,30,.8); transform: rotate(45deg) scale(0); transition: transform .25s; }
+  #title .t-menu button.on { color: #fff8e6; transform: translateX(1.2rem); }
+  .t-menu button.on b { text-shadow: 0 0 1.4rem rgba(255,200,90,.5), .2rem .3rem 0 rgba(0,0,0,.75); }
+  .t-menu button.on small { color: #f5cf72; }
+  .t-menu button:not(.on):hover { color: #fff8e6; }
+  .t-menu button.on::before { transform: rotate(45deg) scale(1); }
+  .t-menu button.on .swash { clip-path: inset(0 0 0 0); }
+  .t-menu .ui-stamp { left: 36rem; top: .2rem; }
+  /* the main menu carries four items: a size under the base so they clear the prompts strip */
+  #title .t-main button { padding: .5rem 0 1.1rem 4rem; }
+  .t-main b { font-size: 4rem; }
+  .t-main button::before { top: 2rem; }
+  .t-main .swash { bottom: 2.6rem; }
+  /* items slide in, staggered, when the menu shows: on wake, and on every entry as the ink uncovers the band */
+  #title.pre .t-menu button { opacity: 0; pointer-events: none; }
+  #title.in:not(.pre) .t-menu button { animation: menuIn .45s cubic-bezier(.2,0,.2,1) calc(.2s + var(--i) * .07s) backwards; }   /* --i: title.js */
+  @keyframes menuIn { from { opacity: 0; translate: -3rem 0; } }
+  #title:is(.ctl, .rec) :is(.t-menu, .t-logo) { opacity: .3; } .t-logo { transition: opacity .3s; }
+  #title .ui-foot { left: 55%; transition: opacity .4s; font-size: max(15px, 1.8rem); } #title.pre .ui-foot { opacity: 0; }
+  #title .ui-foot small { opacity: 1; color: #cfc1a2; font-size: max(13px, 1.2rem); }
+
+  /* officer name tags, projected beside each head (title.js): red seal + vertical brush name + romanisation */
+  .t-tag { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    pointer-events: none; will-change: transform; transition: opacity .5s; }
+  .t-tag b { writing-mode: vertical-rl; font: 700 4.6rem/1 var(--brush); letter-spacing: .4rem; color: #fff4dc;
+    text-shadow: 0 0 .9rem rgba(0,0,0,.9), .15rem .25rem 0 rgba(0,0,0,.8); }
+  .t-tag i { --sz: 1.6rem; --lh: 1.02; --pad: .35rem .25rem; --rad: .25rem; --r1: .14rem; --r2: .24rem; --ra: .8; --drop: 0 .2rem .5rem rgba(0,0,0,.6); }
+  .t-tag small { font: 700 max(12px, 1.2rem)/1.25 var(--sans); letter-spacing: .18em; color: #f0e2c2; text-shadow: 0 .1rem .3rem #000;
+    width: min-content; text-align: center; background: rgba(9,6,4,.6); padding: .35rem .6rem; }   /* one word per line: a narrow column */
+  #title.in .t-tag { animation: fadeIn 1s ease 1.6s both; }
+  #title:is(.ctl, .rec) .t-tag { opacity: 0; }
+
+  /* overlays beside the menu (title.js setPanel): .t-ctl controls, .t-rec the records wall */
+  :is(.t-ctl, .t-rec) { position: absolute; z-index: 2; right: 6rem; top: 50%; transform: translate(3rem, -50%); opacity: 0; pointer-events: none; padding: 2.4rem 3rem 2rem;
+    background: linear-gradient(135deg, rgba(20,13,10,.96), rgba(14,9,7,.94)); border-left: .35rem solid var(--sealr);
+    box-shadow: 0 0 0 .1rem rgba(214,170,90,.45), 0 1.5rem 4rem rgba(0,0,0,.6); transition: opacity .3s, transform .35s cubic-bezier(.3,0,.2,1);
+    max-width: calc(100vw - 12rem); box-sizing: border-box; overflow: auto; max-height: calc(100vh - 16rem); }
+  #title.ctl .t-ctl, #title.rec .t-rec { opacity: 1; transform: translate(0, -50%); pointer-events: auto; }
+  :is(.t-ctl, .t-rec) h2 { margin: 0 0 1.4rem; font: 700 3.6rem/1 var(--brush); color: var(--paper); letter-spacing: .3rem; }
+  :is(.t-ctl, .t-rec) h2 small, .t-ctl th small { font: 600 max(13px, 1.3rem)/1 var(--sans); letter-spacing: .12em; margin-left: .9rem; color: #c9b995; }
+  .t-ctl table { border-collapse: collapse; font: 500 max(13px, 1.55rem)/1.25 var(--sans); color: #f1e6d2; }
+  .t-ctl tr + tr { border-top: .1rem solid rgba(214,170,90,.18); }
+  .t-ctl th { padding: .8rem 2.4rem .8rem 0; text-align: left; white-space: nowrap; font: 700 2.1rem/1 var(--kai); color: #f2c14e; }
+  .t-ctl td { padding: .8rem 1.6rem .8rem 0; }
+  .t-ctl td.pad { color: #c9b995; white-space: nowrap; }
+  .t-ctl p { margin: 1.6rem 0 0; max-width: 52rem; font: 500 max(13px, 1.4rem)/1.5 var(--sans); color: #c9b995; }
+  /* records wall (title.js wall): chapters and trials down, officers across — each cell the officer's best rank there
+     over one pip per difficulty cleared (hatched: he is not in that chapter); beside it what is locked and its rule.
+     At ≤ 4:3 the table tightens and unlocks form two columns below it, keeping the whole wall on a 720p screen. */
+  .t-rec h2 em { margin-left: 3rem; font: 700 1.8rem/1 var(--kai); font-style: normal; letter-spacing: .1rem; color: #c9b995; }
+  .t-rec h2 em b { margin-right: .4rem; font: 700 3.6rem/1 var(--brush); color: #ffe3a0; }
+  .t-rbody { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 2rem 3.4rem; }
+  .t-rec table { border-collapse: collapse; }
+  .t-rec tr + tr { border-top: .1rem solid rgba(214,170,90,.18); }
+  .t-rec th { padding: .6rem 2.2rem .6rem 0; text-align: left; white-space: nowrap; font: 700 2.4rem/1 var(--brush); letter-spacing: .15rem; color: var(--paper); }
+  .t-rec th small { margin-left: .8rem; font: 700 1.2rem/1 var(--kai); letter-spacing: .1rem; color: #c9b995; }
+  .t-rec td { width: 7.4rem; padding: .55rem 0; text-align: center; vertical-align: middle; }
+  .t-rec td.na { background: repeating-linear-gradient(135deg, transparent 0 .5rem, rgba(214,170,90,.07) .5rem .62rem); }
+  .t-rec td canvas { display: block; width: 4rem; height: 4rem; margin: 0 auto .5rem; image-rendering: pixelated; background: #1d3a3c;
+    box-shadow: 0 0 0 .12rem rgba(214,170,90,.5); }
+  .t-rec td > b { font: 700 1.7rem/1 var(--kai); color: #f2c14e; }
+  .t-rec td.lock { opacity: .4; }
+  .t-rec td .t-rk { margin: 0; vertical-align: 0; }
+  .t-rec td .t-rk:empty { display: inline-block; --rc: rgba(214,170,90,.2); background: none; }   /* not cleared yet: an empty ring */
+  .t-rec td span, .t-rleg span { display: flex; justify-content: center; gap: .3rem; margin-top: .45rem; }
+  .t-rec u { width: .9rem; height: .45rem; transform: skewX(-24deg); background: rgba(10,7,6,.75); box-shadow: 0 0 0 .08rem #6b4a1c; }
+  .t-rec u.f { background: linear-gradient(#fff2b8, #f2c14e 45%, #b8791c); box-shadow: 0 0 0 .08rem #ffe8a0; }
+  .t-rleg { display: flex; align-items: center; gap: 1rem; margin: 1.2rem 0 0; font: 700 1.5rem/1 var(--kai); color: #c9b995; }
+  .t-rleg span { margin: 0; }
+  .t-rleg small { font: 600 max(12px, 1.2rem)/1 var(--sans); letter-spacing: .08em; }
+  .t-rec ul { list-style: none; margin: 0; padding: 0 0 0 3rem; display: grid; gap: 1.5rem; border-left: .1rem solid rgba(214,170,90,.3); }
+  .t-rec li { display: grid; grid-template-columns: auto 1fr; gap: .5rem .9rem; align-items: center; }
+  .t-rec li i { padding: .25rem .3rem; font: 700 1.3rem/1 var(--kai); font-style: normal; color: #cdbb9c; border: .12rem solid; border-radius: .25rem; }
+  .t-rec li.open i { color: #1a120d; background: #f2c14e; border-color: #f2c14e; }
+  .t-rec li b { font: 700 2rem/1 var(--kai); color: var(--paper); white-space: nowrap; }
+  .t-rec li span { grid-column: 2; font: 700 1.4rem/1.25 var(--kai); color: #e58a70; }
+  .t-rec li.open span { color: #c9b995; }
+  .t-rec li small { display: block; font: 600 max(11px, 1.1rem)/1.3 var(--sans); letter-spacing: .06em; color: #a99a7c; }
+
+  /* difficulty panel (title.js setDif): in place of the menu once a mode is picked — the four tiers (the menu's diamond +
+     swash focus, a size down) and beside them a card with the focused tier's line and 敵勢 / 敵將 / 傷害 pips (select's
+     .s-stats bars). A locked 修羅: dimmed with a 鎖 tag, the card shows its unlock rule. */
+  #title:not(.dif) .t-dpanel, #title.dif .t-main { display: none; }
+  :is(.t-dpanel, .t-cpanel) { display: flex; align-items: flex-start; gap: 3rem; margin-top: 4rem; }
+  :is(.t-dpanel, .t-cpanel) .t-menu { margin-top: 0; min-width: 20rem; }
+  #title :is(.t-dif, .t-chs) button { padding: .5rem 0 .9rem 4rem; }
+  #title :is(.t-dif, .t-chs) b { font-size: 3.4rem; }
+  :is(.t-dif, .t-chs) button::before { top: 1.6rem; }
+  :is(.t-dif, .t-chs) .swash { bottom: 2.2rem; width: 20rem; }
+  .t-dif .ui-stamp { left: 12rem; top: -.4rem; }
+  .t-lk { display: none; margin-left: .9rem; padding: .25rem .3rem; vertical-align: .7rem; font: 700 1.3rem/1 var(--kai); font-style: normal;
+    letter-spacing: 0; text-shadow: none; color: #cdbb9c; border: .12rem solid; border-radius: .25rem; }
+  :is(.t-dif, .t-chs) button.lock .t-lk { display: inline-block; }
+  :is(.t-dif, .t-chs) button.lock :is(b, small) { opacity: .5; }
+  :is(.t-dcard, .t-ccard) { width: 27rem; margin-top: .6rem; padding: 1.8rem 2.2rem 2rem; box-sizing: border-box; border-left: .35rem solid var(--sealr);
+    background: linear-gradient(135deg, rgba(20,13,10,.92), rgba(14,9,7,.85)); box-shadow: 0 0 0 .1rem rgba(214,170,90,.35), 0 1rem 3rem rgba(0,0,0,.5); }
+  #title.in :is(.t-dcard, .t-ccard) { animation: fadeIn .4s ease .3s backwards; }
+  :is(.t-dcard, .t-ccard) h3 { margin: 0 0 1.1rem; font: 700 1.7rem/1 var(--kai); letter-spacing: .3rem; color: #f2c14e; }
+  :is(.t-dcard, .t-ccard) h3 small { margin-left: .8rem; font: 600 max(12px, 1.2rem)/1 var(--sans); letter-spacing: .14em; color: #c9b995; }
+
+  /* chapter / battlefield panel (title.js setCh): in place of the menu once 劇情模式 / 自由演武 is picked, the difficulty
+     panel in its place after a pick. The chapters in the tiers' look (a small 第X章 before each title; 鎖 on a locked one,
+     the best rank as a ringed brush letter after a cleared one) and beside them the era card: number, brush title + red
+     seal, era, the prologue's opening lines (a locked chapter: what to clear first), the chapter's officers, best rank. */
+  #title:not(.chp) .t-cpanel, #title.chp .t-main, #title.dif .t-cpanel { display: none; }
+  .t-chs b em { margin-right: 1rem; vertical-align: .5rem; font: 700 1.9rem/1 var(--kai); font-style: normal; letter-spacing: .1rem; color: #c9b995; }
+  .t-chs button.on b em { color: #f5cf72; }
+  .t-chs .swash { width: 26rem; }
+  .t-rk { display: inline-block; width: 2.6rem; height: 2.6rem; margin-left: .9rem; vertical-align: .5rem; border-radius: 50%; text-align: center;
+    font: 700 1.9rem/2.6rem var(--brush); font-style: normal; letter-spacing: 0; text-shadow: none; color: #f7f1e8; background: rgba(0,0,0,.35);
+    box-shadow: inset 0 0 0 .22rem var(--rc, #b3261e); }
+  .t-rk:empty { display: none; }   /* a tier / card with no rank yet */
+  .t-rk.rS, .t-cfoot .rS b { --rc: #e2b040; color: #fff0b8; }
+  .t-rk.rB, .t-cfoot .rB b { --rc: #2f8a84; }
+  .t-rk.rC, .t-cfoot .rC b { --rc: #7a6a5a; color: #cdbb9c; }
+  .t-ccard { width: 31rem; }
+  .t-cname { display: flex; align-items: flex-start; gap: 1rem; margin: 0; }
+  .t-cname b { font: 700 5.6rem/1 var(--brush); letter-spacing: .4rem; color: #f9f3e8; white-space: nowrap; text-shadow: .2rem .3rem 0 rgba(0,0,0,.6); }
+  .t-cname i { margin-top: .3rem; --sz: 1.5rem; --pad: .35rem .25rem; --rad: .25rem; --r1: .14rem; --r2: .24rem; --drop: 0 .2rem .5rem rgba(0,0,0,.5); }
+  .t-cera { margin: .9rem 0 0; font: 700 2rem/1 var(--kai); letter-spacing: .2rem; color: #f2c14e; }
+  .t-cera small { display: inline-block; white-space: nowrap; margin-left: .8rem; font: 600 max(12px, 1.2rem)/1 var(--sans); letter-spacing: .14em; color: #c9b995; }
+  .t-cline { margin: 1.3rem 0 0; min-height: 9rem; }
+  .t-cline b { display: block; font: 700 2.1rem/1.4 var(--kai); color: var(--paper); }
+  .t-cline small { display: block; margin-top: .5rem; font: 600 max(13px, 1.3rem)/1.35 var(--sans); color: #c9b995; }
+  .t-ccard.lock .t-cline b { color: #e58a70; }
+  .t-ccard.lock :is(.t-cname, .t-cera) { opacity: .45; }
+  .t-cfoot { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1.3rem; margin: 1.3rem 0 0; padding-top: 1.2rem; border-top: .1rem solid rgba(214,170,90,.3); }
+  .t-cfoot:empty { display: none; }
+  .t-cfoot span { font: 700 1.5rem/1.2 var(--kai); color: #f2c14e; }
+  .t-cfoot span small { display: block; font: 600 max(11px, 1rem)/1 var(--sans); letter-spacing: .14em; color: #c9b995; }
+  .t-cfoot em { display: flex; align-items: center; gap: .5rem; font: 700 2rem/1 var(--brush); font-style: normal; color: var(--paper); }
+  .t-cfoot em .t-rk { margin-left: .2rem; vertical-align: 0; }   /* that officer's best rank on the chapter */
+  .t-cfoot canvas { width: 3.2rem; height: 3.2rem; image-rendering: pixelated; background: #1d3a3c; box-shadow: 0 0 0 .12rem rgba(214,170,90,.5); }
+  .t-cfoot strong { display: flex; align-items: center; gap: .7rem; margin-left: auto; font: 700 1.4rem/1.2 var(--kai); color: #c9b995; }
+  .t-cfoot strong b { display: grid; place-items: center; width: 4.4rem; height: 4.4rem; border-radius: 50%; transform: rotate(-8deg);
+    font: 700 3rem/1 var(--brush); color: #f7f1e8; box-shadow: inset 0 0 0 .3rem var(--rc, #b3261e), 0 0 1.2rem rgba(0,0,0,.4); }
+  .t-dline { margin: 0; min-height: 7rem; }
+  .t-dline b { display: block; font: 700 2.6rem/1.3 var(--brush); color: var(--paper); }
+  .t-dline small { display: block; margin-top: .5rem; font: 600 max(13px, 1.3rem)/1.35 var(--sans); color: #c9b995; }
+  .t-dcard.lock .t-dline b { color: #e58a70; }
+  .t-dcard .t-dbars { grid-template-columns: 1fr; gap: .8rem; margin-top: 1.4rem; }   /* over .s-stats (later, same weight) */
+  .t-dcard.lock .t-dbars { opacity: .4; }
+
+  /* narrow windows (≤ 4:3): tighter band so the officers keep the right half */
+  @media (max-aspect-ratio: 4/3) {
+    .t-band { left: 4rem; }
+    .t-logo h1 { font-size: 14rem; }
+    .t-menu b { font-size: 3.6rem; }
+    .t-press { top: 30rem; }
+    #title .t-veil { background:
+      linear-gradient(90deg, rgba(9,6,4,.95) 0, rgba(9,6,4,.88) 22rem, rgba(9,6,4,.6) 40rem, rgba(9,6,4,0) 60rem),
+      linear-gradient(0deg, rgba(8,5,4,.92) 0, rgba(8,5,4,.55) 9rem, transparent 18rem), linear-gradient(rgba(8,5,4,.55), transparent 11rem); }
+    #title .ui-foot { left: 4rem; right: 3rem; gap: 2rem; }
+    .t-tag { display: none; }   /* the pair is small beside the band here: the tags would sit on the bodies */
+    .t-rec { right: 4rem; max-width: calc(100vw - 8rem); max-height: calc(100vh - 12rem); padding: 1.8rem 2.4rem 1.4rem; }
+    .t-rbody { gap: 1rem 2rem; }
+    .t-rec th { font-size: 2rem; padding: .2rem 1.4rem .2rem 0; }
+    .t-rec td { width: 6rem; padding: .2rem 0; }
+    .t-rec td canvas { width: 3.2rem; height: 3.2rem; }
+    .t-rec td .t-rk { width: 2.2rem; height: 2.2rem; font-size: 1.7rem; line-height: 2.2rem; }
+    .t-rec ul { width: 100%; box-sizing: border-box; grid-template-columns: 1fr 1fr; gap: 1rem 2rem; padding: 1rem 0 0;
+      border-left: 0; border-top: .1rem solid rgba(214,170,90,.3); }
+  }
+
+  /* ---- select: live officer on the right, roster + info in the ink band */
+  #select { --dim: #d8c8a8; }   /* --acc: the focused officer's, set by select.js */
+  /* ink band: >= 85 % ink under the roster and the whole info column (ends at 7 + 42 rem ≈ 60 % of 16:9), officer from ≈ 65 % */
+  .s-veil { background: radial-gradient(90% 80% at 74% 50%, transparent 45%, rgba(8,5,4,.55)),
+    linear-gradient(90deg, rgba(12,8,6,.95) 0, rgba(12,8,6,.9) 40%, rgba(12,8,6,.86) 57%, rgba(12,8,6,.3) 65%, transparent 72%),
+    linear-gradient(rgba(8,5,4,.7), transparent 16%, transparent 76%, rgba(8,5,4,.9)); }
+  .s-head { position: absolute; left: 7rem; top: 3.4rem; display: flex; align-items: baseline; gap: 1.2rem; color: var(--paper); }
+  .s-head h2 { margin: 0; font: 700 4.6rem/1 var(--brush); letter-spacing: .4rem; text-shadow: .2rem .3rem 0 rgba(0,0,0,.55); }
+  .s-head > small { font: 600 max(13px, 1.4rem)/1 var(--sans); letter-spacing: .16em; color: var(--dim); }
+  .s-mode { align-self: center; margin-left: 2rem; padding: .55rem 2.8rem .55rem 1.2rem; font: 700 1.9rem/1 var(--kai); color: #ffe3a0;
+    background: linear-gradient(90deg, #8e1a14, #5a0f0b); clip-path: polygon(0 0, 100% 0, calc(100% - 1rem) 50%, 100% 100%, 0 100%);
+    box-shadow: inset .3rem 0 0 #f2c14e; }
+  .s-mode small { font: 600 max(13px, 1.3rem)/1 var(--sans); letter-spacing: .1em; margin-left: .7rem; color: #f8e4c8; }
+
+  /* roster: the focused officer's faction banner over one compact row per officer (select.js; 7 rows fit above the prompts) */
+  .s-roster { position: absolute; left: 7rem; top: 10.5rem; width: 25rem; display: flex; flex-direction: column; gap: .6rem; }
+  .s-fac { display: flex; align-items: center; gap: 1rem; margin-bottom: .5rem; color: var(--paper); }
+  .s-fac i { font: 700 3rem/1 var(--brush); font-style: normal; color: #ffe3a0; padding: .7rem .8rem 1.5rem;
+    background: linear-gradient(#3a8a60, var(--shu) 60%, #174a30); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+    box-shadow: inset 0 .3rem 0 #f2c14e; text-shadow: 0 .15rem .3rem rgba(0,0,0,.6); }
+  .s-fac small { font: 600 max(13px, 1.3rem)/1 var(--sans); letter-spacing: .2em; color: var(--dim); }
+  /* officer cards: hover = highlight only, click = focus (.on), :active = pressed; .pick replays the focus flash */
+  #select .s-card { position: relative; display: grid; grid-template-columns: 5rem 1fr; column-gap: 1.2rem; align-content: center;
+    padding: .4rem 1.4rem .4rem .4rem; color: rgba(244,234,216,.74); background: linear-gradient(90deg, rgba(26,18,14,.9), rgba(18,12,9,.55));
+    box-shadow: 0 0 0 .1rem rgba(214,170,90,.22), 0 .4rem 1rem rgba(0,0,0,.35);
+    transition: transform .22s cubic-bezier(.3,0,.2,1); }   /* only the composited slide eases: ring / colour swap at once, so a
+    main-thread hitch never leaves the old card looking lit next to the new one */
+  #select .s-card[hidden] { display: none; }   /* not in this visit's roster */
+  .s-card canvas { grid-row: 1 / 3; width: 5rem; height: 5rem; image-rendering: pixelated;
+    background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--acc) 55%, #222), #120c0a 75%);
+    box-shadow: 0 0 0 .12rem rgba(214,170,90,.25); filter: saturate(.5) brightness(.72); }
+  .s-card b { align-self: end; font: 700 2.6rem/1 var(--brush); letter-spacing: .2rem; white-space: nowrap; }
+  .s-card small { font: 600 max(12px, 1.2rem)/1.2 var(--sans); letter-spacing: .06em; padding-top: .3rem; opacity: .9; white-space: nowrap; }
+  .s-card > i { position: absolute; right: .7rem; top: 50%; translate: 0 -50%; white-space: nowrap; --sz: 1.2rem; --pad: .3rem .2rem; --rad: .2rem; box-shadow: none; opacity: .35;
+    transition: opacity .22s; }
+  #select .s-card:hover:not(.on) { color: rgba(244,234,216,.85); transform: translateX(.5rem); background: linear-gradient(90deg, rgba(62,44,28,.94), rgba(30,20,14,.6));
+    box-shadow: 0 0 0 .12rem rgba(242,193,78,.55), 0 .4rem 1rem rgba(0,0,0,.35); }
+  .s-card:hover:not(.on) canvas { filter: saturate(.7) brightness(.85); }
+  #select .s-card.on { color: #fff6e0; transform: translateX(2rem);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--acc) 42%, #1a120d), rgba(22,14,10,.8) 75%);
+    box-shadow: 0 0 0 .16rem #f2c14e, 0 0 0 .34rem rgba(26,18,14,.9), 0 0 0 .44rem rgba(242,193,78,.45),
+      0 0 2.6rem color-mix(in srgb, var(--acc) 60%, transparent), inset .5rem 0 0 var(--acc); }
+  #select .s-card.on::before { content: ""; position: absolute; left: -2.6rem; top: 50%; border: .9rem solid transparent; border-left: 1.2rem solid #f2c14e;
+    transform: translateY(-50%); filter: drop-shadow(0 0 .5rem rgba(242,193,78,.8)); animation: cardPoint 1.1s ease-in-out infinite alternate; }
+  .s-card.on b { color: transparent; background: var(--leaf); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(.12rem .18rem 0 rgba(0,0,0,.7)); }
+  .s-card.on canvas { filter: none; box-shadow: 0 0 0 .14rem #f2c14e, 0 0 1.4rem color-mix(in srgb, var(--acc) 70%, transparent); }
+  .s-card.on > i { opacity: 1; }
+  #select .s-card:active { transform: translateX(1.2rem) scale(.96); transition-duration: .06s; }
+  #select .s-card.pick { animation: cardPick .45s cubic-bezier(.2,0,.2,1); }
+  #select .s-card.pick canvas { animation: portPop .4s cubic-bezier(.3,1.6,.5,1); }
+  /* records (select.js): the officer's best rank on this chapter / trial + tier left of his seal; a locked officer
+     (progress.js UNLOCKS) is dimmed with 鎖 there */
+  .s-card .t-rk { position: absolute; right: 3.4rem; top: 50%; translate: 0 -50%; margin: 0; }
+  .s-card.lock :is(canvas, b, small) { filter: grayscale(1) brightness(.6); }
+  .s-card.lock .t-rk { --rc: #7a6a5a; font-family: var(--kai); font-size: 1.4rem; color: #cdbb9c; }
+  @keyframes cardPick { from { filter: brightness(2.2) saturate(1.4); } }
+  @keyframes portPop { from { transform: scale(.82); } }
+  @keyframes cardPoint { to { transform: translate(.5rem, -50%); } }
+
+  .s-info { position: absolute; left: 39rem; top: 17rem; width: 42rem; max-height: calc(100% - 25rem);
+    overflow-y: auto; scrollbar-width: thin; scrollbar-color: #b8893a transparent; color: var(--paper); }
+  .s-name { display: flex; align-items: flex-start; gap: 1.4rem; }
+  .s-name h1 { margin: 0; font: 700 10rem/1 var(--brush); letter-spacing: .4rem; color: #f9f3e8; white-space: nowrap;
+    text-shadow: .3rem .4rem 0 rgba(0,0,0,.55), 0 0 2.4rem color-mix(in srgb, var(--acc) 45%, transparent); }
+  .s-name div { display: flex; gap: .7rem; padding-top: 1.2rem; }
+  .s-seal { --sz: 2rem; --pad: .4rem .3rem; --r1: .16rem; --r2: .28rem; }
+  .s-court { margin: 0; writing-mode: vertical-rl; font: 700 2.2rem/1 var(--kai); letter-spacing: .3rem; color: #e9d8b6; }
+  .s-en { margin: .2rem 0 0 .4rem; font: 600 max(13px, 1.5rem)/1 var(--sans); letter-spacing: .3em; color: var(--dim); }
+  .s-epi { margin: 1.4rem 0 0; }
+  .s-epi b { font: 700 2.5rem/1 var(--kai); letter-spacing: .3rem; color: #f2c14e; }
+  .s-epi small, .s-wpn small { font: 600 max(13px, 1.4rem)/1 var(--sans); letter-spacing: .1em; margin-left: 1rem; color: var(--dim); }
+  .s-wpn { margin: 1.2rem 0 0; display: flex; flex-wrap: wrap; align-items: center; row-gap: .5rem; }
+  .s-wpn span { font: 700 1.3rem/1 var(--kai); color: #fbe9d6; background: var(--sealr); padding: .3rem .5rem; margin-right: 1rem; border-radius: .2rem; }
+  .s-wpn b { font: 700 2rem/1 var(--kai); }
+  .s-bio { margin: 1.3rem 0 0; padding-left: 1.2rem; border-left: .2rem solid color-mix(in srgb, var(--acc) 70%, transparent); }
+  .s-bio span { display: block; font: 500 1.75rem/1.35 var(--kai); }
+  .s-bio span + span { margin-top: .6rem; }
+  .s-bio small { display: block; font: 500 max(13px, 1.4rem)/1.35 var(--sans); color: var(--dim); }
+  .s-stats { list-style: none; margin: 1.8rem 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 2.6rem; }
+  .s-stats li { display: grid; grid-template-columns: 5.4rem 1fr; column-gap: .9rem; align-items: center; row-gap: .15rem; }
+  .s-stats b { grid-row: 1 / 3; font: 700 2.4rem/1 var(--brush); color: #ffe3a0; }
+  .s-stats small { font: 600 max(13px, 1.3rem)/1 var(--sans); letter-spacing: .14em; color: var(--dim); }
+  .s-stats span { display: flex; gap: .35rem; }
+  .s-stats i { flex: 1; height: 1.1rem; transform: skewX(-24deg); background: rgba(10,7,6,.75); box-shadow: 0 0 0 .1rem #6b4a1c; }
+  .s-stats i.f { background: linear-gradient(#fff2b8, #f2c14e 45%, #b8791c); box-shadow: 0 0 0 .1rem #ffe8a0, 0 0 .6rem rgba(255,200,80,.5); }
+  .s-musou { position: relative; isolation: isolate; margin-top: 2rem; padding: .9rem 1.4rem 1.1rem;
+    background: linear-gradient(90deg, rgba(58,13,10,.85), rgba(58,13,10,0)); border-left: .3rem solid #f2c14e; }
+  .s-musou span { display: block; font: 700 max(13px, 1.4rem)/1 var(--kai); letter-spacing: .4rem; color: #ffb49a; }
+  .s-musou b { display: inline-block; margin-top: .5rem; font: 700 3.6rem/1 var(--brush); letter-spacing: .3rem; color: transparent;
+    background: var(--leaf); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(.15rem .2rem 0 rgba(0,0,0,.6)); }
+  .s-musou small { display: block; margin-top: .6rem; font: 600 max(13px, 1.4rem)/1.3 var(--sans); letter-spacing: .12em; color: var(--dim); overflow-wrap: anywhere; }
+  .s-musou .swash { left: 0; bottom: .2rem; width: 32rem; height: 1.6rem; z-index: -1; opacity: .35; clip-path: none; }
+
+  /* intro line: vertical calligraphy right of the officer (the HUD's Musou copy style), brush-revealed top → down */
+  .s-line { position: absolute; right: 5rem; top: 10rem; display: flex; flex-direction: row-reverse; gap: 1rem; color: #f9f3e8;
+    padding: 0 1.2rem; background: rgba(10,6,4,.62); box-shadow: 0 0 2.4rem 1.2rem rgba(10,6,4,.62); border-radius: .6rem; }
+  .s-line p { margin: 0; writing-mode: vertical-rl; font: 700 3.3rem/1.2 var(--brush); letter-spacing: .5rem; padding: 1.2rem 0; max-height: 44rem;
+    border-top: .15rem solid rgba(247,241,232,.7); border-bottom: .15rem solid rgba(247,241,232,.7);
+    text-shadow: .2rem .3rem 0 rgba(0,0,0,.55), 0 0 1.4rem color-mix(in srgb, var(--acc) 60%, transparent); }
+  .s-line small { writing-mode: vertical-rl; font: 600 max(13px, 1.4rem)/1.3 var(--sans); letter-spacing: .06em; color: #efe3cc; max-height: 42rem; padding-top: 1.4rem; }
+
+  /* between the header and info column, clear of the officer: his record here or his unlock rule */
+  .s-rec { position: absolute; left: 39rem; top: 9.8rem; max-width: 42rem; box-sizing: border-box; margin: 0; padding: .7rem 1.2rem;
+    display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .5rem 1rem;
+    color: var(--paper); background: rgba(10,6,4,.72); border-left: .3rem solid #f2c14e; }
+  .s-rec[hidden] { display: none; }
+  .s-rec span { font: 700 1.3rem/1 var(--kai); color: #fbe9d6; background: var(--sealr); padding: .3rem .5rem; border-radius: .2rem; }
+  .s-rec b { font: 700 2rem/1 var(--kai); letter-spacing: .1rem; }
+  .s-rec small { grid-column: 2; font: 600 max(12px, 1.2rem)/1.25 var(--sans); letter-spacing: .08em; color: var(--dim); }
+  .s-rec.lock { border-left-color: var(--sealr); }
+  .s-rec.lock b { color: #e58a70; }
+  #select .s-go.lock { filter: grayscale(1) brightness(.6); cursor: not-allowed; }
+  .s-act { position: absolute; right: 6rem; bottom: 7.6rem; display: flex; align-items: center; gap: 2.4rem; }
+  .s-act b { font: 700 2.4rem/1 var(--brush); letter-spacing: .3rem; }
+  .s-act small { font: 600 max(13px, 1.3rem)/1 var(--sans); letter-spacing: .1em; margin-left: .8rem; opacity: .9; }
+  #select .s-back { color: rgba(244,234,216,.65); padding: .9rem 1.6rem; box-shadow: 0 0 0 .12rem rgba(239,227,207,.35); }
+  #select .s-back:hover { color: var(--paper); box-shadow: 0 0 0 .12rem rgba(239,227,207,.7); }
+  #select .s-go { padding: 1.2rem 3.8rem; color: #1a120d; background: linear-gradient(#ffe7a3, #f2c14e 55%, #c98a22);
+    clip-path: polygon(1.2rem 0, 100% 0, calc(100% - 1.2rem) 100%, 0 100%); box-shadow: inset 0 -.3rem 0 rgba(90,58,16,.5); }
+  #select .s-go b { font-size: 3.4rem; }
+  #select .s-go:hover { filter: brightness(1.1); }
+  .s-act .ui-stamp { right: -1rem; bottom: 5.6rem; font-size: 4.4rem; }
+
+  /* focus change: name inks in, stats refill left → right, the intro line slides down */
+  #select.swap .s-name h1 { animation: nameIn .5s cubic-bezier(.3,0,.2,1) backwards; transform-origin: 0 60%; }
+  #select.swap :is(.s-en, .s-epi, .s-wpn, .s-bio, .s-musou) { animation: swapIn .45s ease .08s backwards; }
+  #select.swap .s-stats i.f { animation: segIn .3s cubic-bezier(.3,0,.2,1) calc(var(--i) * .05s) both; }   /* --i: select.js */
+  #select.swap .s-line p { animation: lineIn .7s cubic-bezier(.3,0,.2,1) .1s backwards; }
+  #select.swap .s-line small { animation: swapIn .6s ease .5s backwards; }
+  /* entry (select.js replays .in): the band's header, roster and actions slide in, staggered, as the ink clears the left */
+  #select.in .s-head { animation: menuIn .45s cubic-bezier(.2,0,.2,1) .2s backwards; }
+  #select.in .s-roster { animation: menuIn .5s cubic-bezier(.2,0,.2,1) .28s backwards; }
+  #select.in :is(.s-act, .s-rec, .ui-foot) { animation: fadeIn .5s ease .4s backwards; }
+  @media (max-aspect-ratio: 4/3) {
+    .s-head { left: 4rem; right: 3rem; flex-wrap: wrap; gap: .6rem 1rem; }
+    .s-roster { left: 4rem; width: 22rem; }
+    .s-info { left: 31rem; top: 20rem; width: 32rem; max-height: calc(100% - 28rem); }
+    .s-name h1 { font-size: 8rem; }
+    .s-rec { left: 31rem; max-width: 32rem; }
+    .s-act { right: 3rem; flex-direction: column; align-items: flex-end; gap: 1rem; }
+    #select .ui-foot { left: 4rem; right: 3rem; gap: 1.4rem; }
+  }
+  /* motion only, the text stays opaque: an animation stalled at its first frame (main-thread hitch after a focus change,
+     measured in headless runs) leaves the name and the intro line fully readable, just offset */
+  @keyframes nameIn { from { transform: translateX(-1.5rem) scale(1.06); text-shadow: .3rem .4rem 0 rgba(0,0,0,.55), 0 0 4rem var(--acc); } }
+  @keyframes swapIn { from { opacity: .75; } }
+  @keyframes lineIn { from { transform: translateY(-1.6rem); } }
+  @keyframes segIn { from { transform: skewX(-24deg) scaleX(0); } }
+
+  /* ---- loading card (#loading, loading.js): after 出陣, while main.js builds + compiles the chosen officer's battle */
+  #loading { overflow: hidden; background: #0c0806; }   /* --acc: the officer's, set by loading.js */
+  /* key art (main.js snapArt still of the select stage): full-bleed, slow push-in toward the officer */
+  .l-art { position: absolute; inset: 0; background: center / cover no-repeat; transform-origin: 74% 42%;
+    animation: artPush 12s cubic-bezier(.2,0,.4,1) both; }
+  @keyframes artPush { from { transform: scale(1.1) translateX(1.5%); opacity: 0; } 8% { opacity: 1; } to { transform: scale(1.18); } }
+  /* embers: a 2-viewport-tall tile of glowing dots scrolling up (transform only, compositor) */
+  .l-embers { position: absolute; left: 36%; right: 0; top: 0; height: 200%; pointer-events: none; opacity: .9;
+    background: radial-gradient(.25rem .25rem at 3rem 14rem, #ffd27a, transparent), radial-gradient(.18rem .18rem at 11rem 5rem, #ffb050, transparent),
+      radial-gradient(.3rem .3rem at 19rem 11rem, #ffe2a0, transparent), radial-gradient(.15rem .15rem at 7rem 2rem, #ff9a3c, transparent),
+      radial-gradient(.22rem .22rem at 15rem 17rem, #ffc060, transparent);
+    background-size: 24rem 18rem; animation: embersUp 11s linear infinite;
+    -webkit-mask: linear-gradient(90deg, transparent, #000 30%); mask: linear-gradient(90deg, transparent, #000 30%); }
+  @keyframes embersUp { to { transform: translateY(-50%); } }
+  /* ink band for the text (left) and the footer (bottom): >= 85 % ink under every line of small type */
+  .l-veil { position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, rgba(10,6,4,.95) 0, rgba(10,6,4,.88) 36%, rgba(10,6,4,.45) 54%, transparent 66%),
+      linear-gradient(rgba(8,5,4,.5), transparent 14%, transparent 64%, rgba(8,5,4,.94) 82%),
+      radial-gradient(90% 80% at 72% 45%, transparent 55%, rgba(8,5,4,.55)); }
+  .l-main { position: absolute; left: 7rem; top: 11rem; width: 64rem; }
+  .l-ch { display: inline-block; margin: 0; padding: .6rem 3rem .6rem 1.3rem; font: 700 2.2rem/1 var(--kai); color: #ffe3a0;
+    background: linear-gradient(90deg, #8e1a14, #5a0f0b); clip-path: polygon(0 0, 100% 0, calc(100% - 1rem) 50%, 100% 100%, 0 100%);
+    box-shadow: inset .3rem 0 0 #f2c14e; }
+  .l-ch small { font: 600 max(13px, 1.3rem)/1 var(--sans); letter-spacing: .1em; margin-left: .9rem; color: #f8e4c8; }
+  .l-name { display: flex; align-items: flex-start; gap: 1.6rem; margin-top: 2rem; }
+  .l-name h1 { margin: 0; font: 700 16rem/1 var(--brush); letter-spacing: .6rem; color: #f9f3e8; white-space: nowrap;
+    text-shadow: .35rem .5rem 0 rgba(0,0,0,.6), 0 0 3rem color-mix(in srgb, var(--acc) 50%, transparent); }
+  .l-seal { margin-top: 1.6rem; --sz: 2.6rem; --pad: .5rem .35rem; --r1: .18rem; --r2: .32rem; --drop: 0 .3rem .8rem rgba(0,0,0,.5); }
+  .l-en { margin: .6rem 0 0 .5rem; font: 600 max(13px, 1.6rem)/1 var(--sans); letter-spacing: .26em; color: #dccdb0; }
+  .l-line { margin: 3.4rem 0 0; padding: .4rem 0 .4rem 1.6rem; border-left: .3rem solid var(--acc); max-width: 56rem; }
+  .l-line b { display: block; font: 700 3.2rem/1.25 var(--brush); letter-spacing: .3rem; color: #f9f3e8; text-shadow: .2rem .3rem 0 rgba(0,0,0,.5); }
+  .l-line small { display: block; margin-top: .7rem; font: 500 max(13px, 1.6rem)/1.35 var(--sans); color: #e9dcc2; }
+  .l-foot { position: absolute; left: 7rem; right: 6rem; bottom: 3.6rem; display: grid; grid-template-columns: 1fr 40rem; gap: 5rem; align-items: end;
+    padding-top: 1.8rem; border-top: .1rem solid; border-image: linear-gradient(90deg, rgba(214,170,90,.7), rgba(214,170,90,.7) 70%, transparent) 1; }
+  .l-tip { margin: 0; display: grid; grid-template-columns: auto 1fr; column-gap: 1.4rem; align-items: center; }
+  .l-tip span { grid-row: 1 / 3; --sz: 1.6rem; --pad: .45rem .3rem; --rad: .25rem; --r1: .14rem; --r2: .26rem; --ra: .7; }
+  .l-tip b { font: 700 2.3rem/1.3 var(--kai); letter-spacing: .1rem; }
+  .l-tip small { font: 500 max(13px, 1.5rem)/1.35 var(--sans); color: #dccdb0; }
+  .l-state { margin: 0 0 1rem; text-align: right; }
+  .l-state b { font: 700 2.8rem/1 var(--brush); letter-spacing: .3rem; color: #efe0c2; }
+  .l-state small { font: 600 max(13px, 1.3rem)/1 var(--sans); letter-spacing: .12em; margin-left: .8rem; color: #dccdb0; }
+  .l-bar { position: relative; height: 1.3rem; overflow: hidden; transform: skewX(-24deg); background: rgba(10,7,6,.85); box-shadow: 0 0 0 .1rem #8a6424; }
+  .l-bar i { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); transition: transform .45s cubic-bezier(.3,0,.2,1);
+    background: repeating-linear-gradient(90deg, rgba(0,0,0,.16) 0 .2rem, transparent .2rem .6rem), linear-gradient(#fff2b8, #f2c14e 45%, #b8791c);
+    box-shadow: 0 0 .8rem rgba(255,200,80,.6); }
+  .l-bar::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 30%; background: linear-gradient(90deg, transparent, rgba(255,250,230,.55), transparent);
+    animation: barSheen 1.3s linear infinite; }
+  #loading.ready .l-state b { color: #ffe3a0; text-shadow: 0 0 1.2rem rgba(255,190,60,.8); }
+  #loading.ready .l-bar { box-shadow: 0 0 0 .1rem #ffe8a0, 0 0 1.4rem rgba(255,200,80,.8); }
+  #loading.in .l-name h1 { animation: nameIn .6s cubic-bezier(.3,0,.2,1) .12s both; }
+  #loading.in :is(.l-ch, .l-en, .l-line, .l-foot) { animation: fadeIn .5s ease .25s both; }
+  @keyframes barSheen { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+  #result .ui-foot { left: 8vw; right: 6rem; pointer-events: none; }
+
+  /* story lane: #prologue / #result styles */
+  /* prologue: a handscroll on dark brocade. The paper unrolls from the centre (clip-path) as the two rods slide out; the
+     map (SVG) drifts per card; columns are written by a ragged brush-tip mask sweeping down each one. */
+  #prologue { overflow: hidden; --ink: #1b120c; --shu: #1d5560; --wei: #a8281d;
+    --brushmask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 300' preserveAspectRatio='none'><path d='M0 0H100V146L94 151 87 147 80 156 71 149 63 160 55 150 47 162 38 151 30 158 22 149 14 155 7 148 0 153Z' fill='black'/><path d='M0 150L9 156 18 152 27 161 39 155 50 166 60 156 70 163 81 154 91 160 100 152V144H0Z' fill='black' opacity='.45'/></svg>");
+    background: radial-gradient(ellipse at 50% 50%, rgba(40,30,22,0) 40%, rgba(0,0,0,.6)),
+      repeating-linear-gradient(45deg, rgba(214,170,90,.06) 0 .15rem, transparent .15rem 1.4rem),
+      repeating-linear-gradient(-45deg, rgba(214,170,90,.06) 0 .15rem, transparent .15rem 1.4rem), #16211f; }
+  /* out (prologue.js go): the scroll lifts toward the lens and fades off the live field; the HUD then slides in (#hud.in) */
+  #prologue.out { opacity: 0; transition: opacity .5s ease-in .05s; }
+  #prologue.out :is(.pl-paper, .pl-rod) { scale: 1.05; transition: scale .6s cubic-bezier(.3,0,.2,1); }
+  #prologue .pl-paper { position: absolute; inset: 4.4vh 4.6vw; overflow: hidden; background: #d8c197; clip-path: inset(0 50% 0 50%);
+    box-shadow: 0 0 0 .25rem #b8893a, 0 0 0 .6rem #2a1c10, 0 1.2rem 3rem rgba(0,0,0,.7); }
+  #prologue.open .pl-paper { clip-path: inset(0 0 0 0); transition: clip-path 1.15s cubic-bezier(.6,.05,.25,1); }
+  #prologue .pl-rod { position: absolute; top: 2.2vh; bottom: 2.2vh; width: 1.9vw; left: calc(50% - .95vw); border-radius: .5rem;
+    background: linear-gradient(90deg, #2a160a, #6b3f1e 35%, #8a5a2c 50%, #4a2a12 75%, #1e1006);
+    box-shadow: 0 -.9rem 0 -.2rem #c79a3e, 0 .9rem 0 -.2rem #c79a3e, 0 .6rem 1.4rem rgba(0,0,0,.6); }
+  #prologue.open .pl-rod { transition: left 1.15s cubic-bezier(.6,.05,.25,1); }
+  #prologue.open .pl-rod.l { left: 2.7vw; }
+  #prologue.open .pl-rod.r { left: calc(100% - 4.6vw); }
+  #prologue .pl-map { position: absolute; inset: 0; width: 100%; height: 100%; transition: transform 2.8s cubic-bezier(.4,0,.2,1); }
+  #prologue .pl-mark { opacity: .42; transition: opacity 1s; }
+  #prologue .pl-mark.on { opacity: .8; }
+  #prologue .pl-mark.hot { opacity: 1; }
+  #prologue .pl-labels text { font: 700 46px var(--brush); fill: #24160b; stroke: rgba(232,214,178,.75); stroke-width: 7px; paint-order: stroke; }
+  #prologue .pl-labels text.sm { font-size: 32px; }
+  #prologue .pl-labels text.river { fill: #3d4b48; letter-spacing: 14px; }
+  #prologue .pl-labels .wei text { fill: #8e2016; }
+  #prologue .pl-labels rect { fill: rgba(232,214,178,.6); stroke: #24160b; stroke-width: 4px; }
+  #prologue .pl-arw { opacity: .4; transition: opacity 1s; }
+  #prologue .pl-arw.hot { opacity: 1; }
+  #prologue .pl-arw > path { fill: none; stroke-linecap: round; stroke-dasharray: 1.01 1.01; stroke-dashoffset: 1.01; }
+  #prologue .pl-arw .u { stroke-width: 28px; opacity: .2; }
+  #prologue .pl-arw .s { stroke-width: 11px; }
+  #prologue .pl-arw.shu > path { stroke: var(--shu); }
+  #prologue .pl-arw.wei > path { stroke: var(--wei); }
+  #prologue .pl-arw.shu .hd { fill: var(--shu); }
+  #prologue .pl-arw.wei .hd { fill: var(--wei); }
+  #prologue .pl-arw .hd { opacity: 0; }
+  #prologue .pl-arw.on > path { stroke-dashoffset: 0; transition: stroke-dashoffset 1.7s cubic-bezier(.5,0,.3,1) .5s; }
+  #prologue .pl-arw.on .hd { opacity: 1; transition: opacity .25s 2s; }
+  #prologue .pl-card { position: absolute; right: 7vw; top: 6vh; bottom: 19vh; opacity: 0; transition: opacity .35s; }
+  #prologue .pl-card.on { opacity: 1; }
+  /* the inscription panel: paper washed pale behind the columns, so the map never fights the calligraphy */
+  #prologue .pl-card::before { content: ""; position: absolute; top: -10vh; bottom: -30vh; left: -9rem; right: -8vw; z-index: -1;
+    background: linear-gradient(90deg, rgba(226,206,166,0), rgba(226,206,166,.86) 8rem); }
+  #prologue .pl-cols { writing-mode: vertical-rl; height: 100%; font: 700 5rem/1.3 var(--brush); letter-spacing: .6rem; color: var(--ink);
+    text-shadow: .1rem .15rem .2rem rgba(60,30,10,.25); }
+  #prologue .pl-cols span { display: block; margin-left: 1.2rem;
+    -webkit-mask: var(--brushmask) 0 100% / 100% 300% no-repeat; mask: var(--brushmask) 0 100% / 100% 300% no-repeat; }
+  #prologue .pl-cols span:first-child { color: #6e1a12; }
+  #prologue .pl-card.on .pl-cols span { -webkit-mask-position: 0 0; mask-position: 0 0;
+    transition: -webkit-mask-position 1.05s cubic-bezier(.55,.1,.35,1) calc(var(--i) * .55s + .2s), mask-position 1.05s cubic-bezier(.55,.1,.35,1) calc(var(--i) * .55s + .2s); }
+  #prologue .pl-en { position: absolute; right: 7vw; bottom: 10.5vh; margin: 0; max-width: 56rem; text-align: right; text-wrap: balance; opacity: 0;
+    font: italic 500 1.75rem/1.45 var(--sans); letter-spacing: .04em; color: #3b2a1a; transition: opacity .3s; }
+  #prologue .pl-card.on + .pl-en, #prologue .pl-en.on { opacity: .9; transition: opacity .8s 1.9s; }
+  #prologue .pl-pips { position: absolute; left: 4vw; bottom: 5vh; display: flex; gap: 1.1rem; font: 700 2.2rem/1 var(--brush); color: rgba(42,26,14,.58); }
+  #prologue .pl-pips b { transition: color .4s; }
+  #prologue .pl-pips b.past { color: rgba(42,26,14,.85); }
+  #prologue .pl-pips b.on { color: var(--wei); }
+  /* skip legend in the brocade strip under the scroll: same kbd + label + romanisation layout as .ui-foot */
+  #prologue .pl-skip { position: absolute; right: 5.5vw; bottom: max(2px, calc(2.2vh - 1.4rem)); display: flex; align-items: center; gap: 3rem;
+    font: 700 max(15px, 1.9rem)/1 var(--kai); color: #f6ecd9; text-shadow: 0 .1rem .3rem #000, 0 0 .8rem #000; }
+  #prologue .pl-skip span { display: flex; align-items: center; }
+  #prologue .pl-skip small { display: inline; margin-left: .7rem; font: 600 max(13px, 1.3rem)/1 var(--sans); letter-spacing: .12em; color: #e2d4b6; }
+  #prologue .pl-skip svg { width: 2.6rem; height: 2.6rem; margin-right: .6rem; transform: rotate(-90deg); }
+  #prologue .pl-skip circle { fill: none; stroke: rgba(239,227,207,.35); stroke-width: 3; }
+  #prologue .pl-skip circle.p { stroke: #f2c14e; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+  /* held (prologue.js .on): the ring fills over HOLD = .8 s; let go, it snaps back */
+  #prologue .pl-skip circle.p.on { stroke-dashoffset: 0; transition: stroke-dashoffset .8s linear; }
+  #prologue.stamped .pl-card, #prologue.stamped .pl-en, #prologue.stamped .pl-pips, #prologue.stamped .pl-skip { opacity: 0; transition: opacity .4s; }
+  #prologue .pl-stamp { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; }
+  #prologue .pl-stamp::before { content: ""; position: absolute; inset: 0; z-index: -1;
+    background: radial-gradient(ellipse at center, rgba(226,206,166,.94) 0 32%, rgba(226,206,166,.5) 65%, rgba(226,206,166,0)); }
+  #prologue.stamped .pl-stamp { opacity: 1; transition: opacity .6s; }
+  #prologue .pl-stamp small { font: 700 3.4rem/1 var(--kai); letter-spacing: 1.8rem; margin-right: -1.8rem; color: #4a3020; }
+  #prologue .pl-stamp b { position: relative; margin: 1.4rem -2.2rem 1.8rem 0; font: 700 19rem/1 var(--brush); letter-spacing: 2.2rem; color: #140c07;
+    opacity: 0; transform: scale(1.3); filter: blur(1.2rem); text-shadow: .3rem .4rem .6rem rgba(60,30,10,.3); }
+  #prologue.stamped .pl-stamp b { opacity: 1; transform: none; filter: none; transition: opacity .7s .15s, transform 1s cubic-bezier(.2,.7,.2,1) .15s, filter 1s .15s; }
+  #prologue .pl-stamp i { position: absolute; left: calc(50% + 32rem); top: calc(50% - 1rem); height: 2.1em; opacity: 0; transform: rotate(-8deg) scale(2.4);
+    --sz: 3.2rem; --pad: .6rem .7rem; --rad: .45rem; --glyph: 248 230 210; --r1: .22rem; --r2: .4rem; --ra: .8; --drop: 0 .3rem .8rem rgba(60,10,5,.35); }
+  #prologue.stamped .pl-stamp i { opacity: .95; transform: rotate(-8deg); transition: transform .26s cubic-bezier(.3,1.5,.5,1) 1.05s, opacity .08s 1.05s; }
+  #prologue .pl-stamp em { font: 600 1.6rem/1 var(--sans); font-style: normal; letter-spacing: .9em; margin-right: -.9em; color: #4a3020; opacity: 0; }
+  #prologue.stamped .pl-stamp em { opacity: .85; transition: opacity .8s 1.4s; }
+
+  /* result: ink wash over the frozen field; brush 勝利 / 敗北, counted tallies, the rank stamp, the epilogue */
+  #result:not([hidden]) { display: flex; }
+  #result { align-items: center; justify-content: flex-start; padding-bottom: 7rem; box-sizing: border-box;
+    background: linear-gradient(90deg, rgba(10,6,4,.95) 0, rgba(10,6,4,.88) 52%, rgba(10,6,4,.5) 80%, rgba(10,6,4,.35)); }
+  /* officer key art (ctx.art) large on the right, fading into the ink wash (ui lane) */
+  #result.art::before { content: ""; position: absolute; inset: 0; background: var(--art) center / cover no-repeat; transform-origin: 74% 42%;
+    -webkit-mask: linear-gradient(90deg, transparent 44%, #000 66%); mask: linear-gradient(90deg, transparent 44%, #000 66%);
+    animation: rsArt 1.2s cubic-bezier(.2,0,.2,1) both .2s; }
+  #result.art.lose::before { filter: grayscale(.75) brightness(.7) sepia(.2); }
+  @keyframes rsArt { from { opacity: 0; transform: scale(1.12) translateX(3%); } to { transform: scale(1.06); } }
+  #result .rs { position: relative; margin-left: 8vw; width: min(82rem, 86vw); display: flex; flex-direction: column; gap: 1.2rem; }
+  #result .rs-head { display: flex; align-items: center; gap: 2.6rem; animation: rsIn .6s both; }
+  #result .rs-badge { position: relative; flex: none; width: 10rem; height: 10rem; border-radius: 50%; overflow: hidden;
+    background: radial-gradient(circle at 50% 38%, #3c6f72, #16262a 70%); border: .32rem solid #d9d2c6;
+    box-shadow: 0 0 0 .2rem #1a1210, 0 0 0 .36rem #b8893a, 0 .4rem 1rem rgba(0,0,0,.6); }
+  #result .rs-badge canvas { position: absolute; left: 1rem; bottom: -.3rem; width: 8rem; height: 8rem; image-rendering: pixelated; }
+  #result .rs-head small { display: block; font: 600 1.2rem/1 var(--sans); letter-spacing: .35em; color: #cdbb9c; }
+  #result .rs-head h2 { margin: .5rem 0 .2rem; font: 700 8rem/1 var(--brush); letter-spacing: 1.6rem; color: #ffe3a0;
+    text-shadow: 0 0 .1rem #000, .35rem .45rem 0 rgba(0,0,0,.6), 0 0 3rem rgba(255,170,60,.35); animation: rsStamp .55s cubic-bezier(.2,.8,.3,1) both .1s; }
+  #result .rs-head em { font: 600 1.6rem/1 var(--sans); font-style: normal; letter-spacing: 1.2em; color: #f2c14e; }
+  #result.lose .rs-head h2 { color: #c9b8ae; text-shadow: 0 0 .1rem #000, .35rem .45rem 0 rgba(0,0,0,.6), 0 0 3rem rgba(200,40,20,.35); }
+  #result.lose .rs-head em { color: #d8715e; }
+  #result.lose .rs-badge { filter: grayscale(.8) brightness(.8); }
+  #result .rs-body { display: flex; align-items: flex-start; gap: 2.4rem; }
+  #result .rs-stats { border-collapse: collapse; min-width: 46rem; border-left: .3rem solid #b3261e;
+    background: linear-gradient(90deg, rgba(0,0,0,.4), rgba(0,0,0,0)); }
+  #result .rs-stats tr { border-bottom: .1rem solid rgba(214,184,130,.16); animation: rsIn .45s both; animation-delay: calc(.55s + var(--i) * .35s); }
+  #result .rs-stats th { padding: .6rem 2rem; text-align: left; font: 700 2.3rem/1 var(--kai); color: #f2c14e; white-space: nowrap; }
+  #result .rs-stats th small { font: 600 1.05rem/1 var(--sans); letter-spacing: .25em; color: #cdbb9c; margin-left: 1rem; }
+  #result .rs-stats td { padding: .6rem 2rem; min-width: 12rem; text-align: right; font: 700 3.2rem/1 var(--brush); color: #f7f1e8;
+    font-variant-numeric: tabular-nums; text-shadow: .2rem .3rem 0 rgba(0,0,0,.55); }
+  /* records (result.js): a tally that beat the officer's best — a gold 新紀錄 tag over the old value, struck through */
+  #result .rs-stats td.rs-new { min-width: 9rem; padding-left: 0; text-align: left; font: 600 1.2rem/1 var(--sans); text-shadow: none; }
+  #result .rs-new b { display: inline-block; padding: .3rem .6rem; font: 700 1.5rem/1 var(--kai); color: #1a120d; border-radius: .2rem; transform: rotate(-4deg);
+    background: linear-gradient(#ffe7a3, #f2c14e 55%, #c98a22); animation: rsStamp .4s cubic-bezier(.3,1.5,.5,1) both 2.2s; }
+  #result .rs-new small { display: block; margin-top: .4rem; color: #cdbb9c; text-decoration: line-through; }
+  #result .rs-rank em { font: 700 1.5rem/1 var(--kai); font-style: normal; color: #ffe3a0; }
+  #result .rs-rank { display: flex; flex-direction: column; align-items: center; gap: .6rem; margin-top: -1.2rem; transform: rotate(-8deg);
+    animation: rsStamp .4s cubic-bezier(.3,1.5,.5,1) both 2.2s; }
+  #result .rs-rank span { font: 700 2.2rem/1 var(--kai); color: #efe3cf; }
+  #result .rs-rank span small { font: 600 1rem/1 var(--sans); letter-spacing: .3em; margin-left: .6rem; opacity: .75; }
+  #result .rs-rank b { display: grid; place-items: center; width: 14rem; height: 14rem; border-radius: 50%; font: 700 11rem/1 var(--brush);
+    color: #f7f1e8; background: radial-gradient(circle, rgba(0,0,0,.35) 52%, transparent 53%);
+    box-shadow: inset 0 0 0 .9rem var(--rc, #b3261e), inset 0 0 0 1.2rem rgba(0,0,0,.4), 0 0 2.4rem var(--rg, rgba(179,38,30,.4));
+    text-shadow: .3rem .4rem 0 rgba(0,0,0,.6), 0 0 1.6rem var(--rg, rgba(179,38,30,.4)); }
+  #result .rs-rank.rS b { --rc: #e2b040; --rg: rgba(255,200,80,.65); color: #fff0b8; }
+  #result .rs-rank.rA b { --rc: #b3261e; }
+  #result .rs-rank.rB b { --rc: #2f8a84; --rg: rgba(63,184,176,.35); }
+  #result .rs-rank.rC b { --rc: #7a6a5a; --rg: rgba(0,0,0,.3); color: #cdbb9c; }
+  /* the battle's difficulty: a small vermilion-edged tag after VICTORY / DEFEAT; the 修羅 unlock line stamps in after the rank */
+  #result .rs-dif { display: inline-block; margin-left: 2rem; padding: .35rem .8rem; vertical-align: .2rem; font: 700 1.8rem/1 var(--kai); color: #efe3cf;
+    border: .14rem solid #b3261e; border-radius: .3rem; background: rgba(179,38,30,.18); }
+  #result .rs-dif small { margin-left: .6rem; font: 600 1.05rem/1 var(--sans); letter-spacing: .25em; text-transform: uppercase; color: #cdbb9c; }
+  /* announcements share one compact block: three unlocks still leave room for the epilogue and the prompts at 720p */
+  #result .rs-unlocks { display: grid; gap: .6rem; }
+  #result .rs-unlock { margin: 0; font: 700 2.1rem/1.2 var(--brush); letter-spacing: .3rem; color: #ffe3a0;
+    text-shadow: 0 0 1.4rem rgba(255,190,80,.45), .2rem .3rem 0 rgba(0,0,0,.6); animation: rsStamp .4s cubic-bezier(.3,1.5,.5,1) both 2.5s; }
+  #result .rs-unlock small { margin-left: 1.2rem; font: 600 1.2rem/1 var(--sans); letter-spacing: .25em; text-transform: uppercase; color: #f2c14e; text-shadow: none; }
+  #result .rs-epi { max-width: 76rem; animation: rsIn .8s both 2.6s; }
+  #result.lose .rs-epi { animation-delay: 1.9s; }
+  #result .rs-epi p { margin: 0 0 .6rem; font: 700 1.9rem/1.4 var(--kai); color: #efe3cf; }
+  #result .rs-epi small { display: block; font: 500 1.25rem/1.4 var(--sans); letter-spacing: .02em; color: #cdbb9c; }
+  #result .rs-btns { display: flex; gap: 1.6rem; animation: rsIn .5s both 3s; }
+  #result.lose .rs-btns { animation-delay: 2.1s; }
+  #result .rs-btns button { padding: 1.1rem 3.6rem; cursor: pointer; border: 0; border-radius: .4rem; font: 700 2.8rem/1 var(--brush); letter-spacing: .5rem;
+    color: #1a120d; background: linear-gradient(#ffe7a3, #f2c14e 55%, #c98a22); box-shadow: 0 0 0 .15rem #5a3a10, 0 .5rem 1.6rem rgba(0,0,0,.5); }
+  #result .rs-btns button.sub { color: #f4ead8; background: rgba(0,0,0,.45); box-shadow: 0 0 0 .15rem rgba(239,227,207,.5); }
+  #result .rs-btns button small { font: 600 1.3rem/1 var(--sans); letter-spacing: .3em; margin-left: 1rem; }
+  #result .rs-btns button:hover, #result .rs-btns button:focus-visible { filter: brightness(1.12); outline: .2rem solid #ffe7a3; outline-offset: .35rem; }
+  @keyframes rsIn { from { opacity: 0; transform: translateX(-2rem); } }
+  @keyframes rsStamp { from { opacity: 0; transform: scale(1.7) rotate(-6deg); } }
+
+  /* reduced motion: every CSS animation / transition lands at once; the ink-wait ring stands still, the prologue doesn't lift */
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+    .ink-wait svg { animation: none; }
+    #prologue.out :is(.pl-paper, .pl-rod) { scale: none; }
+  }
+</style>
+</head>
+<body class="inkhold">
+<canvas id="c"></canvas>
+<div id="hud" hidden></div>
+<div id="menu" hidden>
+  <div class="t">趙雲<i>常山</i></div>
+  <div class="en" style="--d:.04s">VOXEL MUSOU</div>
+  <div class="sub" style="--d:.08s">戰局暫停<small>Battle paused</small></div>
+  <button id="go" style="--d:.14s">繼續<small>Resume</small></button>
+  <button id="quit" style="--d:.18s">撤退<small>Quit to title</small></button>
+  <div class="hint" style="--d:.22s"><kbd>↑</kbd><kbd>↓</kbd> 選擇 Select · <kbd>Enter</kbd><kbd class="pad">A</kbd> 決定 Confirm · <kbd>Esc</kbd><kbd class="pad">B</kbd> 繼續 Resume</div>
+</div>
+<!-- flow screens (main.js). ui lane: #title #select · story lane: #prologue #result -->
+<div id="title" class="scr" hidden></div>
+<div id="select" class="scr" hidden></div>
+<div id="loading" class="scr" hidden></div>
+<div id="prologue" class="scr" hidden></div>
+<div id="result" class="scr" hidden></div>
+<div id="ink" class="boot"><div class="ink-wait"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" stroke-width="2.6" stroke-dasharray="120 163"/>
+  <circle cx="50" cy="50" r="41" stroke-width="1.2" stroke-dasharray="36 222" stroke-dashoffset="-150" opacity=".6"/></svg><i>無雙</i></div></div>
+<script>
+  // boot failure (a module that 404s or won't link, e.g. a stale cached copy next to fresh ones): the page opens under the
+  // ink and only main.js lifts it, so say what happened instead of turning the seal forever
+  addEventListener('error', () => {
+    const w = document.querySelector('#ink.boot .ink-wait');
+    if (w) w.innerHTML = '<p>載入失敗<small>Failed to load · force-reload (Ctrl/Cmd+Shift+R)</small></p>';
+  }, true);
+</script>
+<script type="module" src="./src/main.js"></script>
+<script src="../__i18n.js"></script></body>
+</html>

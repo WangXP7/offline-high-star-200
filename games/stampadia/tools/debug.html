@@ -1,0 +1,108 @@
+<html><head>
+	<link rel="stylesheet" type="text/css" href="../style/Seshat/stylesheet.css">
+	<script src="../js/jspdf.umd.min.js"></script>
+  	<script src="../js/svg2pdf.umd.min.js"></script>
+	<script src="../js/svg.js"></script>
+	<script src="../js/Seshat-normal.js"></script>
+	<script src="../js/generator.js"></script>
+	<script src="../js/core.js"></script>
+</head>
+<body onload="onl()">	
+</body><script>
+
+var	
+	lookFor=0, // Insert 0 or REGEX for full text search: /forgotten/i
+	mode="find",
+	timer=100,
+	MODES={
+		find:{
+			logCase:true,
+			showFake:true,
+			showRoomAttributes:true,
+			dumpSentences:false,
+			logMissingQuests:true,
+			skipNoise:true,
+			drawRooms:true,
+			drawRoomNumbers:true,
+			dumpXPs:true,
+			dumpSelection:true,
+			flavorText:""
+		},
+		dump:{
+			logCase:true,
+			showFake:true,
+			showRoomAttributes:true,
+			solveRoomRiddles:true,
+			dumpSentences:true,
+			logMissingQuests:true,
+			skipNoise:true,
+			drawRooms:true,
+			drawRoomNumbers:true,
+			dumpXPs:true,
+			dumpSelection:true,
+			flavorText:""
+		},
+		trace:{
+			drawRoomNumbers:true,
+			drawRooms:true,
+			dumpSelection:true,
+			flavorText:""
+		}
+	}
+
+function createDungeon() {
+
+	var core=new Core({
+		root:"../"
+	});
+	core.initialize(()=>{
+
+		var dungen=core.generateAdventureDaily(0,MODES[mode]);
+		dungen.prepare();
+		if (lookFor)
+			console.log("Attempt left",timer,"for",lookFor,"seed",dungen.metadata.seed);
+		else
+			console.log("Generating dungeon",dungen.metadata.seed);
+		dungen.createSVG(svg=>{
+			var stop=false;
+			if (lookFor) {
+				dungen.metadata.selection.forEach(row=>{
+					if (row.quest&&row.quest.id&&row.quest.id.match(lookFor)) {
+						console.log("Found in",row);
+						stop=true;
+					} else if (row.modifier&&row.modifier.id&&row.modifier.id.match(lookFor)) {
+						console.log("Found in",row);
+						stop=true;
+					}
+				})
+				if (!stop) stop=svg.getSVG().match(lookFor);
+			} else stop=true;
+			if (stop) {
+				dungen.metadata.selection.forEach(row=>{
+					if (row.modifier&&row.modifier.id) console.log(row.modifier.id,"@",row.room.id);
+					if (row.quest&&row.quest.id) {
+						let path="";
+						row.route.forEach(step=>path+=step.room.id+" -> ");
+						console.log(row.quest.id,"@",path);
+					}
+				});
+				console.log();
+				dungen.showSVG();
+				dungen.debug();
+				dungen.debugDatabase();
+			} else {
+				if (timer) {
+					timer--;
+					setTimeout(createDungeon,1);
+				} else console.log("Can't find",lookFor)
+			}
+		});
+
+	});
+}
+
+function onl() {
+	createDungeon();
+}
+
+</script>

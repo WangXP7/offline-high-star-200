@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyLists/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- opt in to macOS Game Mode (Sonoma+): top CPU/GPU priority and lower Bluetooth latency while fullscreen -->
+  <key>GCSupportsGameMode</key>
+  <true/>
+  <key>NSSupportsAutomaticGraphicsSwitching</key>
+  <false/>
+</dict>
+</plist>

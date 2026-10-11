@@ -1,0 +1,741 @@
+import { clsx } from 'clsx';
+import {
+  createContext,
+  Fragment,
+  type PropsWithChildren,
+  startTransition,
+  use,
+  useMemo,
+} from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import {
+  type CalculatedCumulativeEffect,
+  calculateBuildingEffectValues,
+  getBuildingDataForLevel,
+  getBuildingDefinition,
+} from '@pillage-first/game-assets/utils/buildings';
+import type { Building } from '@pillage-first/types/models/building';
+import type { Effect } from '@pillage-first/types/models/effect';
+import { formatNumber, formatPercentage } from '@pillage-first/utils/format';
+import {
+  type AssessedBuildingRequirement,
+  assessBuildingRequirements,
+} from '@pillage-first/utils/game/building-requirements';
+import { VillageBuildingLink } from 'app/(game)/(village-slug)/(village)/(...building-field-id)/components/village-building-link';
+import { BuildingFieldContext } from 'app/(game)/(village-slug)/(village)/(...building-field-id)/providers/building-field-context';
+import { useBuildingActions } from 'app/(game)/(village-slug)/(village)/hooks/use-building-actions';
+import { ErrorBag } from 'app/(game)/(village-slug)/components/error-bag';
+import { Resources } from 'app/(game)/(village-slug)/components/resources';
+import { useCurrentVillage } from 'app/(game)/(village-slug)/hooks/current-village/use-current-village';
+import { useBuildingConstructionErrorBag } from 'app/(game)/(village-slug)/hooks/use-building-construction-error-bag';
+import { usePreferences } from 'app/(game)/(village-slug)/hooks/use-preferences';
+import { useTribe } from 'app/(game)/(village-slug)/hooks/use-tribe';
+import { CurrentVillageBuildingQueueContext } from 'app/(game)/(village-slug)/providers/current-village-building-queue-context';
+import { CurrentVillageLiveResourcesSnapshotContext } from 'app/(game)/(village-slug)/providers/current-village-live-resources-context';
+import { InformationPopover } from 'app/(game)/components/information-popover';
+import { Icon } from 'app/components/icon';
+import { Text } from 'app/components/text';
+import { Alert } from 'app/components/ui/alert';
+import { Button } from 'app/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from 'app/components/ui/dialog';
+import { useDialog } from 'app/hooks/use-dialog';
+import { formatTime } from 'app/utils/time';
+
+type BuildingCardContextState = {
+  buildingId: Building['id'];
+  building: Building;
+  buildingInstanceNumber?: number;
+  buildingConstructionReadinessAssessment?: ReturnType<
+    typeof assessBuildingRequirements
+  >;
+  shouldAllowUnmetRequirementsForScheduledConstruction?: boolean;
+};
+
+const BuildingCardContext = createContext<BuildingCardContextState>(
+  {} as BuildingCardContextState,
+);
+
+type BuildingCardProps = {
+  buildingId: Building['id'];
+  buildingInstanceNumber?: number;
+  buildingConstructionReadinessAssessment?: ReturnType<
+    typeof assessBuildingRequirements
+  >;
+  shouldAllowUnmetRequirementsForScheduledConstruction?: boolean;
+};
+
+const unfinishedBuildings = new Set<Building['id']>([
+  'HORSE_DRINKING_TROUGH',
+  'RESIDENCE',
+  'RALLY_POINT',
+  'TOWN_HALL',
+  'EMBASSY',
+  'COMMAND_CENTER',
+  'MARKETPLACE',
+]);
+
+export const BuildingCard = ({
+  buildingId,
+  buildingInstanceNumber,
+  buildingConstructionReadinessAssessment,
+  shouldAllowUnmetRequirementsForScheduledConstruction,
+  children,
+}: PropsWithChildren<BuildingCardProps>) => {
+  const { t } = useTranslation();
+  const building = getBuildingDefinition(buildingId);
+
+  const value = useMemo(
+    () => ({
+      buildingId,
+      building,
+      buildingInstanceNumber,
+      buildingConstructionReadinessAssessment,
+      shouldAllowUnmetRequirementsForScheduledConstruction,
+    }),
+    [
+      buildingId,
+      building,
+      buildingInstanceNumber,
+      buildingConstructionReadinessAssessment,
+      shouldAllowUnmetRequirementsForScheduledConstruction,
+    ],
+  );
+
+  return (
+    <BuildingCardContext value={value}>
+      <article className="flex flex-col gap-2 relative">
+        <InformationPopover ariaLabel={t(`BUILDINGS.${building.id}.NAME`)}>
+          <Text>{t(`BUILDINGS.${building.id}.DESCRIPTION`)}</Text>
+        </InformationPopover>
+        {children}
+      </article>
+    </BuildingCardContext>
+  );
+};
+
+export const BuildingOverview = () => {
+  const { t } = useTranslation();
+  const { buildingId, buildingInstanceNumber } = use(BuildingCardContext);
+  const { actualLevel, virtualLevel, isUpgrading, isDowngrading } =
+    use(BuildingFieldContext);
+
+  const { building, isMaxLevel: isActualMaxLevel } = getBuildingDataForLevel(
+    buildingId,
+    actualLevel,
+  );
+
+  return (
+    <section className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1 md:max-w-4/5">
+        <Text
+          as="h2"
+          className="inline-flex"
+        >
+          {buildingInstanceNumber !== undefined &&
+            buildingInstanceNumber > 1 &&
+            `${buildingInstanceNumber}. `}
+          {t(`BUILDINGS.${building.id}.NAME`)}
+        </Text>
+      </div>
+      {(isUpgrading || isDowngrading) && (
+        <span className="inline-flex text-warning">
+          {t(
+            isUpgrading
+              ? 'Currently upgrading to level {{level}}'
+              : 'Currently downgrading to level {{level}}',
+            {
+              level: virtualLevel,
+            },
+          )}
+        </span>
+      )}
+      {isActualMaxLevel && (
+        <span className="inline-flex text-green-600">
+          {t('{{building}} is fully upgraded', {
+            building: t(`BUILDINGS.${building.id}.NAME`),
+          })}
+        </span>
+      )}
+    </section>
+  );
+};
+
+export const BuildingCost = () => {
+  const { t } = useTranslation();
+  const { buildingId } = use(BuildingCardContext);
+  const { virtualLevel, buildingDuration } = use(BuildingFieldContext);
+  const currentResources = use(CurrentVillageLiveResourcesSnapshotContext);
+
+  const { nextLevelBuildingDuration, nextLevelResourceCost, isMaxLevel } =
+    getBuildingDataForLevel(buildingId, virtualLevel);
+
+  const formattedTime = formatTime(
+    buildingDuration * nextLevelBuildingDuration,
+  );
+
+  if (isMaxLevel) {
+    return null;
+  }
+
+  return (
+    <section className="flex flex-col flex-wrap gap-2 justify-center">
+      <Text as="h3">{t('Cost and duration')}</Text>
+      <div className="flex gap-2 items-center flex-wrap">
+        <Resources
+          availableResources={currentResources}
+          resources={nextLevelResourceCost}
+        />
+        <span className="flex gap-1 items-center">
+          <Icon
+            type="buildingDuration"
+            className="size-5"
+          />
+          {formattedTime}
+        </span>
+      </div>
+    </section>
+  );
+};
+
+export const BuildingUnfinishedNotice = () => {
+  const { t } = useTranslation();
+  const { buildingId } = use(BuildingCardContext);
+
+  if (!unfinishedBuildings.has(buildingId)) {
+    return null;
+  }
+
+  return (
+    <Alert variant="warning">
+      {t(
+        'Building is not fully implemented, some functionality may be missing.',
+      )}
+    </Alert>
+  );
+};
+
+type BuildingScheduledConstructionConfirmationDialogProps = {
+  isOpen: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+};
+
+const BuildingScheduledConstructionConfirmationDialog = ({
+  isOpen,
+  onCancel,
+  onConfirm,
+}: BuildingScheduledConstructionConfirmationDialogProps) => {
+  const { t } = useTranslation();
+  const {
+    buildingConstructionReadinessAssessment,
+    shouldAllowUnmetRequirementsForScheduledConstruction,
+  } = use(BuildingCardContext);
+
+  if (
+    buildingConstructionReadinessAssessment?.canBuild ||
+    !shouldAllowUnmetRequirementsForScheduledConstruction
+  ) {
+    return null;
+  }
+
+  return (
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          onCancel();
+        }
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t('Confirm queued construction')}</DialogTitle>
+        </DialogHeader>
+        <DialogDescription>
+          <Alert variant="warning">
+            {t(
+              'This building does not currently meet all requirements. You may still schedule it, but construction will only start if all prerequisites are met.',
+            )}
+          </Alert>
+        </DialogDescription>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={onCancel}
+          >
+            {t('Cancel')}
+          </Button>
+          <Button
+            variant="confirm"
+            onClick={onConfirm}
+          >
+            {t('Confirm')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const increasingPercentageBuildingEffects = new Set<Effect['id']>([
+  'merchantCapacity',
+  'unitSpeedAfter20Fields',
+  'woodProduction',
+  'clayProduction',
+  'ironProduction',
+  'wheatProduction',
+  'defenceBonus',
+]);
+
+type BuildingBenefitProps = {
+  effect: CalculatedCumulativeEffect;
+  isMaxLevel: boolean;
+};
+
+const BuildingBenefit = ({ effect, isMaxLevel }: BuildingBenefitProps) => {
+  const { serverEffectValueByEffectId } = use(BuildingFieldContext);
+  const serverEffectValue = serverEffectValueByEffectId.get(effect.effectId);
+  const formattingFn = effect.type === 'base' ? formatNumber : formatPercentage;
+
+  const isIncreasing = increasingPercentageBuildingEffects.has(effect.effectId);
+
+  const effectModifier =
+    effect.type === 'base' && serverEffectValue !== undefined
+      ? serverEffectValue
+      : 1;
+
+  return (
+    <span
+      key={effect.effectId}
+      className="flex gap-2"
+    >
+      <Icon
+        type={effect.effectId}
+        className="size-6"
+        {...(!isMaxLevel && {
+          subIcon: effect.areEffectValuesRising
+            ? 'positiveChange'
+            : 'negativeChange',
+        })}
+      />
+      <span>
+        {!isMaxLevel && effect.currentLevelValue !== effect.nextLevelValue && (
+          <>
+            {formattingFn(
+              Math.abs(effect.currentLevelValue * effectModifier),
+              isIncreasing,
+            )}
+            <span className="mx-0.5">&rarr;</span>
+          </>
+        )}
+        {formattingFn(
+          Math.abs(
+            isMaxLevel
+              ? effect.currentLevelValue * effectModifier
+              : effect.nextLevelValue * effectModifier,
+          ),
+          isIncreasing,
+        )}
+      </span>
+    </span>
+  );
+};
+
+export const BuildingBenefits = () => {
+  const { t } = useTranslation();
+  const { building, buildingId } = use(BuildingCardContext);
+  const tribe = useTribe();
+  const { actualLevel, virtualLevel, doesBuildingExist } =
+    use(BuildingFieldContext);
+
+  const {
+    isMaxLevel,
+    population,
+    nextLevelPopulation,
+    culturePoints,
+    nextLevelCulturePoints,
+  } = getBuildingDataForLevel(buildingId, virtualLevel);
+
+  const cumulativeEffects = calculateBuildingEffectValues(
+    building,
+    actualLevel,
+    tribe,
+  );
+
+  // In case we have both infantry and cavalry defence, we show combined defence icon instead
+  const shouldCombineEffects =
+    cumulativeEffects.length > 0 &&
+    cumulativeEffects.every(
+      ({ effectId }) =>
+        effectId === 'infantryDefence' || effectId === 'cavalryDefence',
+    );
+
+  const effectsToShow = useMemo(() => {
+    if (shouldCombineEffects) {
+      const staticDefenceEffect = cumulativeEffects.find(
+        ({ effectId, type }) =>
+          type === 'base' &&
+          (effectId === 'infantryDefence' || effectId === 'cavalryDefence'),
+      );
+      const staticDefenceBonusEffect = cumulativeEffects.find(
+        ({ effectId, type }) =>
+          type === 'bonus' &&
+          (effectId === 'infantryDefence' || effectId === 'cavalryDefence'),
+      );
+
+      const effects: CalculatedCumulativeEffect[] = [];
+
+      if (staticDefenceEffect) {
+        effects.push({
+          ...staticDefenceEffect,
+          effectId: 'defence',
+        } satisfies CalculatedCumulativeEffect);
+      }
+
+      if (staticDefenceBonusEffect) {
+        effects.push({
+          ...staticDefenceBonusEffect,
+          effectId: 'defenceBonus',
+        } satisfies CalculatedCumulativeEffect);
+      }
+
+      return effects;
+    }
+
+    return cumulativeEffects;
+  }, [shouldCombineEffects, cumulativeEffects]);
+
+  return (
+    <section className="flex flex-col gap-2 justify-center">
+      <Text as="h3">
+        {isMaxLevel
+          ? t('Benefits')
+          : t('Benefits at level {{level}}', {
+              level: doesBuildingExist ? actualLevel + 1 : 1,
+            })}
+      </Text>
+      <div className="flex flex-wrap gap-2">
+        <span className="flex gap-2">
+          <Icon
+            type="population"
+            className="size-6"
+            {...(!isMaxLevel && {
+              subIcon: 'positiveChange',
+            })}
+          />
+          <span>
+            {!isMaxLevel && (
+              <>
+                {population}
+                {population !== nextLevelPopulation && (
+                  <>
+                    <span className="mx-0.5">&rarr;</span>
+                    {nextLevelPopulation}
+                  </>
+                )}
+              </>
+            )}
+            {isMaxLevel && population}
+          </span>
+        </span>
+        <span className="flex gap-2">
+          <Icon
+            type="culturePoints"
+            className="size-6"
+            {...(!isMaxLevel && {
+              subIcon: 'positiveChange',
+            })}
+          />
+          <span>
+            {!isMaxLevel && (
+              <>
+                {culturePoints}
+                {culturePoints !== nextLevelCulturePoints && (
+                  <>
+                    <span className="mx-0.5">&rarr;</span>
+                    {nextLevelCulturePoints}
+                  </>
+                )}
+              </>
+            )}
+            {isMaxLevel && culturePoints}
+          </span>
+        </span>
+        {effectsToShow.map((effect) => (
+          <BuildingBenefit
+            key={effect.effectId}
+            effect={effect}
+            isMaxLevel={isMaxLevel}
+          />
+        ))}
+      </div>
+    </section>
+  );
+};
+
+export const BuildingRequirements = () => {
+  const { t } = useTranslation();
+  const { buildingId, buildingConstructionReadinessAssessment } =
+    use(BuildingCardContext);
+  const { currentVillage } = useCurrentVillage();
+
+  const { canBuild, assessedRequirements } =
+    buildingConstructionReadinessAssessment!;
+
+  if (canBuild) {
+    return null;
+  }
+
+  const { maxLevel } = getBuildingDefinition(buildingId);
+
+  const sameBuildingInstances = currentVillage.buildingFields.filter(
+    ({ buildingId: id }) => id === buildingId,
+  );
+  const instanceAlreadyExists = sameBuildingInstances.length > 0;
+
+  // We don't show tribal requirements
+  const requirementsToDisplay = assessedRequirements.filter(({ type }) => {
+    if (type === 'amount') {
+      return instanceAlreadyExists;
+    }
+
+    return ['building', 'amount'].includes(type);
+  });
+
+  return (
+    <section className="flex flex-col gap-2">
+      <Text as="h3">{t('Requirements')}</Text>
+      <ul className="flex gap-x-2 flex-wrap">
+        {requirementsToDisplay.map(
+          (assessedRequirement: AssessedBuildingRequirement, index) => (
+            <Fragment key={assessedRequirement.id}>
+              <li className="whitespace-nowrap">
+                <Text>
+                  {assessedRequirement.type === 'amount' &&
+                    instanceAlreadyExists && (
+                      <>
+                        <VillageBuildingLink buildingId={buildingId} />{' '}
+                        <span
+                          className={clsx(
+                            !assessedRequirement.fulfilled &&
+                              'text-destructive',
+                          )}
+                        >
+                          {t('level {{level}}', { level: maxLevel })}
+                        </span>
+                      </>
+                    )}
+                  {assessedRequirement.type === 'building' && (
+                    <>
+                      <VillageBuildingLink
+                        buildingId={assessedRequirement.buildingId}
+                      />{' '}
+                      <span
+                        className={clsx(
+                          !assessedRequirement.fulfilled && 'text-destructive',
+                        )}
+                      >
+                        {t('level {{level}}', {
+                          level: assessedRequirement.level,
+                        })}
+                      </span>
+                    </>
+                  )}
+                  {index !== requirementsToDisplay.length - 1 && ','}
+                </Text>
+              </li>
+            </Fragment>
+          ),
+        )}
+      </ul>
+    </section>
+  );
+};
+
+type BuildingCardActionsSectionProps = {
+  buildingId: Building['id'];
+  onBuildingConstruction: () => void;
+};
+
+const BuildingCardActionsConstruction = ({
+  buildingId,
+  onBuildingConstruction,
+}: BuildingCardActionsSectionProps) => {
+  const { t } = useTranslation();
+  const { buildingFieldId } = use(BuildingFieldContext);
+  const { getBuildingEventQueue } = use(CurrentVillageBuildingQueueContext);
+  const { errorBag } = useBuildingConstructionErrorBag(
+    buildingId,
+    0,
+    buildingFieldId,
+  );
+  const isScheduling = getBuildingEventQueue(buildingFieldId).length > 0;
+
+  return (
+    <>
+      <Button
+        data-testid="building-actions-construct-building-button"
+        variant="default"
+        size="fit"
+        onClick={onBuildingConstruction}
+        disabled={errorBag.length > 0}
+      >
+        {t(isScheduling ? 'Schedule' : 'Construct')}
+      </Button>
+      <ErrorBag errorBag={errorBag} />
+    </>
+  );
+};
+
+type BuildingCardActionsUpgradeProps = {
+  onBuildingUpgrade: () => void;
+  buildingLevel: number;
+};
+
+const BuildingCardActionsUpgrade = ({
+  onBuildingUpgrade,
+  buildingLevel,
+}: BuildingCardActionsUpgradeProps) => {
+  const { t } = useTranslation();
+  const { buildingId } = use(BuildingCardContext);
+  const { actualLevel, buildingFieldId } = use(BuildingFieldContext);
+  const { getBuildingEventQueue } = use(CurrentVillageBuildingQueueContext);
+
+  const { errorBag } = useBuildingConstructionErrorBag(
+    buildingId,
+    actualLevel,
+    buildingFieldId,
+  );
+  const isScheduling = getBuildingEventQueue(buildingFieldId).length > 0;
+
+  return (
+    <>
+      <Button
+        data-testid="building-actions-upgrade-building-button"
+        variant="default"
+        size="fit"
+        onClick={onBuildingUpgrade}
+        disabled={errorBag.length > 0}
+      >
+        {isScheduling
+          ? t('Schedule')
+          : t('Upgrade to level {{level}}', { level: buildingLevel + 1 })}
+      </Button>
+      <ErrorBag errorBag={errorBag} />
+    </>
+  );
+};
+
+export const BuildingActions = () => {
+  const {
+    buildingId,
+    building,
+    buildingConstructionReadinessAssessment,
+    shouldAllowUnmetRequirementsForScheduledConstruction,
+  } = use(BuildingCardContext);
+  const navigate = useNavigate();
+  const tribe = useTribe();
+  const {
+    buildingFieldId,
+    virtualLevel,
+    doesBuildingExist,
+    maxLevelByBuildingId,
+    buildingIdsInQueue,
+  } = use(BuildingFieldContext);
+  const { preferences } = usePreferences();
+  const {
+    isOpen: isScheduledConstructionConfirmationOpen,
+    openModal: openScheduledConstructionConfirmationModal,
+    closeModal: closeScheduledConstructionConfirmationModal,
+  } = useDialog();
+  const { constructBuilding, upgradeBuilding } = useBuildingActions(
+    buildingId,
+    buildingFieldId,
+  );
+  const { isMaxLevel } = getBuildingDataForLevel(buildingId, virtualLevel);
+
+  const navigateBack = async () => {
+    await navigate('..', { relative: 'path' });
+  };
+
+  const { canBuild } =
+    buildingConstructionReadinessAssessment ??
+    assessBuildingRequirements({
+      building,
+      tribe,
+      maxLevelByBuildingId,
+      buildingIdsInQueue,
+    });
+  const shouldConfirmUnmetScheduledConstruction =
+    !canBuild && shouldAllowUnmetRequirementsForScheduledConstruction;
+
+  const queueBuildingConstruction = async () => {
+    closeScheduledConstructionConfirmationModal();
+    await navigateBack();
+    startTransition(() => {
+      constructBuilding();
+    });
+  };
+
+  const onBuildingConstruction = async () => {
+    if (shouldConfirmUnmetScheduledConstruction) {
+      openScheduledConstructionConfirmationModal();
+      return;
+    }
+
+    await queueBuildingConstruction();
+  };
+
+  const onBuildingUpgrade = async () => {
+    if (preferences.isAutomaticNavigationAfterBuildingLevelChangeEnabled) {
+      await navigateBack();
+    }
+
+    startTransition(() => {
+      upgradeBuilding();
+    });
+  };
+
+  if (!doesBuildingExist) {
+    if (!canBuild && !shouldAllowUnmetRequirementsForScheduledConstruction) {
+      return null;
+    }
+
+    return (
+      <section className="flex flex-col gap-2">
+        <BuildingCardActionsConstruction
+          buildingId={buildingId}
+          onBuildingConstruction={onBuildingConstruction}
+        />
+        <BuildingScheduledConstructionConfirmationDialog
+          isOpen={isScheduledConstructionConfirmationOpen}
+          onCancel={() => {
+            closeScheduledConstructionConfirmationModal();
+          }}
+          onConfirm={queueBuildingConstruction}
+        />
+      </section>
+    );
+  }
+
+  if (isMaxLevel) {
+    return null;
+  }
+
+  return (
+    <section className="flex flex-col gap-2">
+      <BuildingCardActionsUpgrade
+        buildingLevel={virtualLevel}
+        onBuildingUpgrade={onBuildingUpgrade}
+      />
+    </section>
+  );
+};

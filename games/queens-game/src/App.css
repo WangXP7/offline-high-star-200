@@ -1,0 +1,52 @@
+.board {
+  display: grid;
+  width: fit-content;
+  touch-action: none;
+  user-select: none;
+}
+
+.square {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  border: 1px solid black;
+}
+
+.thick-border-t {
+  border-top: 2px solid black;
+}
+
+.thick-border-r {
+  border-right: 2px solid black;
+}
+
+.thick-border-b {
+  border-bottom: 2px solid black;
+}
+
+.thick-border-l {
+  border-left: 2px solid black;
+}
+
+.thick-outer-border-t {
+  border-top-width: 4px;
+}
+
+.thick-outer-border-r {
+  border-right-width: 4px;
+}
+
+.thick-outer-border-b {
+  border-bottom-width: 4px;
+}
+
+.thick-outer-border-l {
+  border-left-width: 4px;
+}
+
+.bg-purple {
+  background: linear-gradient(#7f5aa3, #441e6b);
+}

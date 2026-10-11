@@ -1,0 +1,43 @@
+@import "variables.scss";
+
+// button
+button {
+  border: none;
+
+  &.blue {
+    background-color: blue;
+  }
+  &.red {
+    background-color: red;
+  }
+}
+
+// back button
+a.back {
+  color: blue;
+  text-decoration: none;
+  &:hover {
+    color: white;
+    text-decoration: underline;
+  }
+}
+
+// text input
+input[type="text"],
+input[type="password"] {
+  padding: 0.5em;
+  // border-radius: 0.2em;
+
+  border: 2px solid $input-border;
+  background-color: $input-bg;
+
+  color: $input-text;
+  letter-spacing: 0.12em;
+
+  width: 100%;
+
+  &:focus {
+    outline: none;
+    border: 2px solid #000075;
+  }
+}

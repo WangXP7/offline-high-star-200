@@ -1,0 +1,85 @@
+.Targets {
+	overflow: hidden;
+	flex: 1;
+}
+.Targets-group {
+	display: flex;
+	justify-content: center;
+}
+.Target {
+	position: relative;
+	margin-top: 1rem;
+	padding: 2em 1em 1.4em;
+	flex: 1;
+	display: flex;
+	flex-flow: column;
+	transition: opacity 200ms;
+	justify-content: center;
+	max-width: 20rem;
+	user-select: none;
+}
+.Target-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5em;
+	min-height: 1.4em;
+	margin: 0 0.5rem 0;
+	padding: 0.1em 0.5em;
+	/* background: var(--text-inverse); */
+	background: linear-gradient(10deg, black -80%, transparent 80%);
+	border-top-left-radius: 0.5em;
+	border-top-right-radius: 0.5em;
+}
+.Target-sprite {
+	flex-shrink: 0;
+}
+.Target-intents {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	margin: auto 0 0;
+}
+.Target-name {
+	display: none;
+}
+.Target-intent {
+	display: inline-block;
+}
+.Target-intent img {
+	vertical-align: bottom;
+	height: 1.2em;
+	/*image-rendering: -moz-crisp-edges;*/
+	image-rendering: pixelated;
+}
+.Target-powers {
+	margin-top: 0;
+	margin-left: 1em;
+	min-height: 1.2em;
+}
+.Target-powers span {
+	background: var(--red);
+	margin-right: 0.2em;
+}
+.Target-combatText {
+	position: absolute;
+	width: 100%;
+	pointer-events: none;
+}
+
+.Target--isDead {
+	pointer-events: none;
+	opacity: 0.2;
+}
+
+.Target.is-dragOver .Healthbar {
+	transition-duration: 100ms;
+	box-shadow:
+		1em 0 2em var(--yellow),
+		3px 3px 1px black,
+		0px 0px 30px 20px white;
+}
+
+.Target--isDead .Healthbar {
+	background: var(--red);
+}

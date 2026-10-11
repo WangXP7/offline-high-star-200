@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>五子棋</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="./lib/jquery-weui/lib/weui.min.css?r=20160316">
+    <link rel="stylesheet" href="./lib/jquery-weui/css/jquery-weui.css">
+    <link rel="stylesheet" href="./dist/main.css">
+  </head>
+  <body ontouchstart class="show-nu">
+    <h1>五子棋 <span class="version">V1.1.2</span></h1>
+    <h3>五子连珠，劳逸结合 - 言川</h3>
+    <h4>更新时间：2018-05-12</h4>
+
+    <div class="board-outer">
+      <div class="board" id="board">
+      </div>
+    </div>
+
+    <div class="status">
+    </div>
+
+    <div class="buttons">
+      <div class="weui-row">
+        <div class="weui-col-33">
+          <a href="javascript:;" class="weui-btn weui-btn_primary" id='start'>开始</a>
+        </div>
+        <div class="weui-col-33">
+          <a href="javascript:;" class="weui-btn weui-btn_warn" id='fail'>认输</a>
+        </div>
+        <div class="weui-col-33">
+          <a href="javascript:;" class="weui-btn weui-btn_default" id='back'>悔棋</a>
+        </div>
+      </div>
+    </div>
+
+    <p class="notice"><strong>注意：</strong>手机上请使用系统自带浏览器(Safari/Chrome)，在QQ/微信内置浏览器中电脑思考速度会慢10倍以上!</p>
+
+    <div class="settings">
+      <div class="weui-cells__title">显示设置</div>
+      <div class="weui-cells weui-cells_form">
+        <div class="weui-cell weui-cell_switch">
+          <div class="weui-cell__bd">显示序号</div>
+          <div class="weui-cell__ft">
+            <input class="weui-switch" type="checkbox" id="show-nu" checked>
+          </div>
+        </div>
+      </div>
+      <div class="weui-cells__title">电脑棋力设置(测试用，别修改)</div>
+      <div class="weui-cells">
+        <div class="weui-cell">
+          <div class="weui-cell__bd">
+            <p>步时限制(<span class="range"></span>)(秒)</p>
+          </div>
+          <div class="weui-cell__ft">
+            <div class="weui-count" id="time">
+              <a class="weui-count__btn weui-count__decrease"></a>
+              <input class="weui-count__number" type="number" value="6"  readonly/>
+              <a class="weui-count__btn weui-count__increase"></a>
+            </div>
+          </div>
+        </div>
+        <div class="weui-cell">
+          <div class="weui-cell__bd">
+            <p>搜索深度(<span class="range"></span>)</p>
+          </div>
+          <div class="weui-cell__ft">
+            <div class="weui-count" id="depth">
+              <a class="weui-count__btn weui-count__decrease"></a>
+              <input class="weui-count__number" type="number" value="6"  readonly/>
+              <a class="weui-count__btn weui-count__increase"></a>
+            </div>
+          </div>
+        </div>
+        <div class="weui-cell">
+          <div class="weui-cell__bd">
+            <p>搜索广度(<span class="range"></span>)</p>
+          </div>
+          <div class="weui-cell__ft">
+            <div class="weui-count" id="breadth">
+              <a class="weui-count__btn weui-count__decrease"></a>
+              <input class="weui-count__number" type="number" value="10" readonly />
+              <a class="weui-count__btn weui-count__increase"></a>
+            </div>
+          </div>
+        </div>
+        <div class="weui-cell">
+          <div class="weui-cell__bd">
+            <p>算杀深度(<span class="range"></span>)</p>
+          </div>
+          <div class="weui-cell__ft">
+            <div class="weui-count" id="vcx">
+              <a class="weui-count__btn weui-count__decrease"></a>
+              <input class="weui-count__number" type="number" value="5" readonly/>
+              <a class="weui-count__btn weui-count__increase"></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer>
+      源码： <a href='https://github.com/lihongxun945/gobang' target="_blank">https://github.com/lihongxun945/gobang</a>
+      <br>
+      @2016-03-16
+    </footer>
+
+    <script src='./lib/jquery-weui/lib/jquery-2.1.4.js'></script>
+    <script src='./lib/jquery-weui/js/jquery-weui.js'></script>
+    <script src='./dist/main.js?r=20160316'></script>
+  <script src="../__i18n.js"></script></body>
+</html>

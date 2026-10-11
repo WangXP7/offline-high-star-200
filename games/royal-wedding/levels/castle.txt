@@ -1,0 +1,252 @@
+                                                           
+T========w#                                   #############
+T======www#  ##########                     ###$=========T#
+T====M=w###  #........#   ###       #########P######======#
+T======w#G####1######+#####^#########^.........J..^#======#
+T======w#-#______###p..............##......##.....s#=T==ff#
+T======w--|_______#.....##...##.....#......##......#====ff#
+T====-bBb-|_______L.................2............t.#==W=ff#
+T=---==w--|_______#.....##...##.....#......##......#====ff#
+6@=====w#-#______###...............##......##.....s#====ff#
+T======w#G####L######L#####^#########^............^#======#
+T======w###       #r......###s.xyz.s#######\#P######======#
+T======www#       #r........4..........3....###======T====#
+T==d=====w#       #r......###s.....s#########===========ff#
+T========w##      #.#################==========------===ff#
+T========ww#      #................!+----------======-==ff#
+T=========w#      ###################ffffff======T====-=ff#
+T=========ww#                       #ffffff==g========7=ff#
+T==========w#                       ##################5####
+                                                           
+
+{
+	"level": "Game.Level.Castle",
+	"light": [220, 220, 180],
+	"sight": 10,
+	"portals": {
+		"chapel": {
+			"level": "chapel",
+			"direction": "south"
+		},
+		"forest": {
+			"level": "forest",
+			"direction": "west",
+			"cell": "from-castle"
+		}
+	},
+
+	"#": {
+		"cell": "stonewall"
+	},
+	"s": {
+		"cell": {
+			"type": "statue",
+			"name": "armored statue",
+			"color": [80, 80, 80]
+		}
+	},
+	"P": {
+		"cell": {
+			"type": "stonewall",
+			"name": "painting",
+			"char": "=",
+			"color": [180, 180, 180],
+			"colorVariation": [50, 50, 50]
+		}
+	},
+	"\\": {
+		"cell": {
+			"type": "stonewall",
+			"id": "secretdoor"
+		}
+	},
+	".": {
+		"cell": "floor"
+	},
+	"_": {
+		"cell": "ground"
+	},
+	"-": {
+		"cell": "path"
+	},
+	"b": {
+		"cell": {
+			"type": "pier",
+			"name": "bridge"
+		}
+	},
+	"B": {
+		"cell": {
+			"type": "pier",
+			"name": "bridge",
+			"id": "bridge"
+		}
+	},
+	"=": {
+		"cell": "grass"
+	},
+	"$": {
+		"cell": "grass",
+		"item": "secret-gold"
+	},
+	"f": {
+		"cell": "grass",
+		"item": "flower"
+	},
+	"W": {
+		"cell": "well"
+	},
+	"w": {
+		"cell": {
+			"type": "water",
+			"countable": 1,
+			"name": "moat"
+		}
+	},
+	"T": {
+		"cell": "tree"
+	},
+	"@": {
+		"cell": {
+			"type": "path",
+			"id": "start"
+		}
+	},
+	"G": {
+		"cell": "path",
+		"being": {
+			"type": "guard",
+			"name": "gate guard",
+			"chats": ["Your invitation seems to be valid. You may pass."]
+		}
+	},
+	"d": {
+		"cell": "grass",
+		"being": "dog"
+	},
+	"t": {
+		"cell": {
+			"type": "floor",
+			"name": "throne",
+			"color": [120, 80, 30],
+			"id": "throne",
+			"char": "&"
+		}
+	},
+	"r": {
+		"cell": "floor",
+		"being": {
+			"type": "rat",
+			"hostile": true,
+			"sight": 4
+		}
+	},
+	"M": {
+		"cell": "grass",
+		"being": "mugger"
+	},
+	"g": {
+		"cell": "grass",
+		"being": "gardener"
+	},
+	"J": {
+		"cell": "floor",
+		"being": "jester"
+	},
+	"L": {
+		"cell": {
+			"type": "door",
+			"closed": 1,
+			"locked": 1
+		}
+	},
+	"+": {
+		"cell": {
+			"type": "door",
+			"closed": 1
+		}
+	},
+	"/": {
+		"cell": {
+			"type": "door",
+			"closed": 0
+		}
+	},
+	"1": {
+		"cell": {
+			"type": "door",
+			"closed": 1,
+			"id": "entry"
+		}
+	},
+	"2": {
+		"cell": {
+			"type": "door",
+			"closed": 1,
+			"id": "throneroom"
+		}
+	},
+	"3": {
+		"cell": {
+			"type": "floor",
+			"id": "armory"
+		}
+	},
+	"4": {
+		"cell": {
+			"type": "door",
+			"closed": 1,
+			"id": "kitchen"
+		}
+	},
+	"5": {
+		"cell": {
+			"type": "path",
+			"id": "chapel"
+		}
+	},
+	"6": {
+		"cell": {
+			"type": "path",
+			"id": "forest"
+		}
+	},
+	"7": {
+		"cell": {
+			"type": "path",
+			"id": "from-chapel"
+		}
+	},
+	"|": {
+		"cell": "gate"
+	},
+	"^": {
+		"cell": {
+			"type": "torch",
+			"light": [100, 80, 30],
+			"color": [200, 160, 60]
+		}
+	},
+	"x": {
+		"cell": "floor",
+		"item": "dagger"
+	},
+	"y": {
+		"cell": "floor",
+		"item": "sword"
+	},
+	"z": {
+		"cell": "floor",
+		"item": "axe"
+	},
+	"p": {
+		"cell": {
+			"type": "floor",
+			"id": "potion"
+		}
+	},
+	"!": {
+		"cell": "floor",
+		"item": "healing-potion"
+	}
+}

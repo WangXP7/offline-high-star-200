@@ -1,0 +1,16 @@
+/img/*.db
+/img/eldorado/*.db
+/img/items/*.db
+/img/items/followers/*.db
+/img/open-iconic/*.db
+/nbproject/private/
+/nbproject
+*.xcf
+*.komodoproject
+tools/
+index-dev.html
+balancing.html
+*.bat
+worldcreator.html
+.vscode/
+*_unused_*

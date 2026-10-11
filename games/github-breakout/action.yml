@@ -1,0 +1,35 @@
+name: "generate-breakout-game-from-github-contribution-graph"
+description: "Generate a Breakout game svg from github contribution graph"
+author: "cyprieng"
+
+branding:
+  icon: "image"
+  color: "green"
+
+inputs:
+  github_username:
+    description: "Github username"
+    required: true
+  github_token:
+    description: "Github token used to fetch the contributions. Default to the action token if empty."
+    required: false
+    default: ${{ github.token }}
+  enable_ghost_bricks:
+    description: "Ghost bricks for days without contribution"
+    required: false
+  output_path:
+    description: "Output path for SVGs"
+    required: false
+  paddle_color:
+    description: "Paddle color"
+    required: false
+  ball_color:
+    description: "Ball color"
+    required: false
+  bricks_colors:
+    description: "Bricks colors"
+    required: false
+
+runs:
+  using: node24
+  main: dist/cli.js

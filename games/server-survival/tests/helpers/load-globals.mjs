@@ -1,0 +1,24 @@
+// The game is native ESM (#155 PR 2) — tests load the real modules with
+// dynamic import instead of the old vm-eval global-harvesting hack.
+export const LOCALES = [
+  { code: "en", load: async () => (await import("../../src/locales/en.js")).EN_TRANSLATIONS },
+  { code: "zh", load: async () => (await import("../../src/locales/zh.js")).ZH_TRANSLATIONS },
+  { code: "pt-BR", load: async () => (await import("../../src/locales/pt-BR.js")).PT_BR_TRANSLATIONS },
+  { code: "de", load: async () => (await import("../../src/locales/de.js")).DE_TRANSLATIONS },
+  { code: "fr", load: async () => (await import("../../src/locales/fr.js")).FR_TRANSLATIONS },
+  { code: "ko", load: async () => (await import("../../src/locales/ko.js")).KO_TRANSLATIONS },
+  { code: "ru", load: async () => (await import("../../src/locales/ru.js")).RU_TRANSLATIONS },
+  { code: "ne", load: async () => (await import("../../src/locales/nep.js")).NE_TRANSLATIONS },
+  { code: "it", load: async () => (await import("../../src/locales/it.js")).IT_TRANSLATIONS },
+  { code: "hi", load: async () => (await import("../../src/locales/hi.js")).HI_TRANSLATIONS },
+  // uk was added in #230 with a bespoke suite and never registered here, so
+  // for two months the shared parity/placeholder tests silently skipped it —
+  // found while adding the soft_slow badge (#248). One locale tested by a
+  // different file than the other ten is a gap that widens every time the
+  // shared suite gains a check.
+  { code: "uk", load: async () => (await import("../../src/locales/uk.js")).UK_TRANSLATIONS },
+];
+
+export function loadLocale(locale) {
+  return locale.load();
+}

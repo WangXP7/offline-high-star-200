@@ -1,0 +1,299 @@
+<template>
+  <view-container :is-auth-page="true">
+    <view-title
+      title="Main Menu"
+      :hideHomeButton="true"
+      :showSocialLinks="true"
+    />
+
+    <warnings v-if="user" :warnings="user.warnings" />
+
+    <div class="row pb-0 achievements">
+      <div class="col-sm-12 col-md-6 col-lg-5">
+        <p class="mb-1">
+          A space strategy game filled with conquest, betrayal and subterfuge.
+        </p>
+        <p class="mb-2 mt-2">
+          <small
+            >Play <span class="text-warning">Solaris</span> on
+            <a href="https://solaris.games" target="_blank" title="Web"
+              ><i class="fab fa-chrome me-1"></i>Web</a
+            >,
+            <a
+              href="https://store.steampowered.com/app/1623930/Solaris/"
+              target="_blank"
+              title="Steam"
+              ><i class="fab fa-steam me-1"></i>Steam</a
+            >
+            and
+            <a
+              href="https://play.google.com/store/apps/details?id=com.voxel.solaris_android"
+              target="_blank"
+              title="Android"
+              ><i class="fab fa-google-play me-1"></i>Android</a
+            >.</small
+          >
+        </p>
+        <announcements-button />
+      </div>
+      <div class="col-sm-12 col-md-6 col-lg-7">
+        <!-- player quick stats -->
+        <achievements
+          v-if="achievements"
+          :level="achievements.level"
+          :victories="achievements.victories"
+          :rank="achievements.rank"
+          :renown="achievements.renown"
+        />
+        <loading-spinner :loading="!achievements"></loading-spinner>
+      </div>
+    </div>
+
+    <div class="row pb-0 pt-3">
+      <poll></poll>
+    </div>
+
+    <div class="row pb-0 pt-0">
+      <div class="col-sm-12 col-md-6 col-lg-6">
+        <div
+          class="card bg-dark text-white p-1"
+          @click="routeToPath('/game/active-games')"
+        >
+          <picture style="display: contents">
+            <source :srcset="home1Webp" type="image/webp" />
+            <img class="card-img" :src="home1" alt="View my games" />
+          </picture>
+          <div class="card-img-overlay">
+            <h5 class="card-title">
+              <i class="fas fa-user"></i>
+              <span class="ms-2">My Games</span>
+            </h5>
+          </div>
+          <div class="card-arrow">
+            <div class="card-arrow-top-left"></div>
+            <div class="card-arrow-top-right"></div>
+            <div class="card-arrow-bottom-left"></div>
+            <div class="card-arrow-bottom-right"></div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="col-sm-12 col-md-6 col-lg-6"
+        @click="routeToPath('/game/list')"
+      >
+        <div class="card bg-dark text-white p-1">
+          <picture style="display: contents">
+            <source :srcset="home2Webp" type="image/webp" />
+            <img class="card-img" :src="home2" alt="Join a game" />
+          </picture>
+          <div class="card-img-overlay">
+            <h5 class="card-title">
+              <i class="fas fa-gamepad"></i>
+              <span class="ms-2">Join Game</span>
+            </h5>
+          </div>
+          <div class="card-arrow">
+            <div class="card-arrow-top-left"></div>
+            <div class="card-arrow-top-right"></div>
+            <div class="card-arrow-bottom-left"></div>
+            <div class="card-arrow-bottom-right"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-12 col-md-4 col-lg-4">
+        <div
+          class="card bg-dark text-white p-1"
+          @click="routeToPath('/leaderboard')"
+        >
+          <picture style="display: contents">
+            <source :srcset="home3Webp" type="image/webp" />
+            <img class="card-img" :src="home3" alt="Leaderboard" />
+          </picture>
+          <div class="card-img-overlay">
+            <h5 class="card-title">
+              <i class="fas fa-list-ol"></i>
+              <span class="ms-2">Leaderboard</span>
+            </h5>
+          </div>
+          <div class="card-arrow">
+            <div class="card-arrow-top-left"></div>
+            <div class="card-arrow-top-right"></div>
+            <div class="card-arrow-bottom-left"></div>
+            <div class="card-arrow-bottom-right"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-12 col-md-4 col-lg-4">
+        <div class="card bg-dark text-white p-1" @click="routeToPath('/guild')">
+          <picture style="display: contents">
+            <source :srcset="home4Webp" type="image/webp" />
+            <img class="card-img" :src="home4" alt="Guilds" />
+          </picture>
+          <div class="card-img-overlay">
+            <h5 class="card-title">
+              <i class="fas fa-shield-alt"></i>
+              <span class="ms-2">{{
+                user && user.guildId ? "My Guild" : "Guilds"
+              }}</span>
+            </h5>
+          </div>
+          <div class="card-arrow">
+            <div class="card-arrow-top-left"></div>
+            <div class="card-arrow-top-right"></div>
+            <div class="card-arrow-bottom-left"></div>
+            <div class="card-arrow-bottom-right"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-12 col-md-4 col-lg-4">
+        <div
+          class="card bg-dark text-white p-1"
+          @click="routeToPath('/avatars')"
+        >
+          <picture style="display: contents">
+            <source :srcset="home5Webp" type="image/webp" />
+            <img class="card-img" :src="home5" alt="Shop" />
+          </picture>
+          <div class="card-img-overlay">
+            <h5 class="card-title card-title-success">
+              <i class="fas fa-shopping-basket"></i>
+              <span class="ms-2">Avatar Shop</span>
+            </h5>
+          </div>
+          <div class="card-arrow">
+            <div class="card-arrow-top-left"></div>
+            <div class="card-arrow-top-right"></div>
+            <div class="card-arrow-bottom-left"></div>
+            <div class="card-arrow-bottom-right"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row pb-0">
+      <div class="col-sm-12 col-md-12 col-lg-12">
+        <a
+          class="card bg-dark text-white p-1"
+          href="https://command.solaris.games/"
+        >
+          <picture style="display: contents">
+            <source :srcset="solarisCommandImgWebp" type="image/webp" />
+            <img
+              class="card-img"
+              alt="Solaris:Command"
+              :src="solarisCommandImg"
+            />
+          </picture>
+          <div class="card-img-overlay">
+            <h5 class="card-title">Solaris:Command</h5>
+            <p class="card-text bg-dark p-2">
+              Solaris:Command, the new, hex-based strategy and tactics game, is
+              live!
+            </p>
+            <div class="card-arrow">
+              <div class="card-arrow-top-left"></div>
+              <div class="card-arrow-top-right"></div>
+              <div class="card-arrow-bottom-left"></div>
+              <div class="card-arrow-bottom-right"></div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <hr />
+
+    <community />
+
+    <hr />
+  </view-container>
+</template>
+
+<script setup lang="ts">
+import home1 from "../assets/screenshots/tiles/home-1.jpg";
+import home1Webp from "../assets/screenshots/tiles/home-1.webp";
+import home2 from "../assets/screenshots/tiles/home-2.jpg";
+import home2Webp from "../assets/screenshots/tiles/home-2.webp";
+import home3 from "../assets/screenshots/tiles/home-3.jpg";
+import home3Webp from "../assets/screenshots/tiles/home-3.webp";
+import home4 from "../assets/screenshots/tiles/home-4.jpg";
+import home4Webp from "../assets/screenshots/tiles/home-4.webp";
+import home5 from "../assets/screenshots/tiles/home-5.jpg";
+import home5Webp from "../assets/screenshots/tiles/home-5.webp";
+import solarisCommandImg from "../assets/screenshots/solaris_command_1.jpg";
+import solarisCommandImgWebp from "../assets/screenshots/solaris_command_1.webp";
+import { ref, onMounted, type Ref, inject } from "vue";
+import LoadingSpinner from "./components/LoadingSpinner.vue";
+import router from "../router";
+import ViewContainer from "./components/ViewContainer.vue";
+import ViewTitle from "./components/ViewTitle.vue";
+import Achievements from "./game/components/player/Achievements.vue";
+import Poll from "./components/Poll.vue";
+import Warnings from "./account/Warnings.vue";
+import AnnouncementsButton from "./components/AnnouncementsButton.vue";
+import { detailMe } from "@/services/typedapi/user";
+import { formatError, httpInjectionKey, isOk } from "@/services/typedapi/index";
+import type { UserPrivate, UserAchievements } from "@solaris/common";
+import Community from "@/views/game/components/menu/Community.vue";
+import { useUserStore } from "@/stores/user";
+
+const userStore = useUserStore();
+
+const httpClient = inject(httpInjectionKey)!;
+
+const user: Ref<UserPrivate<string> | null> = ref(null);
+const achievements: Ref<UserAchievements<string> | null> = ref(null);
+
+const loadData = async () => {
+  const response = await detailMe(httpClient)();
+
+  if (isOk(response)) {
+    user.value = response.data;
+    achievements.value = response.data.achievements;
+
+    userStore.setUser(response.data);
+    userStore.setRoles(response.data.roles);
+    userStore.setCredits(response.data.credits);
+    userStore.setIsEstablishedPlayer(response.data.isEstablishedPlayer);
+  } else {
+    console.error(formatError(response));
+  }
+};
+
+const routeToPath = (path: string) => {
+  router.push(path);
+};
+
+onMounted(async () => {
+  await loadData();
+});
+</script>
+
+<style scoped>
+.card {
+  max-height: 150px;
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.card-img {
+  object-fit: cover;
+  max-height: 150px;
+  min-height: 100%;
+  width: auto;
+}
+
+.card-img-overlay {
+  padding: 0.5rem;
+}
+
+.card-title {
+  background-color: #375a7f;
+  padding: 0.25rem;
+  display: inline-block;
+}
+
+.card-title-success {
+  background-color: #00bc8c;
+}
+</style>

@@ -1,0 +1,29 @@
+name: "Selenium-pytest Smoke Tests"
+
+on:
+  pull_request:
+  push:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  smoke_job:
+    name: Smoke tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: run server with the front of the game
+        run: python3 -m http.server 8080 &
+
+      - name: check whether game is UP
+        run: |
+          curl -X GET "http://localhost:8080/"
+      
+      - name: Install python requirements
+        run: pip install -r ./tests/selenium/requirements.txt
+
+      - name: Run tests
+        run: pytest -s -v -m smoke ./tests/selenium

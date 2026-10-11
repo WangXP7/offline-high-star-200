@@ -1,0 +1,414 @@
+import { type JSX, type LazyExoticComponent, Suspense, use } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { Building } from '@pillage-first/types/models/building';
+import {
+  BuildingActions,
+  BuildingBenefits,
+  BuildingCard,
+  BuildingCost,
+  BuildingOverview,
+  BuildingUnfinishedNotice,
+} from 'app/(game)/(village-slug)/(village)/(...building-field-id)/components/building-card';
+import { Bookmark } from 'app/(game)/(village-slug)/(village)/(...building-field-id)/components/building-tabs/bookmark';
+import { BuildingFieldContext } from 'app/(game)/(village-slug)/(village)/(...building-field-id)/providers/building-field-context';
+import {
+  Section,
+  SectionContent,
+} from 'app/(game)/(village-slug)/components/building-layout';
+import { useTabParam } from 'app/(game)/(village-slug)/hooks/routes/use-tab-param';
+import { InformationPopover } from 'app/(game)/components/information-popover';
+import { Text } from 'app/components/text';
+import { Skeleton } from 'app/components/ui/skeleton';
+import { Tab, TabList, TabPanel, Tabs } from 'app/components/ui/tabs';
+import { lazyWithRetry } from 'app/utils/imports';
+
+const BuildingTabFallback = () => {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="flex w-60 h-6" />
+        <Skeleton className="flex w-full h-16" />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Skeleton className="flex w-full h-30" />
+      </div>
+    </div>
+  );
+};
+
+const BuildingStats = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/building-stats/building-stats'))
+    .BuildingStats,
+}));
+
+const ResourceProductionOverview = lazyWithRetry(async () => ({
+  default: (
+    await import(
+      './building-tabs/resource-production/resource-production-overview'
+    )
+  ).ResourceProductionOverview,
+}));
+
+const MainBuildingVillageManagement = lazyWithRetry(async () => ({
+  default: (
+    await import(
+      './building-tabs/main-building/main-building-village-management'
+    )
+  ).MainBuildingVillageManagement,
+}));
+
+const GatherersHutExpedition = lazyWithRetry(async () => ({
+  default: (
+    await import('./building-tabs/gatherers-hut/gatherers-hut-expedition')
+  ).GatherersHutExpedition,
+}));
+
+const HuntersLodgeHuntingParty = lazyWithRetry(async () => ({
+  default: (
+    await import('./building-tabs/hunters-lodge/hunters-lodge-hunting-party')
+  ).HuntersLodgeHuntingParty,
+}));
+
+const HuntersLodgeAnimalCages = lazyWithRetry(async () => ({
+  default: (
+    await import('./building-tabs/hunters-lodge/hunters-lodge-animal-cages')
+  ).HuntersLodgeAnimalCages,
+}));
+
+const TrapperCages = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/trapper/trapper-cages')).TrapperCages,
+}));
+
+const RallyPointTroopMovements = lazyWithRetry(async () => ({
+  default: (
+    await import('./building-tabs/rally-point/rally-point-troop-movements')
+  ).RallyPointTroopMovements,
+}));
+
+const RallyPointSendTroops = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/rally-point/rally-point-send-troops'))
+    .RallyPointSendTroops,
+}));
+
+const RallyPointFarmList = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/rally-point/rally-point-farm-list'))
+    .RallyPointFarmList,
+}));
+
+const RallyPointSimulator = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/rally-point/rally-point-simulator'))
+    .RallyPointSimulator,
+}));
+
+const RallyPointStationedTroops = lazyWithRetry(async () => ({
+  default: (
+    await import('./building-tabs/rally-point/rally-point-stationed-troops')
+  ).RallyPointStationedTroops,
+}));
+
+const ResidenceLoyalty = lazyWithRetry(async () => ({
+  default: (
+    await import(
+      'app/(game)/(village-slug)/(village)/(...building-field-id)/components/building-tabs/residence/residence-loyalty'
+    )
+  ).ResidenceLoyalty,
+}));
+
+const ResidenceExpansion = lazyWithRetry(async () => ({
+  default: (
+    await import(
+      'app/(game)/(village-slug)/(village)/(...building-field-id)/components/building-tabs/residence/residence-expansion'
+    )
+  ).ResidenceExpansion,
+}));
+
+const TreasuryArtifacts = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/treasury/treasury-artifacts'))
+    .TreasuryArtifacts,
+}));
+
+const EmbassyRelations = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/embassy/embassy-relations'))
+    .EmbassyRelations,
+}));
+
+const TownHallCelebrations = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/town-hall/town-hall-celebrations'))
+    .TownHallCelebrations,
+}));
+
+const MarketplaceMerchants = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/marketplace/marketplace-merchants'))
+    .MarketplaceMerchants,
+}));
+
+const MarketplaceSendResources = lazyWithRetry(async () => ({
+  default: (
+    await import('./building-tabs/marketplace/marketplace-send-resources')
+  ).MarketplaceSendResources,
+}));
+
+const MarketplaceBuy = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/marketplace/marketplace-trade'))
+    .MarketplaceTrade,
+}));
+
+const MarketplaceTradeRoutes = lazyWithRetry(async () => ({
+  default: (
+    await import('./building-tabs/marketplace/marketplace-trade-routes')
+  ).MarketplaceTradeRoutes,
+}));
+
+const AcademyUnitResearch = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/academy/academy-unit-research'))
+    .AcademyUnitResearch,
+}));
+
+const SmithyUnitImprovement = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/smithy/smithy-unit-improvement'))
+    .SmithyUnitImprovement,
+}));
+
+const SmithyUnitUpgradeTable = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/smithy/smithy-unit-upgrade-table'))
+    .SmithyUnitUpgradeTable,
+}));
+
+const HerosMansionOasis = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/heros-mansion/heros-mansion-oasis'))
+    .HerosMansionOasis,
+}));
+
+const BreweryCelebration = lazyWithRetry(async () => ({
+  default: (await import('./building-tabs/brewery/brewery-celebrations'))
+    .BreweryCelebration,
+}));
+
+const UnitTraining = lazyWithRetry(async () => ({
+  default: (
+    await import('./building-tabs/unit-production-buildings/unit-training')
+  ).UnitTraining,
+}));
+
+const HospitalTroopTraining = lazyWithRetry(async () => ({
+  default: (
+    await import(
+      './building-tabs/unit-production-buildings/hospital-troop-training'
+    )
+  ).HospitalTroopTraining,
+}));
+
+const residenceTabs = new Map<string, LazyExoticComponent<() => JSX.Element>>([
+  ['train', UnitTraining],
+  ['loyalty', ResidenceLoyalty],
+  ['expansion', ResidenceExpansion],
+]);
+
+const unitTrainingTabs = new Map<
+  string,
+  LazyExoticComponent<() => JSX.Element>
+>([['train', UnitTraining]]);
+
+const resourceProductionTabs = new Map<
+  string,
+  LazyExoticComponent<() => JSX.Element>
+>([['production-overview', ResourceProductionOverview]]);
+
+const resourceProductionBuildingIds = new Set<Building['id']>([
+  'WOODCUTTER',
+  'CLAY_PIT',
+  'IRON_MINE',
+  'WHEAT_FIELD',
+]);
+
+const buildingDetailsTabMap = new Map<
+  Building['id'],
+  Map<string, LazyExoticComponent<() => JSX.Element>>
+>([
+  ['WOODCUTTER', resourceProductionTabs],
+  ['CLAY_PIT', resourceProductionTabs],
+  ['IRON_MINE', resourceProductionTabs],
+  ['WHEAT_FIELD', resourceProductionTabs],
+  [
+    'MAIN_BUILDING',
+    new Map([['village-management', MainBuildingVillageManagement]]),
+  ],
+  [
+    'RALLY_POINT',
+    new Map([
+      ['stationed-troops', RallyPointStationedTroops],
+      ['troop-movements', RallyPointTroopMovements],
+      ['send-troops', RallyPointSendTroops],
+      ['farm-list', RallyPointFarmList],
+      ['simulator', RallyPointSimulator],
+    ]),
+  ],
+  ['TREASURY', new Map([['artifacts', TreasuryArtifacts]])],
+  ['EMBASSY', new Map([['relations', EmbassyRelations]])],
+  ['TOWN_HALL', new Map([['celebrations', TownHallCelebrations]])],
+  [
+    'GATHERERS_HUT',
+    new Map([['gathering-expedition', GatherersHutExpedition]]),
+  ],
+  [
+    'HUNTERS_LODGE',
+    new Map([
+      ['hunting-party', HuntersLodgeHuntingParty],
+      ['animal-cages', HuntersLodgeAnimalCages],
+    ]),
+  ],
+  ['TRAPPER', new Map([['cages', TrapperCages]])],
+  [
+    'MARKETPLACE',
+    new Map([
+      ['merchants', MarketplaceMerchants],
+      ['send-resources', MarketplaceSendResources],
+      ['trade', MarketplaceBuy],
+      ['trade-routes', MarketplaceTradeRoutes],
+    ]),
+  ],
+  ['ACADEMY', new Map([['unit-research', AcademyUnitResearch]])],
+  [
+    'SMITHY',
+    new Map([
+      ['unit-improvement', SmithyUnitImprovement],
+      ['unit-upgrade-table', SmithyUnitUpgradeTable],
+    ]),
+  ],
+  ['RESIDENCE', residenceTabs],
+  ['COMMAND_CENTER', residenceTabs],
+  ['HEROS_MANSION', new Map([['oasis', HerosMansionOasis]])],
+  ['BREWERY', new Map([['celebration', BreweryCelebration]])],
+  ['BARRACKS', unitTrainingTabs],
+  ['GREAT_BARRACKS', unitTrainingTabs],
+  ['STABLE', unitTrainingTabs],
+  ['GREAT_STABLE', unitTrainingTabs],
+  ['WORKSHOP', unitTrainingTabs],
+  ['HOSPITAL', new Map([['heal', HospitalTroopTraining]])],
+  ['ASCLEPEION', new Map([['heal', HospitalTroopTraining]])],
+]);
+
+// t('loyalty')
+// t('expansion')
+// t('village-management')
+// t('construction-log')
+// t('troop-movements')
+// t('stationed-troops')
+// t('send-troops')
+// t('farm-list')
+// t('simulator')
+// t('artifacts')
+// t('merchants')
+// t('send-resources')
+// t('trade')
+// t('trade-routes')
+// t('unit-research')
+// t('unit-improvement')
+// t('unit-upgrade-table')
+// t('oasis')
+// t('celebration')
+// t('celebrations')
+// t('relations')
+// t('train')
+// t('animal-cages')
+// t('hunting-party')
+// t('gathering-expedition')
+// t('cages')
+// t('heal')
+// t('production-overview')
+
+export const BuildingDetails = () => {
+  const { t } = useTranslation();
+  const { buildingField, actualLevel } = use(BuildingFieldContext);
+
+  const { buildingId } = buildingField!;
+
+  const shouldShowBuildingSpecificTabs =
+    actualLevel !== 0 || resourceProductionBuildingIds.has(buildingId);
+
+  const tabs = [
+    'default',
+    ...(shouldShowBuildingSpecificTabs
+      ? (buildingDetailsTabMap.get(buildingId)?.keys() ?? [])
+      : []),
+    'upgrade-cost',
+  ];
+
+  const buildingSpecificTabs = tabs.filter(
+    (tab: string) => !['default', 'upgrade-cost'].includes(tab),
+  );
+
+  const { tabIndex, navigateToTab } = useTabParam(tabs);
+
+  return (
+    <>
+      <InformationPopover
+        ariaLabel={t('Building details')}
+        className="top-2 right-2"
+      >
+        <Text>
+          {t(
+            "Review this building's current level, benefits, upgrade costs, available actions and building-specific management tabs.",
+          )}
+        </Text>
+      </InformationPopover>
+      <Text as="h1">
+        {t(`BUILDINGS.${buildingId}.NAME`)} -{' '}
+        {t('level {{level}}', { level: actualLevel })}
+      </Text>
+      <div className="flex flex-col gap-2">
+        <Tabs
+          value={tabs[tabIndex] ?? 'default'}
+          onValueChange={(value) => {
+            navigateToTab(value);
+          }}
+        >
+          <TabList>
+            <Tab value="default">{t('Overview')}</Tab>
+            {buildingSpecificTabs.map((name: string) => (
+              <Tab
+                key={name}
+                value={name}
+              >
+                {t(name)}
+              </Tab>
+            ))}
+            <Tab value="upgrade-cost">{t('Upgrade details')}</Tab>
+          </TabList>
+          <TabPanel value="default">
+            <Section>
+              <SectionContent>
+                <Bookmark tab="default" />
+                <BuildingCard buildingId={buildingId}>
+                  <BuildingOverview />
+                  <BuildingUnfinishedNotice />
+                  <BuildingBenefits />
+                  <BuildingCost />
+                  <BuildingActions />
+                </BuildingCard>
+              </SectionContent>
+            </Section>
+          </TabPanel>
+          {buildingSpecificTabs.map((name: string) => {
+            const Panel = buildingDetailsTabMap.get(buildingId)!.get(name)!;
+            return (
+              <TabPanel
+                key={name}
+                value={name}
+              >
+                <Suspense fallback={<BuildingTabFallback />}>
+                  <Panel />
+                </Suspense>
+              </TabPanel>
+            );
+          })}
+          <TabPanel value="upgrade-cost">
+            <Suspense fallback={<BuildingTabFallback />}>
+              <BuildingStats />
+            </Suspense>
+          </TabPanel>
+        </Tabs>
+      </div>
+    </>
+  );
+};

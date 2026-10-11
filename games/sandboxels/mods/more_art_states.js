@@ -1,0 +1,120 @@
+/*
+A mod that adds some extra states of the art element.
+And thanks to the people who helped me with the code in the discord server.
+(c) ACrazyPencil 2025-2026
+*/
+
+elements.powder_art = {
+    name: "Powder Art",
+    color: "#ffffff",
+	behavior: behaviors.POWDER,
+	tool: function(pixel) {
+		if (pixel.element === "paper") {
+			deletePixel(pixel.x,pixel.y)
+		}
+	},
+	canPlace: true,
+	customColor: true,
+    category: "powders",
+    related: ["art", "liquid_art", "gas_art", "breakable_art", "radiated_art"],
+    burn: false,
+    hardness: 1,
+	conduct: false,
+	stain: 0,
+	state: "powder",
+	reactions: {
+    	"radiation": { func:function(pixel, pixel2) {
+			pixel.element = "gas_art"
+			pixel2.element = "radiated_art"
+		}}
+	},
+}
+
+elements.liquid_art = {
+    name: "Liquid Art",
+	behavior: behaviors.LIQUID,
+	tool: function(pixel) {
+		if (pixel.element === "paper") {
+			deletePixel(pixel.x,pixel.y)
+		}
+	},
+	canPlace: true,
+	customColor: true,
+    category: "liquids",
+    related: ["art", "powder_art", "breakable_art", "gas_art", "radiated_art"],
+    burn: false,
+    hardness: 1,
+	conduct: false,
+	stain: 0,
+	state: "liquid"
+}
+
+elements.gas_art = {
+    name: "Gas Art",
+	behavior: behaviors.GAS,
+	tool: function(pixel) {
+		if (pixel.element === "paper") {
+			deletePixel(pixel.x,pixel.y)
+		}
+	},
+	canPlace: true,
+	customColor: true,
+    category: "gases",
+    related: ["art", "powder_art", "liquid_art", "breakable_art", "radiated_art"],
+    burn: false,
+    hardness: 1,
+	conduct: false,
+	stain: 0,
+    state: "gas"
+}
+
+elements.breakable_art = {
+	name: "Breakable Art",
+	behavior: behaviors.WALL,
+	tool: function(pixel) {
+		if (pixel.element === "paper") {
+			deletePixel(pixel.x,pixel.y)
+		}
+	},
+	canPlace: true,
+	customColor: true,
+    category: "solids",
+    related: ["art", "powder_art", "liquid_art", "radiated_art", "gas_art"],
+    burn: false,
+	conduct: false,
+	stain: 0,
+    state: "solid",
+	tempLow: -45.555556,
+	stateLow: "liquid_art",
+	tempHigh: 204.444444,
+	stateHigh: "gas_art",
+	breakInto: "powder_art",
+	breakIntoColorMultiplier: [1,1,1],
+},
+
+elements.radiated_art = {
+    name: "Radiated Art",
+    color: "#ffffff",
+	behavior: [
+		"XX|XX|XX",
+		"XX|RL:radiation%1|XX",
+		"M2|M1|M2"
+	],
+	tool: function(pixel) {
+		if (pixel.element === "paper") {
+			deletePixel(pixel.x,pixel.y)
+		}
+	},
+	canPlace: true,
+	customColor: true,
+    category: "powders",
+    related: ["art", "liquid_art", "gas_art", "breakable_art", "powder_art"],
+    burn: false,
+    hardness: 1,
+	conduct: false,
+	stain: 0,
+	state: "powder",
+}
+
+elements.art.related = ["powder_art", "liquid_art", "gas_art", "breakable_art", "radiated_art"]
+elements.art.hardness = 1

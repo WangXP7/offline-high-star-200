@@ -1,0 +1,717 @@
+@import 'reset';
+@import 'variables';
+@import 'mixins';
+
+body {
+    color: #3F3E37;
+    background-color: #EBE7DC;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    font-family: "Trebuchet MS", Helvetica, sans-serif;
+    font-size: 18px;
+    line-height: 1.5;
+    top: 0;
+    left: 0;
+    background-image: none;
+    background-position: left bottom;
+    background-repeat: no-repeat;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+
+h1 {
+    font-size: 50px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 40px;
+}
+
+h3 {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+h4 {
+    font-size: 18px;
+}
+
+a {
+    color: #666666;
+    text-decoration: underline;
+
+    &:hover {
+        text-decoration: none;
+    }
+}
+
+strong {
+    font-weight: bold;
+}
+
+canvas {
+    position: absolute;
+}
+
+iframe {
+    border: none;
+    background: #F7F6F2;
+}
+
+p {
+    margin-bottom: 12px;
+}
+
+.button {
+    background: #EBE7DC;
+    padding: 10px;
+    color: #666666;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.button:hover {
+    background: #D9D6CB;
+}
+
+.hidden {
+    display: none;
+}
+
+.clear {
+    clear: both;
+}
+
+.layer {
+    width: 100%;
+    height: 100%;
+}
+
+.light {
+    background-color: #F7F6F2;
+}
+
+.inactive {
+    color: #969696;
+}
+
+#layer-menu table {
+    margin: auto;
+    height: 100%;
+}
+
+.player {
+    .title {
+        float: left;
+        width: 240px;
+    }
+    .keys {
+        float: left;
+        font-size: 28px;
+        margin: 19px;
+    }
+}
+
+.red.active {
+    color: $default-theme-red;
+}
+
+.green.active {
+    color: $default-theme-green;
+}
+
+.blue.active {
+    color: $default-theme-blue;
+}
+
+.orange.active {
+    color: $default-theme-orange;
+}
+
+.purple.active {
+    color: $default-theme-purple;
+}
+
+.pink.active {
+    color: $default-theme-pink;
+}
+
+#content {
+    width: 100%;
+    height: 100%;
+}
+
+#content-left {
+    width: 70%;
+    height: 100%;
+    float: left;
+}
+
+#content-right {
+    width: 30%;
+    height: 100%;
+    float: left;
+    padding: 24px;
+    /* TODO: use border-box on all elements */
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+#menu {
+    padding: 30px;
+    width: 580px;
+
+    &.shake {
+        animation: shake 0.4s ease;
+    }
+}
+
+#menu-intro {
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+#menu-players {
+    .player > div {
+        float: left;
+    }
+
+    .player > div > * {
+        padding: 10px;
+        height: 40px;
+        vertical-align: middle;
+        font-size: 28px;
+        line-height: 40px;
+    }
+
+    .head div {
+        float: left;
+        font-size: 18px;
+        background: #D9D6CC;
+        padding: 5px 0;
+    }
+
+    .head div *{
+        padding: 5px 10px;
+    }
+
+    .title {
+        width: 160px;
+        margin: 0 1px 1px 0;
+    }
+
+    .key {
+        text-align: center;
+
+        &.left,
+        &.right {
+            width: 60px;
+            margin: 0 1px 1px 0;
+        }
+    }
+
+    .superpower .key {
+    }
+
+    .superpower {
+        width: 297px;
+
+        .key {
+            float: left;
+            width: 40px;
+            margin: 0 1px 1px 0;
+        }
+    }
+}
+
+#menu-players-list div {
+    cursor: pointer;
+}
+
+#menu-players-list .title,
+#menu-players-list .key.left,
+#menu-players-list .key.right,
+#menu-players-list .superpower .key,
+#menu-players-list .superpower .superpowerType {
+    border-bottom: 1px solid #D9D6CC;
+}
+
+#menu-players {
+    .superpowerType {
+        font-size: 18px;
+        width: 216px;
+        height: 40px;
+        float: left;
+        overflow: hidden;
+        position: relative;
+
+        div {
+            float: left;
+            font-size: 18px;
+        }
+
+        .left {
+            position: absolute;
+            padding: 10px;
+            top: 0;
+            left: 10px;
+
+            .arrow-left {
+                width: 16px;
+                height: 16px;
+                position: relative;
+                top: 8px;
+            }
+        }
+
+        .right {
+            position: absolute;
+            padding: 10px;
+            top: 0;
+            right: 10px;
+
+            .arrow-right {
+                width: 16px;
+                height: 16px;
+                position: relative;
+                top: 8px;
+            }
+        }
+    }
+
+    .superpowers {
+        width: 100%;
+
+        div {
+            width: 100%;
+            text-align: center;
+        }
+    }
+}
+
+.toggle-sound {
+    float: left;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+#menu-settings {
+    margin-top: 10px;
+
+    & > div {
+      float: right;
+    }
+}
+
+#lightbox-overlay {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+#lightbox-wrap {
+    height: 100%;
+    overflow-y: scroll;
+}
+
+#lightbox-wrap table {
+    height: 100%;
+    text-align: center;
+    margin: auto;
+}
+
+#lightbox-content {
+    background: #FFF;
+    display: table-cell;
+    padding: 20px;
+    text-align: left;
+    max-width: 600px;
+    margin: auto;
+
+    .button {
+      padding: 15px;
+      display: block;
+      text-align: center;
+    }
+
+    .deathmatch h1 {
+        padding: 100px;
+        font-size: 60px;
+        margin: 0;
+    }
+}
+
+#player-scores {
+    margin: 10px 0 30px 0;
+
+    .title {
+        float: left;
+        width: 180px;
+    }
+
+    .points {
+        float: left;
+        font-size: 40px;
+    }
+}
+
+.superpowerCircle {
+    height: 7px;
+    width: 7px;
+    -moz-border-radius: 7px;
+    -webkit-border-radius: 7px;
+    border-radius: 7px;
+    margin-top: 2px;
+    margin-right: 2px;
+    float: left;
+    border: 2px solid $default-theme-superpower-circle-color;
+
+    &.red {
+        border: 2px solid $default-theme-red;
+    }
+
+    &.green {
+        border: 2px solid $default-theme-green;
+    }
+
+    &.blue {
+        border: 2px solid $default-theme-blue;
+    }
+
+    &.orange {
+        border: 2px solid $default-theme-orange;
+    }
+
+    &.purple {
+        border: 2px solid $default-theme-purple;
+    }
+
+    &.pink {
+        border: 2px solid $default-theme-pink;
+    }
+}
+
+.superpowers {
+    display: flex;
+}
+
+.superpower-label {
+    font-size: 15px;
+    margin-left: 8px;
+    line-height: 12px;
+    color: $default-theme-superpower-circle-color;
+}
+
+#author {
+    position: absolute;
+    bottom: 15px;
+    padding-right: 15px;
+    font-size: 11px;
+    color: #888;
+    line-height: 1.4;
+
+    a,
+    a:visited{
+        color: #888;
+        text-decoration: none;
+    }
+
+    a:hover{
+       color: #444;
+       text-decoration: underline;
+    }
+}
+
+.key {
+    .arrow {
+        width: 0;
+        height: 0;
+        display: block;
+        border-style: solid;
+    }
+
+    .arrow-left {
+        margin: 9px 0 0 9px;
+        border-width: 12px 18px 12px 0;
+        border-color: transparent $default-theme-orange transparent transparent;
+    }
+
+    .arrow-right {
+        margin: 9px 0 0 13px;
+        border-width: 12px 0 12px 18px;
+        border-color: transparent transparent transparent $default-theme-orange;
+    }
+
+    .arrow-down {
+        margin: 14px 0 0 8px;
+        border-width: 18px 12px 0 12px;
+        border-color: $default-theme-orange transparent transparent transparent;
+    }
+}
+
+.inactive .key .arrow-left {
+    border-color: transparent #969696 transparent transparent;
+}
+
+.inactive .key .arrow-right {
+    border-color: transparent transparent transparent #969696;
+}
+
+.inactive .key .arrow-down {
+    border-color: #969696 transparent transparent transparent;
+}
+
+#game-settings {
+    position: absolute;
+    bottom: 70px;
+
+    #button-menu {
+        float: left;
+    }
+}
+
+#dark-knight {
+    background: #222;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 70%;
+    height: 100%;
+}
+
+#lightbox-content .deathmatch h1 {
+    -webkit-animation-name: blinker;
+    -webkit-animation-duration: 0.3s;
+    -webkit-animation-timing-function: linear;
+    -webkit-animation-iteration-count: infinite;
+
+    -moz-animation-name: blinker;
+    -moz-animation-duration: 0.3s;
+    -moz-animation-timing-function: linear;
+    -moz-animation-iteration-count: infinite;
+
+    animation-name: blinker;
+    animation-duration: 0.3s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+@-moz-keyframes blinker {
+    0% { color: #3F3E37; background: #FFF; }
+    49% { color: #3F3E37; background: #FFF; }
+    50% { color: #FFF; background: #3F3E37; }
+    100% { color: #FFF; background: #3F3E37; }
+}
+
+@-webkit-keyframes blinker {
+    0% { color: #3F3E37; background: #FFF; }
+    49% { color: #3F3E37; background: #FFF; }
+    50% { color: #FFF; background: #3F3E37; }
+    100% { color: #FFF; background: #3F3E37; }
+}
+
+@keyframes blinker {
+    0% { color: #3F3E37; background: #FFF; }
+    49% { color: #3F3E37; background: #FFF; }
+    50% { color: #FFF; background: #3F3E37; }
+    100% { color: #FFF; background: #3F3E37; }
+}
+
+i.arrow {
+    border: solid #969696;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+}
+
+i.arrow-right {
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+}
+
+i.arrow-left {
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
+}
+
+body.dark-theme {
+    color: #DDD;
+    background-color: #222;
+
+    a {
+        color: #DDD;
+    }
+
+    i.arrow {
+        border-color: #DDD;
+    }
+
+    .superpowerCircle {
+        border-color: $dark-theme-superpower-circle-color;
+    }
+
+    .superpower-label {
+        color: $dark-theme-superpower-circle-color;
+    }
+
+    .red.active {
+        color: $dark-theme-red;
+    }
+    .superpowerCircle.red {
+        border-color: $default-theme-red;
+    }
+
+    .green.active {
+        color: $dark-theme-green;
+    }
+    .superpowerCircle.green {
+        border: 2px solid $dark-theme-green;
+    }
+
+    .blue.active {
+        color: $dark-theme-blue;
+    }
+    .superpowerCircle.blue {
+        border: 2px solid $dark-theme-blue;
+    }
+
+    .orange.active {
+        color: $dark-theme-orange;
+    }
+    .superpowerCircle.orange {
+        border: 2px solid $dark-theme-orange;
+    }
+
+    .purple.active {
+        color: $dark-theme-purple;
+    }
+    .superpowerCircle.purple {
+        border: 2px solid $dark-theme-purple;
+    }
+
+    .pink.active {
+        color: $dark-theme-pink;
+    }
+    .superpowerCircle.pink {
+        border: 2px solid $dark-theme-pink;
+    }
+
+    .button {
+        background: #222;
+        color: #DDD;
+    }
+
+    .button:hover {
+        background: #444;
+    }
+
+    .light {
+        background-color: #333;
+    }
+
+    .inactive {
+        color: #969696;
+    }
+
+    #menu-players .head div {
+        background: #444;
+    }
+
+    #menu-players-list .title,
+    #menu-players-list .key.left,
+    #menu-players-list .key.right,
+    #menu-players-list .superpower .key,
+    #menu-players-list .superpower .superpowerType {
+        border-bottom: 1px solid #444;
+    }
+
+    #lightbox-overlay {
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    #lightbox-content {
+        background: #333;
+        color: #888;
+    }
+
+    #author {
+        color: #888;
+    }
+
+    #author a,
+    #author a:visited{
+        color: #888;
+    }
+
+    #author a:hover{
+        color: #DDD;
+    }
+
+    .key .arrow-left {
+        border-color: transparent $default-theme-orange transparent transparent;
+    }
+
+    .key .arrow-right {
+        border-color: transparent transparent transparent $default-theme-orange;
+    }
+
+    .key .arrow-down {
+        border-color: $default-theme-orange transparent transparent transparent;
+    }
+
+    .inactive .key .arrow-left {
+        border-color: transparent #969696 transparent transparent;
+    }
+
+    .inactive .key .arrow-right {
+        border-color: transparent transparent transparent #969696;
+    }
+
+    .inactive .key .arrow-down {
+        border-color: #969696 transparent transparent transparent;
+    }
+
+    #dark-knight {
+        background: #222;
+    }
+
+
+    @-moz-keyframes blinker {
+        0% { color: #222; background: #DDD; }
+        49% { color: #222; background: #DDD; }
+        50% { color: #DDD; background: #222; }
+        100% { color: #DDD; background: #222; }
+    }
+
+    @-webkit-keyframes blinker {
+        0% { color: #222; background: #DDD; }
+        49% { color: #222; background: #DDD; }
+        50% { color: #DDD; background: #222; }
+        100% { color: #DDD; background: #222; }
+    }
+
+    @keyframes blinker {
+        0% { color: #222; background: #DDD; }
+        49% { color: #222; background: #DDD; }
+        50% { color: #DDD; background: #222; }
+        100% { color: #DDD; background: #222; }
+    }
+}
+
+.is-safari,
+.is-ie {
+    .toggle-sound {
+        display: none;
+    }
+}

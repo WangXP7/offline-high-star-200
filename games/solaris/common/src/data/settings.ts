@@ -1,0 +1,77 @@
+import type { UserGameSettings } from "../types/common/settings";
+
+export const DEFAULT_SETTINGS: UserGameSettings = {
+    interface: {
+        audio: "enabled",
+        galaxyScreenUpgrades: "disabled",
+        uiStyle: "standard",
+        suggestMentions: "enabled",
+        shiftKeyMentions: "disabled",
+    },
+    guild: {
+        displayGuildTag: "visible",
+    },
+    technical: {
+        performanceMonitor: "disabled",
+        fpsLimit: 60,
+    },
+    map: {
+        naturalResources: "single-ring",
+        carrierLoopStyle: "dashed",
+        carrierPathWidth: 1,
+        carrierPathDashLength: 6,
+        territoryStyle: "marching-square",
+        territoryOpacity: 0.3,
+        marchingSquareGridSize: 6,
+        marchingSquareTerritorySize: 5,
+        marchingSquareBorderWidth: 2,
+        voronoiCellBorderWidth: 2,
+        voronoiTerritoryBorderWidth: 4,
+        objectsScaling: "default",
+        objectsMinimumScale: 8,
+        objectsMaximumScale: 16,
+        objectsDepth: "disabled",
+        antiAliasing: "enabled",
+        background: {
+            nebulaFrequency: 12,
+            nebulaDensity: 3,
+            nebulaOpacity: 1.0,
+            moveNebulas: "enabled",
+            nebulaMovementSpeed: 1.0,
+            starsOpacity: 1.0,
+            blendMode: "NORMAL",
+            nebulaColour1: "#FF0000",
+            nebulaColour2: "#00FF00",
+            nebulaColour3: "#0000FF",
+        },
+        zoomLevels: {
+            territories: 100,
+            playerNames: 100,
+            carrierShips: 140,
+            star: {
+                shipCount: 120,
+                name: 160,
+                naturalResources: 160,
+                infrastructure: 200,
+            },
+            background: {
+                nebulas: 100,
+                stars: 100,
+            },
+        },
+        naturalResourcesRingOpacity: 0.1,
+        galaxyCenterAlwaysVisible: "disabled",
+    },
+    carrier: {
+        defaultAction: "collectAll",
+        defaultAmount: 0,
+        confirmBuildCarrier: "enabled",
+    },
+    star: {
+        confirmBuildEconomy: "disabled",
+        confirmBuildIndustry: "disabled",
+        confirmBuildScience: "disabled",
+        confirmBuildWarpGate: "enabled",
+        confirmShipDistribution: "disabled",
+    },
+};

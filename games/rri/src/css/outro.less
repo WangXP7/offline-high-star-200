@@ -1,0 +1,39 @@
+#outro {
+	min-width: var(--board-width);
+
+	.-menu;
+}
+
+#score {
+	padding-bottom: 1em;
+	max-width: 100%;
+	overflow-x: auto;
+
+	.score {
+		border-collapse: collapse;
+		white-space: nowrap;
+		margin: auto;
+
+		.best { font-weight: bold; }
+
+		thead td {
+			&.active::before { content: "⇧"; }
+			&.active::after { content: "⇧"; }
+
+			&:not(.active) {
+				text-decoration: underline;
+				cursor: pointer;
+			}
+		}
+
+		td:not(:first-child) {
+			text-align: right;
+			padding-left: 1ch;
+		}
+
+		tfoot td {
+			border-top: 3px double #000;
+			font-size: 120%;
+		}
+	}
+}

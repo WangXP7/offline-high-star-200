@@ -1,0 +1,40 @@
+import type { Metadata } from "next";
+import { getPageUrl } from "~/lib/site";
+
+export const metadata: Metadata = {
+    title: "Installation Guide - Git Mastery | Interactive Git Learning Platform",
+    description:
+        "Learn how to install and set up Git on your system. Step-by-step installation guide for Windows, macOS, and Linux.",
+    openGraph: {
+        title: "Installation Guide - Git Mastery",
+        description: "Learn how to install and set up Git on your system",
+        url: getPageUrl("/installation"),
+        siteName: "Git Mastery",
+        images: [
+            {
+                url: "/og-cover.jpg",
+                width: 1200,
+                height: 630,
+                alt: "Git Mastery Installation Guide",
+            },
+        ],
+        type: "website",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Installation Guide - Git Mastery",
+        description: "Learn how to install and set up Git on your system",
+        images: ["/og-cover.jpg"],
+    },
+    alternates: {
+        canonical: "/installation",
+    },
+    robots: {
+        index: true,
+        follow: true,
+    },
+};
+
+export default function InstallationLayout({ children }: { children: React.ReactNode }) {
+    return children;
+}

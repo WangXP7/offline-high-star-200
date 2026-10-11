@@ -1,0 +1,65 @@
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { use } from 'react';
+import {
+  getUnitDefinition,
+  getUnitsByTribe,
+} from '@pillage-first/game-assets/utils/units';
+import type { Unit } from '@pillage-first/types/models/unit';
+import { useCurrentVillage } from 'app/(game)/(village-slug)/hooks/current-village/use-current-village';
+import { useTribe } from 'app/(game)/(village-slug)/hooks/use-tribe';
+import { unitResearchCacheKey } from 'app/(game)/constants/query-keys';
+import { ApiContext } from 'app/(game)/providers/api-context';
+
+export const useUnitResearch = () => {
+  const { apiClient } = use(ApiContext);
+  const tribe = useTribe();
+  const { currentVillage } = useCurrentVillage();
+
+  const unitsByTribe = getUnitsByTribe(tribe);
+
+  const { data: unitResearch } = useSuspenseQuery({
+    queryKey: [unitResearchCacheKey, currentVillage.id],
+    queryFn: async () => {
+      const { data } = await apiClient.get(
+        '/villages/:villageId/researched-units',
+        {
+          path: {
+            villageId: currentVillage.id,
+          },
+        },
+      );
+
+      return data;
+    },
+  });
+
+  const isUnitResearched = (unitId: Unit['id']): boolean => {
+    const unit = getUnitDefinition(unitId);
+
+    if (unit.researchRequirements.length === 0) {
+      return true;
+    }
+
+    return unitResearch.some((unitResearch) => unitResearch.unitId === unitId);
+  };
+
+  const getResearchedUnits = () => {
+    return unitsByTribe.filter(({ id }) => isUnitResearched(id));
+  };
+
+  const getResearchedUnitsByCategory = (category: Unit['category']) => {
+    const researchedUnits = getResearchedUnits();
+
+    return researchedUnits.filter(({ id }) => {
+      const unit = getUnitDefinition(id);
+      return unit.category === category;
+    });
+  };
+
+  return {
+    unitResearch,
+    isUnitResearched,
+    getResearchedUnitsByCategory,
+    researchableUnits: unitsByTribe,
+  };
+};

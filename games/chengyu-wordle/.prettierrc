@@ -1,0 +1,18 @@
+{
+  "tabWidth": 2,
+  "useTabs": false,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "importOrder": [
+    "^[^.]+.css$",
+    ".css$",
+    "^core-js",
+    "<THIRD_PARTY_MODULES>",
+    ".(txt|csv|json)",
+    ".(mp3)",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "importOrderGroupNamespaceSpecifiers": true
+}

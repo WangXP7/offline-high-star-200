@@ -1,0 +1,68 @@
+{
+  "id": "lesson-practice-delete-character-practice",
+  "version": 1,
+  "name": "Delete Character Practice",
+  "metadata": {
+    "revision": 1,
+    "author": "VIM Master Team",
+    "githubUsername": "vimmaster",
+    "created": "2026-07-09",
+    "difficulty": "beginner",
+    "tags": [
+      "practice",
+      "x"
+    ],
+    "estimatedTime": 60,
+    "prerequisites": [],
+    "learningObjectives": [],
+    "order": 106
+  },
+  "instructions": "Use x to delete characters. Remove the X from 'Delete X this' and fix other typos.",
+  "initialContent": [
+    "Delete the X from this line: 'Delete X this'",
+    "Use x to remove the X character",
+    "Also fix: 'Fixx this typo'",
+    "And: 'Removve extra letters'"
+  ],
+  "targetContent": [
+    "Delete the from this line: 'Delete this'",
+    "Use x to remove the character",
+    "Also fix: 'Fix this typo'",
+    "And: 'Remove extra letters'"
+  ],
+  "focusCommand": "VIM",
+  "initialCursor": {
+    "row": 0,
+    "col": 7
+  },
+  "solution": [
+    "4",
+    "l",
+    "2",
+    "x",
+    "2",
+    "4",
+    "l",
+    "2",
+    "x",
+    "j",
+    "0",
+    "2",
+    "0",
+    "l",
+    "2",
+    "x",
+    "j",
+    "0",
+    "1",
+    "4",
+    "l",
+    "x",
+    "j",
+    "0",
+    "1",
+    "1",
+    "l",
+    "x"
+  ]
+}

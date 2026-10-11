@@ -1,0 +1,359 @@
+html, body {
+  width:  100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+html {
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+.allow-mic {
+  display: none;
+
+  background-color: transparent;
+}
+
+.allow-mic--active {
+  display: block;
+}
+
+.allow-mic__arrow {
+  position: absolute;
+  left: 408px;
+  top: 60px;
+  width: 60px;
+  height: 72px;
+
+  background-image: url("../img/allow_mic_arrow.png");
+  background-size: cover;
+}
+
+.allow-mic__message {
+  position: absolute;
+  width: 250px;
+  left: 330px;
+  top: 140px;
+
+  font-family: 'Kalam', cursive;
+  font-size: 24px;
+  color: #F1FAEE;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  height: 60px;
+}
+
+.header__audio-wave {
+  position: absolute;
+  top: 2px;
+  left: 10px;
+}
+
+.header__score {
+  display: none;
+  position: absolute;
+  top: 20px;
+  right: 40px;
+
+  font-size: 32px;
+  line-height: 48px;
+  font-weight: bold;
+  color: #A8DADC;
+}
+
+.real-guitar-hero {
+  background-color: #1D3557;
+}
+
+.real-guitar-hero__header {
+  position: absolute;
+}
+
+.real-guitar-hero__canvas {
+}
+
+.real-guitar-hero__settings {
+  display: block;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  font-family: 'Source Sans Pro', sans-serif;
+  font-weight: bold;
+  color: #F1FAEE;
+  text-decoration: none;
+}
+
+.game-settings {
+  width: 100%;
+}
+
+
+.game-settings__bpm-input-label {
+  display: block;
+
+  font-family: 'Source Sans Pro', sans-serif;
+  font-weight: bold;
+  color: #1D3557;
+  text-decoration: none;
+}
+
+.game-settings__bpm-input {
+  display: block;
+  padding: 8px;
+  width: 100%;
+
+  font-size: 24px;
+  line-height: 32px;
+}
+
+.game-settings__song-select-label,
+.game-settings__string-select-label,
+.game-settings__mode-select-label {
+  display: block;
+  margin-top: 16px;
+
+  font-family: 'Source Sans Pro', sans-serif;
+  font-weight: bold;
+  color: #1D3557;
+  text-decoration: none;
+}
+
+.game-settings__song-select,
+.game-settings__string-select {
+  display: block;
+  width: 100%;
+  height: 52px;
+
+  background-color: #FFF;
+
+  font-family: 'Source Sans Pro', sans-serif;
+  color: #1D3557;
+  text-decoration: none;
+  font-size: 18px;
+  line-height: 24px;
+}
+
+.game-settings__mode-select {
+  font-family: 'Source Sans Pro', sans-serif;
+  color: #1D3557;
+  text-decoration: none;
+  font-size: 18px;
+  line-height: 24px;
+}
+
+.game-settings__mode-select-hint {
+  font-size: 14px;
+  line-height: 14px;
+}
+
+.game-settings__mode-select-item + .game-settings__mode-select-item {
+  margin-top: 10px;
+}
+
+.real-guitar-hero__score {
+  font-size: 24px;
+  color: #0654C8;
+}
+
+.sidebar-menu {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px 20px;
+  position: absolute;
+  width: 400px;
+  height: 100%;
+  top: 0;
+  right: 0;
+  z-index: 100;
+
+  background-color: #E4EEFB;
+}
+
+.sidebar-menu--active {
+  display: flex;
+}
+
+.sidebar-menu__footer {
+  text-align: right;
+}
+
+.footer-link {
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 16px;
+  line-height: 20px;
+  color: #1D3557;
+  text-decoration: none;
+}
+
+.sidebar-menu__footer a + a {
+  margin-left: 15px;
+}
+
+.sidebar-menu__header {
+  margin: 0;
+  padding: 0;
+
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 24px;
+  line-height: 32px;
+  color: #1D3557;
+}
+
+.sidebar-menu__subheader {
+  margin-top: 20px;
+
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 16px;
+  line-height: 20px;
+  color: #1D3557;
+}
+
+.sidebar-menu__settings {
+  margin-top: 20px;
+}
+
+.sidebar-menu__start-button {
+  margin: 50px auto 0;
+  display: block;
+  width: 350px;
+  padding: 20px 25px;
+
+  border: none;
+  border-radius: 2px;
+
+  background-color: #7C69F4;
+
+  font-family: 'Source Sans Pro', sans-serif;
+  font-weight: bold;
+  font-size: 24px;
+  line-height: 32px;
+  color: #FFF;
+  letter-spacing: 4px;
+
+  outline: none;
+  cursor: pointer;
+}
+
+.sidebar-menu__start-button:hover {
+  opacity: 0.9;
+}
+
+.sidebar-menu__install-chrome,
+.sidebar-menu__update-chrome {
+  display: none;
+  margin-top: 10px;
+
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 16px;
+  line-height: 20px;
+  color: #1D3557;
+}
+
+.sidebar-menu__install-chrome--active,
+.sidebar-menu__update-chrome--active {
+  display: block;
+}
+
+.sidebar-menu__install-chrome i,
+.sidebar-menu__update-chrome i {
+  color: red;
+}
+
+.sidebar-menu__install-chrome a,
+.sidebar-menu__update-chrome a {
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.sidebar-menu__install-chrome a:hover,
+.sidebar-menu__update-chrome a:hover {
+  text-decoration: underline;
+}
+
+.sidebar-menu__sharing-buttons {
+  display: flex;
+  margin-top: 20px;
+  align-items: center;
+  justify-content: center;
+}
+
+.sharing-buttons {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.share-button {
+  display: inline-block;
+  padding: 10px 15px;
+
+  border-radius: 2px;
+
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 16px;
+  line-height: 20px;
+  color: #F1FAEE;
+  text-decoration: none;
+}
+
+.share-button:hover {
+  opacity: 0.9;
+}
+
+.share-button i {
+  margin-right: 4px;
+}
+
+.share-button + .share-button {
+  margin-left: 8px;
+}
+
+.share-button--fb {
+  background-color: #3b5998;
+}
+
+.share-button--tw {
+  background-color: #4099FF;
+}
+
+.audio-wave {
+  display: none;
+
+  width: 60px;
+  height: 32px;
+}
+
+.audio-wave--active {
+  display: block;
+}
+
+.audio-wave path {
+  stroke: #F1FAEE;
+  stroke-width: 1;
+  fill: none;
+  opacity: 0.5;
+}
+
+.no-sound {
+  display: none;
+  padding-top: 8px;
+
+  color: white;
+  font-size: 30px;
+}
+
+.no-sound--active {
+  display: block;
+}
+
+.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}

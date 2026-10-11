@@ -1,0 +1,1544 @@
+<!--
+
+ZzArt - Abstract Art Evolution
+© Frank Force 2019
+
+code credits 
+- download.js v4.21, by dandavis; 2008-2018. [MIT] see http://danml.com/download.html for tests/usage
+- Smooth HSV by iq - https://www.shadertoy.com/view/MsS3Wc
+- github-corners by Tim Holman - https://github.com/tholman/github-corners
+
+
+todo
+- poster option
+- resolution
+- 2x3 resolution
+- background color
+- margin
+- line around image
+- dpi
+- color change button
+- black and white
+- scale variation button
+
+-->
+
+<!doctype html>
+<html>
+
+<head>
+<style>
+
+body,select { font-size: 20px; font-family: monospace; color: #FFF; }
+input     { font-size: 20px; }
+a         { color:#5AF; }
+a:visited { color:#A5A; }
+canvas    { background-color: #FFF; }
+div.satellite
+{
+    display:none;
+    z-index:100;
+    position:relative;
+    -webkit-text-fill-color: white; 
+    -webkit-text-stroke-width: 1px; 
+    -webkit-text-stroke-color: black; 
+}
+select
+{
+    background-color: #000; 
+}
+button
+{ 
+    font-size: 30px; 
+    vertical-align: middle; 
+    text-align: center; 
+    background-color: #EEE; 
+    margin: 10px; 
+}
+button.small
+{ 
+    border-radius: 10px;
+    height:45px;
+}
+button.satellite
+{
+    background-color: #FFF; 
+    -webkit-text-fill-color: black; 
+    -webkit-text-stroke-width: 1px; 
+    color: #000;
+    font-size: 30px;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-left: 0px;
+    padding: 2px;
+    width:45px;
+    height:45px;
+    border-radius: 10px;
+}
+input.advanced
+{
+    width:80px;
+    height:20px;
+}
+</style>
+<title>ZzArt - Abstract Art Evolution</title>
+<link rel="shortcut icon" type="image/x-icon" href="favicon.png"/>
+<meta name="author" content="Frank Force">
+<meta charset="utf-8">
+</head>
+<body bgcolor="#222">
+<tag autocomplete=off autocorrect=off autocapitalize=off spellcheck=false/>
+<div id=div_satellite class=satellite>
+<button id=button_satelliteHelp class=satellite onclick=ButtonSatelliteHelp() title="Help">📡</button>
+<button id=button_satelliteSave class=satellite onclick=ButtonSave() title="Save HD Image [S]">💾</button>
+<font size=10><b>𝓩𝔃𝓐𝓻𝓽</b> - <span id=span_generationsSatellite>0</span></font><br></div>
+<center>
+<div id=div_title><font size=5><b>𝓩𝔃𝓐𝓻𝓽</b></font> - <span id=span_generations>0</span></div>
+<div id=buttons_top>
+<button class=small id=button_preview disabled onclick=ButtonTogglePreview() title="Toggle Preview [Spacebar]">🔍</button>
+<button class=small id=button_back disabled onclick=ChangeMemoryLocation(-1) title="Undo [Z]">◄</button>
+<button class=small id=button_forward disabled onclick=ChangeMemoryLocation(1) title="Redo [X]">►</button>
+<button class=small id=button_save onclick=ButtonSave() title="Save HD Image [S]">💾</button>
+<button class=small style="display:none;" id=button_saveFolder onclick=DisplaySaveListPage() title="Show Next Save Folder Page">📁</button>
+<button class=small id=button_randomize onclick=ButtonRandomize() title="Randomize [R]">🎲</button>
+<button class=small id=button_share onclick=ButtonShare() title="Copy Link To Clipboard">🔗</button>
+<button class=small style="display:none;" id=button_seed onclick=ButtonSeed() title="Enter Seed">🌱</button>
+<button class=small id=button_openSatellite onclick=ButtonSatellite() title="Open Satellite Preview">📡</button>
+<button class=small id=button_advanced onclick=ButtonAdvanced() title="Advanced Controls">🔧</button>
+<button class=small id=button_help onclick=ButtonHelp() title="Help">❓</button>
+<button class=small style="display:none;" id=button_delete onclick=DeleteSelectedSave() title="Delete Selected Save">␡</button>
+<br></div>
+<canvas id=canvas_main width=1920 height=1080 style="width:1280px; height:720px; border:2px solid black;"></canvas>
+<canvas id=canvas_shader hidden style="width:1280px; height:720px; border:2px solid black;"></canvas>
+<canvas id=canvas_save hidden style="width:1280px; height:720px; border:2px solid black;"></canvas>
+<br>
+<div id=div_credit><font size=3>ZzArt © <a href="http://www.frankforce.com" target="_blank">Frank Force</a> 2019 ☮♥☻␌</font></div>
+<div id=div_advanced style="display:none;"><hr><table><tr>
+<td>
+<center>Shadertoy Compatible GLSL Code
+<br><textarea disabled id=textarea_code rows=10 cols=80></textarea>
+<br><textarea disabled hidden id=textarea_debug style="color:#F00;" rows=4 cols=160></textarea>
+<br>Base 64 JSON
+<br><textarea disabled id=textarea_json rows=5 cols=80></textarea>
+</center></td>
+<td><center>
+Saved Shaders
+<br><select id=select_saveList onchange=SelectSavedShader(select_saveList.selectedIndex) style="width:350px;overflow:scrollY" size=10></select>
+</center></td>
+<td style='font-size: 20px; line-height: 40px;'><center>
+<input id=checkbox_showWatermark onclick=UpdateUI() type=checkbox title="Toggle Watermark">Show Watermark
+<br>Save Scale: <input type=number id=input_saveScale class=advanced value=2>
+<br>Grid Size: <input type=number onchange=SetGridSize(parseInt(input_gridSize.value)) id=input_gridSize class=advanced value=5>
+<br>Start Iterations: <input type=number id=input_startIterations class=advanced value=1>
+<br>Randomize Length: <input type=number id=input_randomizeLength class=advanced value=15>
+<br><button onclick=OpenCapJS()>Open in CapJS</button>
+<br><button onclick=ExportSaveList()>Export Saves</button>
+<br><button onclick=input_importFile.click()>Import Saves</button><input id=input_importFile type="file" style="display:none">
+<br><button onclick=DeleteSelectedSave()>Delete Selected</button>
+</center></td></tr></table></div>
+</center>
+<a href="https://github.com/KilledByAPixel/ZzArt" target="_blank" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#5AF; color:#222; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+<script>
+
+"use strict"; // strict mode
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// global variables    
+let canvasContext_main = canvas_main.getContext('2d');
+let canvasContext_save = canvas_save.getContext('2d');
+let canvasContext_shader = canvas_shader.getContext('webgl');
+let defaultCanvasWidth = canvas_main.width;
+let defaultCanvasHeight =  canvas_main.height;
+let shaderMemory = [];
+let shaderGrid = [];
+let gridSize = 5;
+let favoriteShader = 0; 
+let shaderMemoryLocation = 0;
+let showPreview = 0;
+let advancedMode = 0;
+let rotateCanvas = 0;
+let dataVersion = 3;
+let itchMode = 0;
+let satelliteMode = 0;
+let startIterations = 1;
+let uniqueID = 0;
+let isInit = 0;
+let maxIterations = 9;
+
+function Init()
+{
+    isInit = 1;
+
+    uniqueID = RandSeeded();
+    InitWebgl();
+    shaderMemory.push(new ShaderObject());
+    
+    if (!itchMode)
+        LoadFromURL();
+    LoadLocalStorage();
+    LoadSavedShaderList();
+    
+    for(let i=0; i<gridSize; i++)
+        shaderGrid[i] = [];
+        
+    if (satelliteMode)
+        InitSatelliteMode();
+    else
+    {
+        if (favoriteShader)
+            shaderMemory[shaderMemoryLocation] = favoriteShader;
+        SetFavoriteFromMemory();
+            
+        if (!itchMode && IsMobile())
+            TryToRotate();
+            
+        DrawShaders();
+        UpdateUI();
+    }
+    isInit = 0;
+}
+
+function InitSatelliteMode()
+{
+    // redraw the favorite shader
+    canvas_shader.width = canvas_main.width;
+    canvas_shader.height = canvas_main.height;
+    favoriteShader.randSeed = 0;
+       
+    // set ui for satellite mode
+    canvas_shader.style = 'position:absolute; left:0px; top:0px;width:100%;height:100%'
+    canvas_shader.style.zIndex = 10;
+    canvas_main.hidden = 1;
+    canvas_shader.hidden = 0;
+    buttons_top.style.display = 'none';
+    div_credit.style.display = 'none';
+    div_title.style.display = 'none';
+    div_title.style.display = 'none';
+    div_satellite.style.display = 'inline';
+    
+    favoriteShader.Render();
+    setInterval(UpdateSatelliteMode, 100);
+}
+
+function UpdateSatelliteMode()
+{ 
+    // continuous poll favorite from local storage
+    let localStorageItem = localStorage.saveData;
+    if (localStorageItem)
+    {
+        let saveData = JSON.parse(localStorage.saveData);
+        let rawObject = saveData.favorite;
+        if (rawObject.uniqueID != favoriteShader.uniqueID)
+        {
+            // redraw new favorite
+            favoriteShader = Object.assign(new ShaderObject(), rawObject).Clone();
+            favoriteShader.Render();
+            span_generationsSatellite.innerHTML = favoriteShader.GetGenerationString();
+        }
+    }
+}
+
+function TryToRotate()
+{
+    // rotate canvas if window is more vertical then horizontal
+    let newRotateCanvas = window.innerHeight > window.innerWidth;
+    if (rotateCanvas == newRotateCanvas)
+        return;
+        
+    rotateCanvas = newRotateCanvas;
+    if (rotateCanvas)
+    {
+        canvas_main.width = defaultCanvasHeight;
+        canvas_main.height = defaultCanvasWidth;
+    }
+    else
+    {
+        canvas_main.width = defaultCanvasWidth;
+        canvas_main.height = defaultCanvasHeight;
+    }
+}
+
+function RandomizeShaders()
+{
+    saveListIndex = 0;
+    favoriteShader = new ShaderObject();
+    for(let i=9;i--;) Rand(); // warm up random number generator
+    
+    for(let X=0; X<gridSize; X++)
+    for(let Y=0; Y<gridSize; Y++)
+    {
+        let shader = shaderGrid[X][Y] = favoriteShader.Clone();
+        shader.SetGridPos(X,Y);
+        shader.Randomize();
+    }
+}
+
+function DrawShaders()
+{
+    let x = canvasContext_main;
+    let c = canvas_main;
+    c.width|=0;
+    
+    let gap = 10;
+    let G = gridSize;
+    let SX = (c.width-gap)/G;
+    let SY = (c.height-gap)/G;
+    let W = (c.width - gap*(gridSize+1))/G;
+    let H = (c.height - gap*(gridSize+1))/G;
+    
+    // use small hight for previews
+    canvas_shader.width = W;
+    canvas_shader.height = H;
+    
+    for(let X=0; X<G; X++)
+    for(let Y=0; Y<G; Y++)
+    {
+        let shader = shaderGrid[X][Y];
+        shader.Render();
+        
+        let posX = gap+SX*X;
+        let posY = gap+SY*Y;
+        x.drawImage(canvas_shader, posX, posY, W, H);
+        x.beginPath()
+        x.rect(posX,posY,W,H);
+        x.lineWidth=2;
+        x.strokeStyle='#000';
+        x.stroke();
+    }
+        
+    if (favoriteShader.gridPosX >=0 && favoriteShader.gridPosY >=0)
+    {
+        let posX = gap+SX*favoriteShader.gridPosX;
+        let posY = gap+SY*favoriteShader.gridPosY;
+        x.beginPath()
+        x.rect(posX-gap/2,posY-gap/2,W+gap,H+gap);
+        x.lineWidth=7;
+        x.strokeStyle='#f00';
+        x.stroke();
+    }
+}
+
+function SetBest(bestX, bestY)
+{
+    favoriteShader = shaderGrid[bestX][bestY];
+    favoriteShader.randSeed = randSeed;
+    
+    ++favoriteShader.subGeneration;
+    if (favoriteShader.generation == 0)
+        ++favoriteShader.generation;
+    
+    ++shaderMemoryLocation;
+    shaderMemory.length = shaderMemoryLocation;
+    shaderMemory.push(favoriteShader.Clone());
+    
+    MakeVariations(bestX, bestY);
+    DrawShaders();
+    UpdateUI();
+}
+
+function MakeVariations(skipX, skipY)
+{
+    saveListIndex = 0;
+    textarea_code.value = favoriteShader.GetCode();
+    textarea_json.value = btoa(JSON.stringify(favoriteShader));
+        
+    for(let X=0; X<gridSize; X++)
+    for(let Y=0; Y<gridSize; Y++)
+    {
+        let shader = shaderGrid[X][Y] = favoriteShader.Clone();
+        shader.SetGridPos(X,Y);
+        
+        if (X!=skipX || Y!=skipY)
+            shader.Mutate();
+    }
+}
+
+function SetFavoriteFromMemory()
+{
+    if (!favoriteShader)
+    {
+        RandomizeShaders();
+        return;
+    }
+
+    favoriteShader = shaderMemory[shaderMemoryLocation];
+    randSeed = favoriteShader.randSeed;
+    randSeedString = favoriteShader.randSeedString;
+    
+    if (favoriteShader.IsVariation())
+    {
+        if (favoriteShader.gridPosX >= gridSize || favoriteShader.gridPosY >= gridSize)
+            favoriteShader.gridPosX = favoriteShader.gridPosY = 0;
+    
+        let X = favoriteShader.gridPosX;
+        let Y = favoriteShader.gridPosY;
+        
+        shaderGrid[X][Y] = favoriteShader.Clone();
+        MakeVariations(X, Y);
+    }
+    else if (favoriteShader.IsSaveList())
+    {
+        saveListIndex = favoriteShader.saveListIndex;
+        DisplaySaveListPage(0);
+    }
+    else
+        RandomizeShaders();
+        
+    randSeedString = '';
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SHADER OBJECT
+
+class ShaderObject
+{
+    constructor()
+    {
+        this.shaderStatements = [];
+        this.randSeed = randSeed;
+        this.randSeedString = randSeedString.length? randSeedString : ''+randSeed;
+        this.iterationCount = 1;
+        this.gridPosX = -1;
+        this.gridPosY = -1;
+        this.generation = 0;
+        this.subGeneration = 0;
+        this.hueOffset = 0;
+        this.hueScale = 1;
+        this.saturationScale = 1;
+        this.uvOffsetX = 0;
+        this.uvOffsetY = 0;
+        this.uvScaleX = 1;
+        this.uvScaleY = 1;
+        this.rotate = 0;
+        this.usePalette = 0;
+        this.paletteColors = [new Vector3(), new Vector3(), new Vector3(), new Vector3()];
+        this.saveListIndex = -1;
+        this.uniqueID=++uniqueID;
+    }
+    
+    SetGridPos(X,Y) { this.gridPosX = X; this.gridPosY = Y; }
+    IsVariation() { return this.gridPosX >= 0; }
+    IsSaveList() { return this.saveListIndex >= 0; };
+    
+    MakeAllObjectFloatsFixed(object, digits=3)
+    {
+        // keep floats small
+        for (let key in object)
+        {
+            let subObject = object[key];
+            if (typeof subObject === 'object')
+                this.MakeAllObjectFloatsFixed(subObject)
+            else if (typeof subObject === 'number')
+                object[key] = parseFloat(subObject.toFixed(digits));
+        }
+    }
+    
+    Randomize()
+    {
+        let statementCount = parseInt(input_randomizeLength.value);
+        if (statementCount <0)
+            statementCount = 0;
+        
+        this.usePalette = 1;
+        this.hueOffset = Rand();
+        this.hueScale = RandBetween(-1,1);
+        this.saturationScale = Rand();
+        this.generation = 0;
+        this.subGeneration = 0;
+        this.shaderStatements = [];
+        this.uvOffsetX = RandBetween(-1,1);
+        this.uvOffsetY = RandBetween(-1,1);
+        this.uvScaleX = RandBetween(-1,1);
+        this.uvScaleY = RandBetween(-1,1);
+        this.iterationCount = startIterations;
+        for(let i=statementCount; i--;)
+        {
+            let statement = new ShaderStatement();
+            statement.Randomize();
+            this.shaderStatements.push(statement);
+        }
+        
+        for(let color of this.paletteColors)
+            color.Randomize(0,1);
+            
+        this.MakeAllObjectFloatsFixed(this);
+    }
+    
+    Clone() 
+    {
+        let clone = Object.assign(new ShaderObject(), this);
+        clone.shaderStatements = [];
+        for(let statement of this.shaderStatements)
+            clone.shaderStatements.push(Object.assign(new ShaderStatement(), statement));
+        clone.paletteColors = [];
+        for(let color of this.paletteColors)
+            clone.paletteColors.push(Object.assign(new Vector3(), color));
+            
+        // fix old shaders that had too high iterations
+        clone.iterationCount = Clamp(parseInt(clone.iterationCount),1,maxIterations);
+        return clone;
+    }
+    
+    Mutate() 
+    {   
+        this.uniqueID = RandSeeded();
+        this.subGeneration = 0;
+        ++this.generation;
+        
+        if (this.shaderStatements.length <= 2)
+        {
+            this.Randomize();
+            return;
+        }
+        
+        if (Rand() < .3)
+        {
+            // remove statement
+            let r = RandInt(this.shaderStatements.length);
+            let s = this.shaderStatements[r];
+            this.shaderStatements.splice(r, 1);
+        }
+        
+        if (Rand() < .5)
+        {
+            // change order or a statement
+            let r = RandInt(this.shaderStatements.length);
+            let s = this.shaderStatements[r];
+            this.shaderStatements.splice(r, 1);
+            r = RandInt(this.shaderStatements.length+1);
+            this.shaderStatements.splice(r, 0, s);
+        }
+        
+        for(let i=RandInt(2); i--;)
+        {
+            // mutate statements
+            let r = RandInt(this.shaderStatements.length);
+            this.shaderStatements[r].Mutate();
+        }
+        
+        if (Rand() < .2)
+        {
+            // insert random statement
+            let statement = new ShaderStatement();
+            statement.Randomize();
+            let r = RandInt(this.shaderStatements.length+1);
+            this.shaderStatements.splice(r, 0, statement);
+        }
+        
+        // mutate colors
+        this.hueOffset += RandBetween(-.1,.1)
+        if (Rand() < .2)
+            this.hueOffset = Rand();
+        if (Rand() < .2)
+            this.saturationScale = Rand();
+        if (Rand() < .2)
+            this.hueScale = RandBetween(-1,1);
+        if (Rand() < .4)
+        {
+            for(let color of this.paletteColors)
+                color.Randomize(0,1);
+        }
+        
+        // mutate position
+        if (Rand() < .1)
+        {
+            this.uvOffsetX = RandBetween(-1,1);
+            this.uvOffsetY = RandBetween(-1,1);
+            this.uvScaleX = RandBetween(-1,1);
+            this.uvScaleY = RandBetween(-1,1);
+        }
+        else
+        {
+            this.uvOffsetX += RandBetween(-.1,.1);
+            this.uvOffsetY += RandBetween(-.1,.1);
+            this.uvScaleX += RandBetween(-.1,.1);
+            this.uvScaleY += RandBetween(-.1,.1);
+        }
+        
+        if (Rand() < .1)
+            this.rotate = !this.rotate;
+            
+        if (Rand() < .1)
+            this.iterationCount += RandInt(3)-1;
+            
+        this.MakeAllObjectFloatsFixed(this);
+    }
+    
+    GetCode() 
+    {
+        let s = 10;
+        let uvsx = (s*this.uvScaleX).toFixed(3);
+        let uvsy = (s*this.uvScaleY).toFixed(3);
+        let uvox = (s*this.uvOffsetX).toFixed(3);
+        let uvoy = (s*this.uvOffsetY).toFixed(3);
+        
+        let code = ``;
+        code += `// ZzArt - ${this.GetGenerationString()}\n\n`;
+        code += `const float PI=3.141592653589793;\n`;
+        if (this.usePalette)
+            code += `vec3 CosinePalette( float t, vec3 a, vec3 b, vec3 c, vec3 d ) { return a + b*cos( PI*2.*(c*t+d)); }\n`;
+        else
+            code += `vec3 SmoothHSV(vec3 c) { vec3 rgb = clamp(abs(mod(c.x*6.+vec3(0,4,2),6.)-3.)-1.,0.,1.); return c.z * mix( vec3(1), rgb*rgb*(3.-2.*rgb), c.y); }\n`
+        code += `vec4 lengthA(vec4 a)      { return vec4(length(a)); }\n`;
+        code += `vec4 asinA(vec4 a)        { return asin(clamp(a,-1.,1.)); }\n`;
+        code += `vec4 acosA(vec4 a)        { return acos(clamp(a,-1.,1.)); }\n`;
+        code += `vec4 logA(vec4 a)         { return log(abs(a)); }\n`;
+        code += `vec4 log2A(vec4 a)        { return log2(abs(a)); }\n`;
+        code += `vec4 sqrtA(vec4 a)        { return sqrt(abs(a)); }\n`;
+        code += `vec4 inversesqrtA(vec4 a) { return inversesqrt(abs(a)); }\n`;
+        code += `vec4 pow2(vec4 a)         { return a*a; }\n`;
+        code += `vec4 pow3(vec4 a)         { return a*a*a; }\n\n`;
+        code += `void mainImage(out vec4 a, in vec2 p)\n{\n`;
+        let rotateSwizzle = rotateCanvas^this.rotate? 'yxyx' : 'xyxy';
+        code += `a=p.${rotateSwizzle}/iResolution.${rotateSwizzle};\n`;
+        code += `a.xywz *= vec2(${uvsx}, ${uvsy}).xyxy;\n`;
+        code += `a.xywz += vec2(${uvox}, ${uvoy}).xyxy;\n`;
+        code += `vec4 b = a;\n\n`;
+        code += `// Generated Code - Line Count: ${this.shaderStatements.length}\n`
+        
+        if (this.shaderStatements.length == 0)
+            code += `b=a=vec4(0.0);\n`;
+        else
+        {
+            if (this.iterationCount > 1)
+                code += `for (int i = 0; i < ${this.iterationCount}; ++i)\n{\n`
+            for(let statement of this.shaderStatements)
+                code += statement.GetString() + '\n';
+            if (this.iterationCount > 1)
+                code += `}\n`
+        }
+        // use hsl color
+        if (this.usePalette)
+        {
+            code += `\n// Cosine palettes by iq\n`
+            code += `a.x = a.x * ${(this.hueScale*.1).toFixed(3)}+${this.hueOffset.toFixed(3)};\n`
+            code += `a.xyz = b.x * CosinePalette(a.x`
+            for(let color of this.paletteColors)
+                code += `,\n ${color.GetShaderCode()}`;
+            code += `);\n`;
+        }
+        else
+        {
+            code += `\n// Smooth HSV by iq\n`
+            code += `a.x = a.x * ${this.hueScale.toFixed(3)}+${this.hueOffset.toFixed(3)};\n`;
+            code += `a.y *= ${this.saturationScale.toFixed(3)};\n`;
+            code += `a.xyz = SmoothHSV(a.xyz);\n`;
+        }
+        code += `}`;
+        return code;
+    }
+    
+    Render() 
+    {
+        let code = this.GetCode();
+        RenderShader(code);
+    }
+    
+    GetGenerationString(shorten)
+    {
+        let string = ''
+        
+        if (this.IsSaveList())
+        {
+            let page = 1+this.saveListIndex / (gridSize*gridSize)|0; 
+            return 'Favorites Page: ' + page;
+        }
+        
+        let seed = this.randSeedString?this.randSeedString:this.randSeed;
+        if (shorten)
+            string += `${seed}-`;
+        else
+            string += this.IsVariation()? 'Generation: ' : 'Seed: '
+            
+        if (!this.IsVariation())
+            return string + seed;
+        
+        if (this.subGeneration <= 1)
+            string += this.generation;
+        else
+            string += this.generation + '-' + (this.subGeneration>27?this.subGeneration:String.fromCharCode(65+this.subGeneration-2));
+            
+        if (!shorten && this.IsVariation())
+            string += ` (${seed})`
+            
+        return string;
+    }
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SHADER STUFF
+
+class ShaderStatement
+{
+    constructor()
+    {
+        this.output = 'a';
+        this.outputSwizzle = 'xyzw';
+        this.assignmentOperator = '=';
+        this.functionName = '';
+        this.parameter = 'a';
+        this.valueX = 1;
+        this.valueY = 1;
+        this.valueZ = 1;
+        this.valueW = 1;
+        this.parameterSwizzle = 'xyzw';
+    }
+    
+    Randomize()
+    {
+        this.output = shaderRandomizer.Output();
+        this.assignmentOperator = shaderRandomizer.AssignmentOperator();
+        this.functionName = shaderRandomizer.FunctionName();
+        this.parameter = shaderRandomizer.Parameter();
+        this.valueX = shaderRandomizer.Value();
+        this.valueY = shaderRandomizer.Value();
+        this.valueZ = shaderRandomizer.Value();
+        this.valueW = shaderRandomizer.Value();
+        this.outputSwizzle = shaderRandomizer.Swizzle(1);
+        this.parameterSwizzle = shaderRandomizer.Swizzle();
+    }
+    
+    Mutate()
+    {
+        let r = RandInt(10);
+        switch (r)
+        {
+            case 0: this.output = shaderRandomizer.Output(); break;
+            case 1: this.assignmentOperator = shaderRandomizer.AssignmentOperator(); break;
+            case 2: this.functionName = shaderRandomizer.FunctionName(); break;
+            case 3: this.outputSwizzle = shaderRandomizer.Swizzle(1); break;
+            case 4: this.parameter = shaderRandomizer.Parameter(); break;
+            case 5: this.parameterSwizzle = shaderRandomizer.Swizzle(); break;
+            case 6: this.valueX = shaderRandomizer.Value(); break;
+            case 7: this.valueY = shaderRandomizer.Value(); break;
+            case 8: this.valueZ = shaderRandomizer.Value(); break;
+            case 9: this.valueW = shaderRandomizer.Value(); break;
+        }
+        
+        this.valueX += 0.05*RandBetween(-1,1);
+        this.valueY += 0.05*RandBetween(-1,1);
+        this.valueZ += 0.05*RandBetween(-1,1);
+        this.valueW += 0.05*RandBetween(-1,1);
+    }
+    
+    GetString()
+    {
+        let parameter = '' + this.parameter;
+        if (parameter == '')
+            parameter = `vec4(${this.valueX.toFixed(3)}, ${this.valueY.toFixed(3)}, ${this.valueZ.toFixed(3)}, ${this.valueW.toFixed(3)})`;
+         
+        let code;
+        code = this.output + '.' + this.outputSwizzle;
+        code += ' ' + this.assignmentOperator + ' ' + this.functionName
+        code += '(' + parameter + ')'
+        code += '.' + this.parameterSwizzle;
+        code += ';';
+        return code;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SHADER RANDOMIZER
+
+let shaderRandomizer =
+{
+    AssignmentOperator: function()
+    {
+        let f = ['=','+=','-=','*=','/='];
+        return f[RandInt(f.length)];
+    },
+    FunctionName: function()
+    {
+        if (Rand() < .5)
+            return '';
+
+        let f =
+        [
+            'sin','cos','normalize','lengthA',
+            'tan','asinA','acosA','atan',
+            'logA','log2A','exp','exp2',
+            'sqrtA','inversesqrtA','fract',
+            'abs','sign','floor','ceil',
+            'pow2','pow3'
+        ];
+        return f[RandInt(f.length)];
+    },
+    Output: function()
+    {
+        let f = ['a','b'];
+        return f[RandInt(f.length)];
+    },
+    Value: function()
+    {
+        let v = RandBetween(0,1);
+        v = v * v;
+        v *= 10;
+        return RandInt(2)? v : -v;
+    },
+    Parameter: function()
+    {
+        let f = ['a','b','']
+        return f[RandInt(f.length)];
+    },
+    Swizzle: function(noDuplicates)
+    {
+        if (noDuplicates)
+        {
+            let s = ['x','y','z','w'];
+            s = ShuffleArray(s);
+            return s.join('');
+        }
+
+        let s = ['x','y','z','w'];
+        return s[RandInt(s.length)] + s[RandInt(s.length)] + s[RandInt(s.length)] + s[RandInt(s.length)];
+    }
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// USER INTERFACE
+
+function SetGridSize(newGridSize)
+{
+    gridSize = Clamp(newGridSize,2,10);
+    shaderGrid=[];
+    for(let i=0; i<gridSize; i++)
+        shaderGrid[i] = [];
+    
+    SetFavoriteFromMemory();
+    DrawShaders();
+    UpdateUI();
+}
+
+function UpdateUI(resetSaveListSelection=1)
+{
+    if (satelliteMode)
+        return;
+
+    if (!isInit)
+    {
+        // clear url
+        let url = new URL(window.location.href);
+        url.search= "";
+        window.history.pushState(null,null,url.toString());
+    }
+
+    if (resetSaveListSelection)
+        select_saveList.selectedIndex=-1;
+    startIterations = Clamp(parseInt(input_startIterations.value), 1, maxIterations);
+    button_back.disabled = shaderMemoryLocation <= 0;
+    button_forward.disabled = shaderMemoryLocation >= shaderMemory.length-1;
+    button_preview.disabled = !favoriteShader || favoriteShader.gridPosX<0;
+    canvas_main.hidden = showPreview;
+    canvas_shader.hidden = !showPreview;
+    div_advanced.style.display = advancedMode? 'inline' : 'none';
+    button_delete.style.display = advancedMode? 'inline' : 'none';
+    button_help.style.display = advancedMode? 'none' : 'inline';
+    textarea_debug.hidden = textarea_debug.value == '';
+    button_saveFolder.style.display = saveList.length==0? 'none' : 'inline';
+    
+    let s = shaderMemory[shaderMemoryLocation];
+    span_generations.innerHTML = s.GetGenerationString();
+    
+    let isMobile = IsMobile();
+    if (isMobile || itchMode)
+    {
+        if (!itchMode)
+            button_help.style.display = 'none';
+        button_seed.style.display = 'inline';
+        button_advanced.style.display = 'none';
+        button_share.style.display = 'none';
+        div_credit.style.display = 'none';
+        button_openSatellite.style.display = 'none';
+    }
+    
+    // set title
+    let shader = shaderMemory[shaderMemoryLocation];
+    document.title = `ZzArt - ` + shader.GetGenerationString();
+    
+    // resize canvas to fit window
+    let a = canvas_main.width / canvas_main.height;
+    let w = window.innerWidth - (isMobile||itchMode?20:100);
+    let h = window.innerHeight - (itchMode?120:150);
+    let wa = w/h;
+    if (rotateCanvas)
+        wa = 1/wa;
+    if (wa > a)
+        w = h * a;
+    else
+        h = w / a;
+     
+    canvas_main.style.width=w+'px';
+    canvas_main.style.height=h+'px';
+    canvas_shader.style.width=w+'px';
+    canvas_shader.style.height=h+'px';
+
+    SaveLocalStorage();
+}
+
+function ChangeMemoryLocation(direction)
+{
+    if (shaderMemoryLocation + direction < 0 || shaderMemoryLocation + direction >= shaderMemory.length)
+        return;
+        
+    if (showPreview)
+    {
+        showPreview = 0;
+        UpdateUI();
+        return;
+    }
+        
+    shaderMemoryLocation+=direction;
+    SetFavoriteFromMemory();
+    DrawShaders();
+    UpdateUI();
+}
+
+function ButtonSatellite()
+{
+    let url = new URL(window.location.href);
+    url.search = 'satellite=1';
+    window.open(url);
+}
+
+function ButtonSatelliteHelp()
+{
+    window.alert(
+`Welcome to 𝓩𝔃𝓐𝓻𝓽 ~ Abstract Art Evolution
+
+This satellite 📡 mode allows you to view a full screen preview of our current favorite on a second monitor while browsing!`
+    );
+}
+
+function ButtonHelp()
+{
+    window.alert(
+`Welcome to 𝓩𝔃𝓐𝓻𝓽 ~ Abstract Art Evolution
+
+To get started, click 🎲 a few times generate random seeds.
+When you like something, just click it see more variations.
+You can click 🔍 or press space to see a large preview.
+Use 📡 to view open the large preview in a separate window.
+Click 💾 to save your art as a 4K png image file.`
+    );
+}
+
+function Randomize(seed)
+{
+    randSeed = seed;
+        
+    showPreview = 0;
+    ++shaderMemoryLocation;
+    shaderMemory.length=shaderMemoryLocation;
+    shaderMemory.push(new ShaderObject());
+    RandomizeShaders();
+    DrawShaders();
+    UpdateUI();
+}
+
+function ButtonRandomize()
+{
+    let seed = Math.abs(Date.now() % 1e9);
+    Randomize(seed);
+}
+
+function ButtonSeed()
+{
+    let seedString = window.prompt('Enter a ZzArt seed to use for randomization:', '');
+    if (seedString === null)
+        return;
+        
+    seedString = String(seedString);
+    let seed = parseInt(seedString);
+    if (!Number.isInteger(seed))
+        seed = HashString(seedString);
+    if (seed==0)
+        seed = 1; // prevent it from being black
+    
+    randSeedString = seedString;
+    Randomize(seed);
+    randSeedString = '';
+}
+
+function ButtonAdvanced()
+{
+    advancedMode = !advancedMode;
+    UpdateUI();
+}
+
+function ButtonTogglePreview()
+{
+    showPreview = !showPreview;
+    if (showPreview)
+    {
+        // redraw the favorite shader
+        canvas_shader.width = canvas_main.width;
+        canvas_shader.height = canvas_main.height;
+        if (favoriteShader && favoriteShader.IsVariation())
+            favoriteShader.Render();
+    }
+        
+    UpdateUI();
+}
+
+function ButtonSave()
+{
+    if (!favoriteShader)
+        return;
+
+    AddToSaveList(favoriteShader);
+
+    // save large
+    let saveScale = parseInt(input_saveScale.value);
+    if (saveScale <= 0)
+        return;
+    canvas_shader.width = saveScale*defaultCanvasWidth;
+    canvas_shader.height = saveScale*defaultCanvasHeight;
+    favoriteShader.Render();
+
+    let canvas = canvas_shader;
+
+    if (checkbox_showWatermark.checked)
+    {
+        canvas = canvas_save;
+        canvas.width = canvas_shader.width;
+        canvas.height = canvas_shader.height;
+        let x = canvasContext_save;
+        x.drawImage(canvas_shader, 0, 0);
+
+        // watermark
+        let watermarkText = `𝓩𝔃𝓐𝓻𝓽 ~ ${favoriteShader.GetGenerationString()} ~ zzart.3d2k.com`;
+        let X = canvas.width-10;
+        let Y = canvas.height-10;
+        x.textAlign='right';
+        x.shadowBlur = 6;
+        x.shadowColor = '#0009';
+        x.fillStyle = '#000';
+        x.font = '30px monospace';
+        for (let i=-1;i<=1;i+=2)
+        for (let j=-1;j<=1;j+=2)
+            x.fillText(watermarkText, X+1*i,Y+1*j);
+        x.fillStyle='#fff';
+        x.fillText(watermarkText, X,Y);
+    }
+    
+    let filename = 'ZzArt-' + favoriteShader.GetGenerationString(1) + ".png";
+    download(canvas.toDataURL("image/png"), filename,"image/png");
+    UpdateUI();
+}
+
+function SaveCode()
+{
+    let filename = 'ZzArt-' + favoriteShader.GetGenerationString(1) + ".txt";
+    download(favoriteShader.GetCode(), filename, "data:application/octet-stream");
+}
+
+function ButtonShare()
+{
+    window.open(GetShareUrl());
+}
+
+function GetShareUrl()
+{
+    let shader = shaderMemory[shaderMemoryLocation].Clone();
+    shader.MakeAllObjectFloatsFixed(shader, 5);
+    let crushed = JSONCrush(JSON.stringify(shader));
+    
+    let search = '';
+    //search += "&shader=" + encodeURIComponent(jsonShader);
+    search += "&crushed=" + crushed;
+    let url = new URL(window.location.href);
+    url.search = search;
+    return url.toString();
+}
+
+function OpenCapJS()
+{
+    if (!favoriteShader)
+        return;
+
+    let filename = 'ZzArt - ' + favoriteShader.GetGenerationString();
+    let search = "";
+    search += "filename=" + encodeURIComponent(filename);
+    search += "&mode=" + encodeURIComponent('shadertoy');
+    search += "&code=" + encodeURIComponent(favoriteShader.GetCode());
+    let url = new URL('https://capjs.3d2k.com');
+    url.search = search;
+    window.open(url);
+}
+
+onresize=_=>UpdateUI();
+
+let onselect=e=>
+{
+    if (e.button != 0 || satelliteMode)
+        return;
+        
+    let rect = canvas_main.getBoundingClientRect();
+    let scaleX = canvas_main.width / rect.width;
+    let scaleY = canvas_main.height / rect.height;
+    let mouseX = (e.clientX- rect.left) * scaleX; 
+    let mouseY = (e.clientY- rect.top) * scaleY;
+    let X = gridSize * mouseX / canvas_main.width | 0;
+    let Y = gridSize * mouseY / canvas_main.height | 0;
+    
+    if (X<0 || X>gridSize-1 || Y<0 || Y>gridSize-1)
+        return; 
+       
+    SetBest(X,Y);
+}
+
+canvas_main.onmousedown=onselect;
+canvas_main.ontouch=onselect;
+
+canvas_shader.onclick=e=>
+{
+    if (satelliteMode)
+        return;
+
+    showPreview = 0;
+    UpdateUI();
+}
+
+onkeydown=e=>
+{
+    if (satelliteMode)
+        return;
+        
+    let used = 0;
+    if (e.keyCode == 32) // Space
+    {
+        if (favoriteShader)
+            ButtonTogglePreview();
+        used = 1;
+    }
+    else if (e.keyCode == 83) // S
+        ButtonSave(), used = 1;
+    else if (e.keyCode == 90) // Z
+        ChangeMemoryLocation(-1), used = 1;
+    else if (e.keyCode == 88) // X
+        ChangeMemoryLocation(1), used = 1;
+    else if (e.keyCode == 82) // R
+        ButtonRandomize(), used = 1;
+    
+    if (used)
+    {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SAVE & LOAD
+
+function LoadFromURL()
+{
+    let url = new URL(window.location.href);
+    let searchParams = url.searchParams;
+    if (searchParams.has('shader'))
+    {
+        let shaderText = searchParams.get('shader');
+        let rawObject = JSON.parse(shaderText);
+        favoriteShader = Object.assign(new ShaderObject(), rawObject).Clone();
+    }
+    else if (searchParams.has('crushed'))
+    {
+        // uncrush
+        let crushedString = searchParams.get('crushed');
+        let rawObject = JSON.parse(JSONUncrush(crushedString));
+        favoriteShader = Object.assign(new ShaderObject(), rawObject).Clone();
+    }
+    
+    if (!IsMobile() && !itchMode && searchParams.has('satellite'))
+        satelliteMode = parseInt(searchParams.get('satellite'));
+}
+
+function SaveLocalStorage()
+{
+    if (satelliteMode)
+        return;
+        
+    let shader = shaderMemory[shaderMemoryLocation];
+    let saveData = 
+    {
+        version:dataVersion,
+        showWatermark:checkbox_showWatermark.checked,
+        advancedMode:advancedMode,
+        //saveScale:input_saveScale.value,
+        //startIterations:input_startIterations.value,
+        //randomizeLength:input_randomizeLength.value,
+        gridSize:gridSize,
+        favorite:shader
+    }
+        
+    localStorage.version = dataVersion;
+    localStorage.saveData = JSON.stringify(saveData);
+}
+
+function LoadLocalStorage()
+{
+    if (localStorage.version != dataVersion)
+        return;
+        
+    let saveData = JSON.parse(localStorage.saveData);
+    checkbox_showWatermark.checked = saveData.showWatermark;
+    advancedMode = saveData.advancedMode;
+    input_gridSize.value = gridSize = saveData.gridSize;
+    //input_saveScale.value = saveData.saveScale;
+    //input_startIterations.value = saveData.startIterations;
+    //input_randomizeLength.value = saveData.randomizeLength;
+    
+    let rawObject = saveData.favorite;
+    favoriteShader = Object.assign(new ShaderObject(), rawObject).Clone();
+}
+
+///////////////////////////////////////////////////////////////////////  
+// WEBGL STUFF
+
+let vertexShader = 0;
+function InitWebgl() 
+{
+    let x = canvasContext_shader;
+
+    // create simple pass through vertex shader
+    vertexShader=x.createShader(x.VERTEX_SHADER);
+    x.shaderSource(vertexShader,"attribute vec4 p;void main(){gl_Position=p;}")
+    x.compileShader(vertexShader);
+    let compiled = x.getShaderParameter(vertexShader, x.COMPILE_STATUS);
+    if (!compiled)
+    {
+        let shaderLog = x.getShaderInfoLog(vertexShader);
+        textarea_debug.value = compiled? "" : "VERTEX SHADER ERROR!\n" + shaderLog;
+        vertexShader = 0;
+        return;
+    }
+    
+    // create vertex buffer that is a giant triangle to cover the viewport
+    let vertexBuffer=x.ARRAY_BUFFER;
+    x.bindBuffer(vertexBuffer,x.createBuffer());
+    x.bufferData(vertexBuffer,new Int8Array([-3,1,1,-3,1,1]),x.STATIC_DRAW);
+    x.enableVertexAttribArray(0);
+    x.vertexAttribPointer(0,2,x.BYTE,0,0,0); // 2D vertex
+}
+
+function RenderShader(code) 
+{
+    if (!vertexShader)
+        return;
+    
+    // create pixel shader
+    let x = canvasContext_shader;
+    let shaderProgram = x.createProgram();
+    let pixelShader = x.createShader(x.FRAGMENT_SHADER)
+    let shaderProgramCode = 
+        "precision mediump float;"+
+        `const vec3 iResolution = vec3(${canvas_shader.width},${canvas_shader.height},0.);`+
+        code+
+        `\nvoid main(){mainImage(gl_FragColor,gl_FragCoord.xy);gl_FragColor.a=1.;}`
+    x.shaderSource(pixelShader, shaderProgramCode)
+    x.compileShader(pixelShader);
+    
+    // check for errors
+    let debugOutput="";
+    let compiled = x.getShaderParameter(pixelShader, x.COMPILE_STATUS);
+    let shaderLog = x.getShaderInfoLog(pixelShader);
+    textarea_debug.value = compiled? "" : "FRAGMENT SHADER ERROR!\n" + shaderLog;
+    if (!compiled)
+    {
+        shaderProgram = 0;
+        return;
+    }
+
+    // link program
+    x.attachShader(shaderProgram,vertexShader);
+    x.attachShader(shaderProgram, pixelShader);
+    x.linkProgram(shaderProgram);
+    let linkGood = x.getProgramParameter(shaderProgram, x.LINK_STATUS);
+    if (!linkGood)
+    {
+        // something went wrong with the link
+        textarea_debug.value = "LINK ERROR!\n" + x.getProgramInfoLog(shaderProgram);
+        return;
+    }
+    
+    // render
+    x.viewport(0, 0, canvas_shader.width, canvas_shader.height);
+    x.useProgram(shaderProgram);
+    x.drawArrays(x.TRIANGLE_FAN, 0, 3);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// IMPORT/EXPORT AND SAVE LIST
+
+let saveList = [];
+let saveListIndex = 0;
+
+function LoadSavedShaderList()
+{
+    saveList = [];
+    let savedShaderCount = localStorage.savedShaderCount;
+    if (!savedShaderCount)
+    {
+        savedShaderCount = 0;
+        return;
+    }
+    for(let i=0;i<savedShaderCount;++i)
+    {
+        let rawObject = localStorage['savedShader_'+i];
+        if (!rawObject)
+            continue;
+            
+        rawObject = JSON.parse(rawObject);
+        let shader = Object.assign(new ShaderObject(), rawObject).Clone();
+        AddToSaveList(shader, 0);
+    }
+}
+
+function SaveShaderList()
+{
+    let i=0;
+    localStorage.savedShaderCount = saveList.length;
+    for(let shader of saveList)
+    {
+        localStorage['savedShader_'+i] = JSON.stringify(shader);
+        ++i;
+    }
+}
+
+function SelectSavedShader(i)
+{
+    i = parseInt(i);
+    if (i >= saveList.length)
+        return;
+ 
+    if (saveList[i].IsSaveList())
+        return;
+ 
+    saveListIndex = i;
+    shaderMemoryLocation = shaderMemory.length;
+    let shader = saveList[i].Clone();
+    shader.gridPosX = 0;
+    shader.gridPosY = 0;
+    shaderMemory[shaderMemoryLocation] = shader;
+    SetFavoriteFromMemory();
+    
+    DrawShaders();
+    UpdateUI(0);
+}
+
+function AddToSaveList(shader, save=1)
+{
+    // check if duplicate
+    let matches = saveList.filter(savedShader => savedShader.uniqueID == shader.uniqueID);
+    if (matches.length)
+        return;
+
+    let i = saveList.length;
+    let option = document.createElement('option');
+    option.value = i;
+    option.innerHTML = shader.GetGenerationString(1);
+    select_saveList.appendChild(option);
+    saveList.push(shader.Clone());
+    if (save)
+    {
+        localStorage['savedShader_'+i] = JSON.stringify(shader);
+        localStorage.savedShaderCount = saveList.length;
+    }
+}
+
+function DeleteSelectedSave()
+{
+    let options = select_saveList.getElementsByTagName('option');
+    let i = select_saveList.selectedIndex;
+    if (i < 0 || i >= options.length)
+    {
+        // check if current favorite
+        i = 0;
+        for (let shader of saveList)
+        {
+            if (shader.uniqueID == favoriteShader.uniqueID)
+                break;
+                
+            ++i;
+        }
+        
+        if (i == saveList.length)
+            return;
+    }
+    
+    saveList.splice(i, 1);
+    options[i].remove();
+    SaveShaderList();
+    UpdateUI();
+}
+
+function ExportSaveList()
+{
+    let filename = 'zzart_export.txt';
+    let output = '';
+    let i = 0;
+    for (let shader of saveList)
+        output += JSON.stringify(shader) + '\n';
+    
+    download(output, filename, "data:application/octet-stream");
+}
+
+input_importFile.onchange=e=> { ImportSaveList(e.target.files[0]); }
+
+function ImportSaveList(file)
+{
+    if (file.type != "text/plain")
+        return;
+        
+    let reader = new FileReader();
+    reader.readAsText(file,'UTF-8');
+    reader.onload=readerEvent=>
+    {
+        saveList = [];
+        saveListIndex = 0;
+        select_saveList.options.length = 0;
+            
+        let content = readerEvent.target.result;
+        let jsonLines = content.split('\n');
+        for (let line of jsonLines)
+        {
+            try
+            {
+                let jsonShader = JSON.parse(line);
+                let shader = Object.assign(new ShaderObject(), jsonShader).Clone();
+                AddToSaveList(shader, 0);
+            }
+            catch (e) 
+            {
+                break;
+            }
+        }
+        
+        SaveShaderList();
+        DisplaySaveListPage(0);
+        
+        shaderMemoryLocation=0;
+        shaderMemory.length = shaderMemoryLocation;
+        shaderMemory.push(favoriteShader.Clone());
+        UpdateUI();
+    }
+}
+
+function DisplaySaveListPage(saveMemory=1)
+{
+    showPreview = 0;
+    favoriteShader = new ShaderObject();
+    favoriteShader.saveListIndex = saveListIndex;
+    let shader = favoriteShader;
+    
+    if (saveMemory)
+    {
+        ++shaderMemoryLocation;
+        shaderMemory.length = shaderMemoryLocation;
+        shaderMemory.push(shader.Clone());
+    }
+    
+    for(let Y=0; Y<gridSize; Y++)
+    for(let X=0; X<gridSize; X++)
+    {
+        let shader = new ShaderObject();
+        
+        let i = saveListIndex;
+        ++saveListIndex;
+        
+        if (i < saveList.length)
+            shader = saveList[i].Clone();
+        shaderGrid[X][Y] = shader;
+        shader.SetGridPos(X,Y);
+    }
+    
+    if (saveListIndex >= saveList.length)
+        saveListIndex = 0;
+
+    DrawShaders();
+    UpdateUI();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// MATH STUFF
+
+let randSeedString = '';
+let randSeed = Date.now();
+function RandSeeded()
+{
+    randSeed^=randSeed<<13
+    randSeed^=randSeed>>7
+    randSeed^=randSeed<<17
+    return Math.abs(randSeed);
+}
+
+let Rand             = (m=1)=>m*RandInt(1e9)/1e9;
+let RandInt          = m=>RandSeeded()%m;
+let RandBetween      = (a,b)=>a+Rand(b-a);
+let RandIntBetween   = (a,b)=>a+RandInt(b-a+1);
+
+let HashString=string=>
+{
+    let hash=0;
+    for (let i=0; i<string.length; i++)
+        hash = (hash << 5) - hash + string.charCodeAt(i) | 0;
+    return hash;
+};
+
+let PI                  = Math.PI;
+let Min=(a, b)          => a<b? a : b;
+let Max=(a, b)          => a>b? a : b;
+let Clamp=(v, min, max) => Min(Max(v, min), max);
+let Percent=(v, a, b)   => a==b? 0 : Clamp((v-a)/(b-a), 0, 1);
+let Lerp=(p, a, b)      => a + Clamp(p, 0, 1) * (b-a);
+
+function ShuffleArray(array) 
+{
+    let currentIndex = array.length;
+    while (currentIndex) 
+    {
+        let randomIndex = RandInt(currentIndex);
+        --currentIndex;
+        let temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+    }
+
+    return array;
+}
+    
+class Vector3 
+{
+    constructor(x=0, y=0, z=0) { this.x = x; this.y = y; this.z = z; }
+    Randomize(min, max)
+    { 
+        this.x = RandBetween(min,max); 
+        this.y = RandBetween(min,max); 
+        this.z = RandBetween(min,max); 
+    }
+    
+    GetShaderCode() { return `vec3(${this.x.toFixed(3)}, ${this.y.toFixed(3)}, ${this.z.toFixed(3)})`; }
+}
+
+///////////////////////////////////////////////////////////////////////  
+
+let IsMobile=_=>!itchMode&&((navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i) || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/BlackBerry/i) || navigator.userAgent.match(/Windows Phone/i))!= null);
+
+///////////////////////////////////////////////////////////////////////  
+//download.js v4.21, by dandavis; 2008-2018. [MIT] see http://danml.com/download.html for tests/usage
+
+;(function(root,factory){typeof define=="function"&&define.amd?define([],factory):typeof exports=="object"?module.exports=factory():root.download=factory()})(this,function(){return function download(data,strFileName,strMimeType){let self=window,defaultMime="application/octet-stream",mimeType=strMimeType||defaultMime,payload=data,url=!strFileName&&!strMimeType&&payload,anchor=document.createElement("a"),toString=function(a){return String(a)},myBlob=self.Blob||self.MozBlob||self.WebKitBlob||toString,fileName=strFileName||"download",blob,reader;myBlob=myBlob.call?myBlob.bind(self):Blob,String(this)==="true"&&(payload=[payload,mimeType],mimeType=payload[0],payload=payload[1]);if(url&&url.length<2048){fileName=url.split("/").pop().split("?")[0],anchor.href=url;if(anchor.href.indexOf(url)!==-1){let ajax=new XMLHttpRequest;return ajax.open("GET",url,!0),ajax.responseType="blob",ajax.onload=function(e){download(e.target.response,fileName,defaultMime)},setTimeout(function(){ajax.send()},0),ajax}}if(/^data:([\w+-]+\/[\w+.-]+)?[,;]/.test(payload)){if(!(payload.length>2096103.424&&myBlob!==toString))return navigator.msSaveBlob?navigator.msSaveBlob(dataUrlToBlob(payload),fileName):saver(payload);payload=dataUrlToBlob(payload),mimeType=payload.type||defaultMime}else if(/([\x80-\xff])/.test(payload)){let i=0,tempUiArr=new Uint8Array(payload.length),mx=tempUiArr.length;for(i;i<mx;++i)tempUiArr[i]=payload.charCodeAt(i);payload=new myBlob([tempUiArr],{type:mimeType})}blob=payload instanceof myBlob?payload:new myBlob([payload],{type:mimeType});function dataUrlToBlob(strUrl){let parts=strUrl.split(/[:;,]/),type=parts[1],indexDecoder=strUrl.indexOf("charset")>0?3:2,decoder=parts[indexDecoder]=="base64"?atob:decodeURIComponent,binData=decoder(parts.pop()),mx=binData.length,i=0,uiArr=new Uint8Array(mx);for(i;i<mx;++i)uiArr[i]=binData.charCodeAt(i);return new myBlob([uiArr],{type:type})}function saver(url,winMode){if("download"in anchor)return anchor.href=url,anchor.setAttribute("download",fileName),anchor.className="download-js-link",anchor.innerHTML="downloading...",anchor.style.display="none",anchor.addEventListener("click",function(e){e.stopPropagation()}),document.body.appendChild(anchor),setTimeout(function(){anchor.click(),document.body.removeChild(anchor),winMode===!0&&setTimeout(function(){self.URL.revokeObjectURL(anchor.href)},250)},66),!0;if(/(Version)\/(\d+)\.(\d+)(?:\.(\d+))?.*Safari\//.test(navigator.userAgent))return/^data:/.test(url)&&(url="data:"+url.replace(/^data:([\w\/\-\+]+)/,defaultMime)),window.open(url)||confirm("Displaying New Document\n\nUse Save As... to download, then click back to return to this page.")&&(location.href=url),!0;let f=document.createElement("iframe");document.body.appendChild(f),!winMode&&/^data:/.test(url)&&(url="data:"+url.replace(/^data:([\w\/\-\+]+)/,defaultMime)),f.src=url,setTimeout(function(){document.body.removeChild(f)},333)}if(navigator.msSaveBlob)return navigator.msSaveBlob(blob,fileName);if(self.URL)saver(self.URL.createObjectURL(blob),!0);else{if(typeof blob=="string"||blob.constructor===toString)try{return saver("data:"+mimeType+";base64,"+self.btoa(blob))}catch(y){return saver("data:"+mimeType+","+encodeURIComponent(blob))}reader=new FileReader,reader.onload=function(e){saver(this.result)},reader.readAsDataURL(blob)}return!0}});
+
+///////////////////////////////////////////////////////////////////////  
+// JSON Crush by Frank Force https://github.com/KilledByAPixel/JSONCrush
+
+// JSONCrush by Frank Force [MIT] https://github.com/KilledByAPixel/JSONCrush
+function JSONCrush(e){let t=[];const n="-_.!~*'()";for(let e=127;--e;)(e>=48&&e<=57||e>=65&&e<=90||e>=97&&e<=122||n.includes(String.fromCharCode(e)))&&t.push(String.fromCharCode(e));for(let e=32;e<255;++e){let n=String.fromCharCode(e);"\\"==n||t.includes(n)||t.unshift(n)}const l=((e,t)=>{let n=t.length,l="";const r=e=>encodeURI(encodeURIComponent(e)).replace(/%../g,"i").length,o=e=>{let t=e.charCodeAt(0),n=e.charCodeAt(e.length-1);return t>=56320&&t<=57343||n>=55296&&n<=56319};let i={};for(let t=2;t<50;t++)for(let n=0;n<e.length-t;++n){let l=e.substr(n,t);if(i[l])continue;if(o(l))continue;let r=1;for(let o=e.indexOf(l,n+t);o>=0;++r)o=e.indexOf(l,o+t);r>1&&(i[l]=r)}for(;;){for(;n--&&e.includes(t[n]););if(n<0)break;let o,f=t[n],s=0,c=r(f);for(let e in i){let t=i[e],n=(t-1)*r(e)-(t+1)*c;l.length||(n-=r("")),n<=0?delete i[e]:n>s&&(o=e,s=n)}if(!o)break;e=e.split(o).join(f)+f+o,l=f+l;let u={};for(let t in i){let n=t.split(o).join(f),l=0;for(let t=e.indexOf(n);t>=0;++l)t=e.indexOf(n,t+n.length);l>1&&(u[n]=l)}i=u}return{a:e,b:l}})(e=JSONCrushSwap(e=e.replace(new RegExp("","g"),"")),t);let r=l.a;return l.b.length&&(r+=""+l.b),encodeURIComponent(r+'_')}function JSONUncrush(e){e=e.substring(0, e.length-1);const t=e.split("");let n=t[0];if(t.length>1){let e=t[1];for(let t of e){let e=n.split(t);n=e.join(e.pop())}}return JSONCrushSwap(n,0)}function JSONCrushSwap(e,t=1){const n=[['"',"'"],["':","!"],[",'","~"],["}",")","\\","\\"],["{","(","\\","\\"]],l=(e,t)=>{let n=new RegExp(`${(t[2]?t[2]:"")+t[0]}|${(t[3]?t[3]:"")+t[1]}`,"g");return e.replace(n,e=>e===t[0]?t[1]:t[0])};if(t)for(let t=0;t<n.length;++t)e=l(e,n[t]);else for(let t=n.length;t--;)e=l(e,n[t]);return e}
+
+///////////////////////////////////////////////////////////////////////  
+
+Init();
+
+</script>
+<script src="../__i18n.js"></script></body>
+</html>

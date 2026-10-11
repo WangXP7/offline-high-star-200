@@ -1,0 +1,178 @@
+/* Normal card layout in one row */
+.Cards {
+	display: flex;
+	flex-flow: row nowrap;
+	justify-content: center;
+	min-height: var(--card-height);
+}
+
+.Cards--grid {
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.Cards--mini {
+	--card-height: 11rem;
+	/* --card-width: 13rem; */
+	/* --column-width: var(--card-width); */
+	/* display: grid; */
+	/* gap: 0; */
+	/* grid-template-columns: repeat(auto-fill, minmax(min(var(--column-width), 100%), 1fr)); */
+
+	& .Card-media img {
+		height: 50px;
+	}
+}
+
+.Cards--withUpgrades {
+	& .CardBox {
+		display: flex;
+		flex-flow: column wrap;
+		position: relative;
+		cursor: pointer;
+	}
+
+	& .CardBox:not([flipped]) .Card:not([upgraded]) {
+		display: flex;
+	}
+
+	& .CardBox[flipped] .Card:not([upgraded]) {
+		display: none;
+	}
+
+	& .CardBox[flipped] .Card[upgraded] {
+		display: flex;
+		border-color: color-mix(in oklab, var(--lightblue), white 30%);
+		box-shadow: 0 0 1.7rem color-mix(in oklab, var(--lightblue), white 30%);
+	}
+
+	& .Card[upgraded] {
+		display: none;
+	}
+}
+
+.Cards--withUpgrades .Card {
+	height: 100%;
+}
+
+.Cards .Card {
+	width: var(--card-width);
+	height: var(--card-height);
+	flex-shrink: 1;
+}
+
+.Card {
+	position: relative;
+	display: flex;
+	border: 0.5em ridge #53b5a8;
+	border-image-source: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAA7ElEQVRYhe2YMQ6DMAxFcwBGRtaeoFUv0K2qOAa36NYDVmLjMmHB0VfqEJbG3xKRvkTiAE+OnYBD2FrfDdFSAVvfDfH7vpsqQQnMMk9xmad0jWOacJ4o79fGVSgEEsPnda1qbx7a8mdifxcIJ7aKm6qHBOZxuTURQsm7i0Djc/y7fAHhYEsgTCYqD6lZRrVk1h6iAZIYoglqOg/RAflZMtwLKDZGOg+dQe0OiO60t8oyutP+/B5yF9R0QH6yTEiplgxJW+jQv30urHagJ0v22n2lSkjyEF196EjRqlRK0cowaNfmaLYfGOuyHjKsYnCffLyABLkAAAAASUVORK5CYII=);
+	border-image-repeat: repeat;
+	border-image-slice: 6 6 6 6;
+	border-image-width: 0.75rem;
+	border-width: 0.5rem;
+	/*image-rendering: -moz-crisp-edges;*/
+	image-rendering: pixelated;
+}
+
+.Card-inner {
+	width: 100%;
+	flex: 1;
+	display: flex;
+	flex-flow: column nowrap;
+	background: #2a3335;
+	color: var(--text);
+	text-align: center;
+	user-select: none;
+}
+
+.Card-media {
+	margin: 0;
+	border-bottom: 2px solid #2a3335;
+	background: #111;
+}
+
+.Card-media img {
+	display: block;
+	width: 100%;
+	height: 120px;
+	object-fit: cover;
+	object-position: center top;
+}
+
+@media (max-height: 500px) {
+	.Card-media img {
+		height: 70px;
+	}
+}
+
+.Cards--mini .Card-name {
+	font-size: 1rem;
+}
+
+.Card-name {
+	padding: 0.5rem 0 0.1rem;
+	margin: 0;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.Card-type {
+	margin: -0.75rem auto 0;
+	padding: 2px 5px 4px;
+	font-family: "heliotrope_4_caps", sans-serif;
+	font-feature-settings: "ss10";
+	font-size: 0.75rem;
+	background: hsl(191.3, 33.3%, 18.8%);
+	border: 1px solid hsla(0, 0%, 0%, 0.2);
+	border-bottom-width: 2px;
+	border-radius: 0.4em;
+}
+
+.Card[data-card-type="attack"] .Card-type {
+	background: hsl(0deg 33% 19%);
+}
+
+.Cards--mini .Card-description {
+	font-size: 0.75rem;
+}
+
+.Card-description {
+	font-size: 0.875rem;
+	padding-left: 0.2em;
+	padding-right: 0.2em;
+	min-height: 2.5em;
+	margin: 0;
+	line-height: 1.2;
+}
+
+.Card-energy {
+	position: absolute;
+	top: -1.3em;
+	left: -0.3em;
+	width: 1.1em;
+	height: 1.1em;
+	margin-left: 0;
+	box-shadow: none;
+	border-width: 0.15rem;
+}
+
+.Hand .Card[disabled] .EnergyBadge {
+	color: #fb1515;
+	background-color: hsl(0deg 73% 25%);
+}
+
+.Cards-item {
+	display: flex;
+	flex-flow: column;
+
+	& stw-card + button {
+		margin: 0 auto;
+		font-size: 1rem;
+		position: relative;
+		top: -1rem;
+	}
+
+	& stw-card + button:active:not([disabled]) {
+		top: calc(-1rem + 2px);
+	}
+}

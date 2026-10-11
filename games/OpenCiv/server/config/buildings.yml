@@ -1,0 +1,442 @@
+# unique_to makes a building one civilization's unique building, built by that civ in place of the
+# building named in replaces and by nobody else.
+# maintenance is Civ 5's GoldMaintenance: gold the owner pays for the building every turn. Wonders and the
+# Palace have none.
+# is_wonder marks a great (world) wonder: one city in the whole world can have it, and once it's built
+# every other city building it loses it from its queue. national_wonder marks a national wonder: one
+# per civilization. Civ 5 has a national wonder need its building in every city; here it needs it in
+# the city building the wonder (requires_building).
+# Most wonder effects in Civ 5 lean on systems the game doesn't have yet (great people, policies,
+# religion), so a wonder's stats are a flat stand-in; the comment above each says what the real one does.
+# happiness adds to the owner's empire-wide happiness (see PlayerHappiness), wherever the building stands.
+# coastal: only a city beside the sea can build it. requires_building: the city must have that one first.
+# Buildings only give flat yields for now, so where Civ 5's effect is a percentage or per-tile bonus
+# (University's +33% Science, Harbor's +1 Production on sea tiles) the stats are a flat stand-in.
+buildings:
+  - name: Palace
+    asset_name: BUILDING_PALACE
+    stats:
+      - science: 3
+      - production: 3
+      - gold: 2
+      - defense: 2
+      - culture: 1
+  - name: Monument
+    asset_name: BUILDING_MONUMENT
+    cost: 60
+    maintenance: 1
+    stats:
+      - culture: 2
+  - name: Amphitheater
+    asset_name: BUILDING_AMPHITHEATER
+    cost: 100
+    maintenance: 1
+    required_tech: Drama and Poetry
+    stats:
+      - culture: 3
+  - name: Aqueduct
+    asset_name: BUILDING_AQUEDUCT
+    cost: 100
+    maintenance: 1
+    required_tech: Engineering
+    stats: []
+  - name: Bazaar
+    asset_name: BUILDING_BAZAAR
+    # Arabia's unique Market in Civ 5. Arabia isn't in the game yet, so nobody can build it.
+    unique_to: Arabia
+    replaces: Market
+    cost: 100
+    required_tech: Currency
+    stats:
+      - gold: 2
+      - science: 2
+  - name: Castle
+    asset_name: BUILDING_CASTLE
+    cost: 160
+    required_tech: Chivalry
+    requires_building: Walls
+    city_health: 25
+    stats:
+      - defense: 7
+  - name: Circus
+    asset_name: BUILDING_CIRCUS
+    cost: 80
+    maintenance: 1
+    required_tech: Trapping
+    stats:
+      - happiness: 2
+  - name: Colosseum
+    asset_name: BUILDING_COLOSSEUM
+    cost: 100
+    maintenance: 1
+    required_tech: Construction
+    stats:
+      - happiness: 3
+  - name: Colossus
+    asset_name: BUILDING_COLOSSUS
+    cost: 185
+    required_tech: Bronze Working
+    is_wonder: true
+    stats:
+      - culture: 1
+      - gold: 5
+  - name: Forge
+    asset_name: BUILDING_FORGE
+    cost: 120
+    maintenance: 1
+    required_tech: Metal Casting
+    stats:
+      - culture: 1
+  - name: Garden
+    asset_name: BUILDING_GARDEN
+    cost: 120
+    maintenance: 1
+    required_tech: Theology
+    stats:
+      - food: 1
+  - name: Granary
+    asset_name: BUILDING_GRANARY
+    cost: 40
+    maintenance: 1
+    required_tech: Pottery
+    stats:
+      - food: 2
+  - name: Great Library
+    asset_name: BUILDING_GREAT_LIBRARY
+    cost: 185
+    required_tech: Writing
+    is_wonder: true
+    stats:
+      - science: 3
+      - culture: 1
+  - name: Great Pyramids
+    asset_name: BUILDING_GREAT_PYRAMIDS
+    cost: 185
+    required_tech: Masonry
+    is_wonder: true
+    stats:
+      - culture: 1
+  - name: Hanging Gardens
+    asset_name: BUILDING_HANGING_GARDENS
+    cost: 250
+    required_tech: Mathematics
+    is_wonder: true
+    stats:
+      - food: 10
+      - culture: 1
+  - name: Harbor
+    asset_name: BUILDING_HARBOR
+    cost: 80
+    maintenance: 2
+    required_tech: Compass
+    coastal: true
+    stats:
+      - production: 2
+  - name: Library
+    asset_name: BUILDING_LIBRARY
+    cost: 75
+    maintenance: 1
+    required_tech: Writing
+    stats:
+      - science: 2
+  - name: Lighthouse
+    asset_name: BUILDING_LIGHTHOUSE
+    cost: 75
+    maintenance: 1
+    required_tech: Optics
+    coastal: true
+    stats:
+      - food: 1
+  - name: Machu Picchu
+    asset_name: BUILDING_MACHU_PICCHU
+    cost: 300
+    required_tech: Guilds
+    is_wonder: true
+    stats:
+      - culture: 1
+      - gold: 5
+  - name: Market
+    asset_name: BUILDING_MARKET
+    cost: 100
+    required_tech: Currency
+    stats:
+      - gold: 2
+  - name: Mint
+    asset_name: BUILDING_MINT
+    cost: 100
+    required_tech: Currency
+    stats: []
+  - name: National College
+    asset_name: BUILDING_NATIONAL_COLLEGE
+    cost: 135
+    required_tech: Philosophy
+    national_wonder: true
+    requires_building: Library
+    stats:
+      - science: 3
+      - culture: 1
+  - name: Shrine
+    asset_name: BUILDING_SHRINE
+    cost: 65
+    maintenance: 1
+    required_tech: Pottery
+    stats:
+      - culture: 1
+  - name: Stables
+    asset_name: BUILDING_STABLES
+    cost: 100
+    maintenance: 1
+    required_tech: Horseback Riding
+    stats: []
+  - name: Statue of Zeus
+    asset_name: BUILDING_STATUE_OF_ZEUS
+    cost: 185
+    required_tech: Bronze Working
+    is_wonder: true
+    stats:
+      - culture: 1
+  - name: Stonehenge
+    asset_name: BUILDING_STONEHENGE
+    cost: 185
+    required_tech: Calendar
+    is_wonder: true
+    stats:
+      - faith: 5
+  - name: Stoneworks
+    asset_name: BUILDING_STONEWORKS
+    cost: 75
+    maintenance: 1
+    required_tech: Calendar
+    stats:
+      - production: 1
+      - happiness: 1
+  - name: Temple
+    asset_name: BUILDING_TEMPLE
+    cost: 100
+    maintenance: 2
+    required_tech: Philosophy
+    requires_building: Shrine
+    stats:
+      - faith: 2
+  - name: Terracotta Army
+    asset_name: BUILDING_TERRACOTTA_ARMY
+    cost: 200
+    required_tech: Construction
+    is_wonder: true
+    stats:
+      - culture: 1
+  - name: University
+    asset_name: BUILDING_UNIVERSITY
+    cost: 160
+    maintenance: 3
+    required_tech: Education
+    requires_building: Library
+    stats:
+      - science: 3
+  - name: Walls
+    asset_name: BUILDING_WALLS
+    cost: 75
+    maintenance: 1
+    required_tech: Masonry
+    # A city's `defense` stat adds to its combat strength (see City.getBaseStrength()).
+    city_health: 50
+    stats:
+      - defense: 5
+  - name: Water Mill
+    asset_name: BUILDING_WATER_MILL
+    cost: 75
+    maintenance: 2
+    required_tech: The Wheel
+    stats:
+      - food: 2
+      - production: 1
+  - name: Workshop
+    asset_name: BUILDING_WORKSHOP
+    cost: 120
+    maintenance: 2
+    required_tech: Metal Casting
+    stats:
+      - production: 2
+
+  # Great wonders from Brave New World's Ancient to Medieval eras.
+  - name: Temple of Artemis
+    # +10% Food in all cities, +1 Culture.
+    asset_name: BUILDING_TEMPLE_OF_ARTEMIS
+    cost: 185
+    required_tech: Archery
+    is_wonder: true
+    stats:
+      - food: 3
+      - culture: 1
+  - name: Great Lighthouse
+    # +1 Movement and +1 Sight for naval units.
+    asset_name: BUILDING_GREAT_LIGHTHOUSE
+    cost: 185
+    required_tech: Optics
+    is_wonder: true
+    coastal: true
+    stats:
+      - gold: 2
+      - culture: 1
+  - name: Mausoleum of Halicarnassus
+    # +2 Gold whenever a Great Person is expended, +1 Culture on Stone and Marble.
+    asset_name: BUILDING_MAUSOLEUM_OF_HALICARNASSUS
+    cost: 185
+    required_tech: Masonry
+    is_wonder: true
+    stats:
+      - gold: 3
+      - culture: 1
+  - name: Oracle
+    # A free Social Policy.
+    asset_name: BUILDING_ORACLE
+    cost: 250
+    required_tech: Philosophy
+    is_wonder: true
+    stats:
+      - culture: 4
+  - name: Parthenon
+    # A free Great Work of Art.
+    asset_name: BUILDING_PARTHENON
+    cost: 250
+    required_tech: Drama and Poetry
+    is_wonder: true
+    stats:
+      - culture: 4
+  - name: Petra
+    # +1 Food and +1 Production on the city's Desert tiles.
+    asset_name: BUILDING_PETRA
+    cost: 250
+    required_tech: Currency
+    is_wonder: true
+    stats:
+      - food: 2
+      - production: 2
+  - name: Great Wall
+    # Enemy land units spend all their movement on entering your territory.
+    asset_name: BUILDING_GREAT_WALL
+    cost: 250
+    required_tech: Engineering
+    is_wonder: true
+    stats:
+      - defense: 5
+      - culture: 1
+  - name: Hagia Sophia
+    # A free Great Prophet.
+    asset_name: BUILDING_HAGIA_SOPHIA
+    cost: 300
+    required_tech: Theology
+    is_wonder: true
+    stats:
+      - faith: 4
+      - culture: 1
+  - name: Borobudur
+    # Three free Missionaries.
+    asset_name: BUILDING_BOROBUDUR
+    cost: 300
+    required_tech: Theology
+    is_wonder: true
+    stats:
+      - faith: 5
+  - name: Great Mosque of Djenne
+    # Missionaries spread religion three times instead of twice.
+    asset_name: BUILDING_GREAT_MOSQUE_OF_DJENNE
+    cost: 300
+    required_tech: Theology
+    is_wonder: true
+    stats:
+      - faith: 3
+      - culture: 1
+  - name: Chichen Itza
+    # +4 Happiness. Golden Ages last 50% longer.
+    asset_name: BUILDING_CHICHEN_ITZA
+    cost: 300
+    required_tech: Civil Service
+    is_wonder: true
+    stats:
+      - happiness: 4
+      - culture: 1
+  - name: Angkor Wat
+    # Tiles cost 25% less Culture and Gold to acquire in all cities.
+    asset_name: BUILDING_ANGKOR_WAT
+    cost: 400
+    required_tech: Education
+    is_wonder: true
+    stats:
+      - culture: 5
+  - name: Himeji Castle
+    # +15% Combat Strength for units fighting in friendly territory.
+    asset_name: BUILDING_HIMEJI_CASTLE
+    cost: 400
+    required_tech: Chivalry
+    is_wonder: true
+    city_health: 25
+    stats:
+      - defense: 8
+      - culture: 1
+  - name: Alhambra
+    # A free Castle in the city, and the Drill I promotion for units trained there. The defense stands in
+    # for the Castle.
+    asset_name: BUILDING_ALHAMBRA
+    cost: 400
+    required_tech: Chivalry
+    is_wonder: true
+    stats:
+      - defense: 7
+      - culture: 3
+  - name: Notre Dame
+    # +10 Happiness.
+    asset_name: BUILDING_NOTRE_DAME
+    cost: 400
+    required_tech: Physics
+    is_wonder: true
+    stats:
+      - happiness: 10
+      - culture: 1
+
+  # National wonders.
+  - name: National Epic
+    # +25% Great People generation in the city.
+    asset_name: BUILDING_NATIONAL_EPIC
+    cost: 125
+    required_tech: Drama and Poetry
+    national_wonder: true
+    requires_building: Monument
+    stats:
+      - culture: 2
+  - name: Circus Maximus
+    # +5 Happiness.
+    asset_name: BUILDING_CIRCUS_MAXIMUS
+    cost: 125
+    required_tech: Horseback Riding
+    national_wonder: true
+    requires_building: Colosseum
+    stats:
+      - happiness: 5
+  - name: Grand Temple
+    # Doubles the city's religious pressure, +8 Faith.
+    asset_name: BUILDING_GRAND_TEMPLE
+    cost: 125
+    required_tech: Theology
+    national_wonder: true
+    requires_building: Temple
+    stats:
+      - faith: 8
+  - name: Oxford University
+    # A free Technology, +3 Science.
+    asset_name: BUILDING_OXFORD_UNIVERSITY
+    cost: 125
+    required_tech: Education
+    national_wonder: true
+    requires_building: University
+    stats:
+      - science: 5
+  - name: Ironworks
+    # +10 Production.
+    asset_name: BUILDING_IRONWORKS
+    cost: 125
+    required_tech: Machinery
+    national_wonder: true
+    requires_building: Workshop
+    stats:
+      - production: 10

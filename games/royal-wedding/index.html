@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+
+		<script src="js/common/rot.js"></script>
+		<script src="js/game.js"></script>
+		<script src="js/common/promise.js"></script>
+		<script src="js/common/promise-request.js"></script>
+		<script src="js/common/levelmanager.js"></script>
+		<script src="js/common/level.js"></script>
+		<script src="js/common/entity.js"></script>
+		<script src="js/common/repository.js"></script>
+		<script src="js/common/being.js"></script>
+		<script src="js/common/cell.js"></script>
+		<script src="js/common/item.js"></script>
+		<script src="js/common/lib/healingpotion.js"></script>
+		<script src="js/common/lib/food.js"></script>
+		<script src="js/common/lib/door.js"></script>
+		<script src="js/common/lib/weapon.js"></script>
+		<script src="js/common/lib/armor.js"></script>
+		<script src="js/common/lib/beings.js"></script>
+		<script src="js/common/lib/cells.js"></script>
+		<script src="js/common/lib/items.js"></script>
+
+		<script src="js/display.js"></script>
+		<script src="js/ai.js"></script>
+		<script src="js/intro.js"></script>
+		<script src="js/story.js"></script>
+		<script src="js/status.js"></script>
+		<script src="js/stats.js"></script>
+		<script src="js/legend.js"></script>
+		<script src="js/player.js"></script>
+		<script src="js/lib/gate.js"></script>
+		<script src="js/lib/bride.js"></script>
+		<script src="js/lib/beings.js"></script>
+		<script src="js/lib/cells.js"></script>
+		<script src="js/lib/items.js"></script>
+
+		<script src="levels/forest.js"></script>
+		<script src="levels/castle.js"></script>
+		<script src="levels/chapel.js"></script>
+		<script src="levels/dungeon.js"></script>
+
+		<title>The Royal Wedding</title>
+
+		<link href="css/style.css" rel="stylesheet" type="text/css" />
+		<link href='https://fonts.googleapis.com/css?family=PT+Mono|Merienda|Droid+Sans+Mono&subset=latin,latin-ext' rel='stylesheet' type='text/css' />
+	</head>
+	<body>
+		<pre id="intro">
+      _______________________________________________  
+     /                                           /   \ 
+    /            <span>This deed confirms</span>             /___  \
+    |    <span>that you have been invited to attend</span>   | /_\ |
+    |                                           |_\___/
+    |             <strong>THE ROYAL WEDDING</strong>             |      
+    |                                           |      
+    |     <span>(an introductory Rogue-like game)</span>     |      
+    |                                           |      
+    |                                           |      
+    |        <span>Please confirm your concern</span>        |      
+    |           <span>(and start the game)</span>            |      
+    |            <span>by hitting any key</span>             |      
+    |                                           |      
+    |                                           |      
+    |                                           |      
+    |                                           |      
+    |                                           |      
+    |                                           |      
+    |                                           |      
+    |                                           |      
+    |                                           |      
+    |                                           |      
+    |      <span>Created by <a href="https://ondras.zarovi.cz/">Ondřej Žára</a></span>               |      
+    |      <span>using <a href="https://ondras.github.io/rot.js/">rot.js</a></span>                         |      
+    |      <span>forkable at <a href="https://github.com/ondras/trw">GitHub</a></span>                   |      
+____|______________________________________     |      
+\                                          \    /      
+ \__________________________________________\__/       <em></em>
+</pre>
+		<div id="text">
+			<div id="story">
+				<a id="prev">◀</a><span>The story so far...</span><a id="next">▶</a>
+				<div id="current"></div>
+				<div id="task"></div>
+			</div>
+			<p id="status"></p>
+			<p id="stats"></p>
+		</div>
+		<div id="level"></div>
+		<div id="legend"></div>
+	<script src="../__i18n.js"></script></body>
+</html>

@@ -1,0 +1,128 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+import { t } from 'i18next';
+import { use, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { z } from 'zod';
+import {
+  Section,
+  SectionContent,
+} from 'app/(game)/(village-slug)/components/building-layout';
+import { useCurrentVillage } from 'app/(game)/(village-slug)/hooks/current-village/use-current-village';
+import { InformationPopover } from 'app/(game)/components/information-popover';
+import {
+  currentVillageCacheKey,
+  villageListingCacheKey,
+} from 'app/(game)/constants/query-keys';
+import { ApiContext } from 'app/(game)/providers/api-context';
+import { Text } from 'app/components/text';
+import { Button } from 'app/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from 'app/components/ui/form';
+import { Input } from 'app/components/ui/input';
+import { invalidateQueries } from 'app/utils/react-query';
+
+const formSchema = z.strictObject({
+  name: z
+    .string()
+    .min(1, { error: t('Village name is required') })
+    .max(30, { error: t('Name cannot be longer than 30 characters') }),
+});
+
+export const RenameVillage = () => {
+  const { apiClient } = use(ApiContext);
+  const { t } = useTranslation();
+  const { currentVillage } = useCurrentVillage();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: currentVillage.name,
+    },
+  });
+  const { reset } = form;
+
+  useEffect(() => {
+    reset({ name: currentVillage.name });
+  }, [currentVillage.name, reset]);
+
+  const { mutate: renameVillage } = useMutation<
+    void,
+    Error,
+    z.infer<typeof formSchema>
+  >({
+    mutationFn: async ({ name }) => {
+      await apiClient.patch('/villages/:villageId', {
+        path: {
+          villageId: currentVillage.id,
+        },
+        body: {
+          name,
+        },
+      });
+    },
+    onSuccess: async (_data, _vars, _onMutateResult, context) => {
+      await invalidateQueries(context, [
+        [currentVillageCacheKey, currentVillage.slug],
+        [villageListingCacheKey],
+      ]);
+      toast.success(t('Village renamed'));
+    },
+  });
+
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    renameVillage(values);
+  };
+
+  return (
+    <Section>
+      <SectionContent>
+        <InformationPopover ariaLabel={t('Rename village')}>
+          <Text>
+            {t('Rename current village. Name cannot exceed 30 characters.')}
+          </Text>
+        </InformationPopover>
+        <Text as="h2">{t('Rename village')}</Text>
+      </SectionContent>
+      <SectionContent>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col gap-2 mt-2"
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>{t('Village name')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t('Village name')}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              size="fit"
+              type="submit"
+            >
+              {t('Update village name')}
+            </Button>
+          </form>
+        </Form>
+      </SectionContent>
+    </Section>
+  );
+};

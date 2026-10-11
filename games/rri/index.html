@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="theme-color" content="#def" />
+
+		<link rel="manifest" href="manifest.webmanifest" />
+		<link rel="stylesheet" href="client/client.css" />
+		<link rel="icon" href="img/icon.svg" />
+		<link rel="apple-touch-icon" href="img/icon-192.png" />
+
+		<title>Railroad Ink</title>
+	</head>
+
+	<body>
+		<h1>Railroad Ink</h1>
+		<main>
+			<section id="intro">
+				<p>Tap to place/rotate, double-tap to remove.</p>
+				<ul>
+					<li><button name="start-normal"><strong>Play normal game</strong></button></li>
+					<li><button name="start-lake">Play with lakes</button></li>
+					<li><button name="start-river">Play with rivers</button></li>
+					<li><button name="start-forest">Play with forests</button></li>
+					<li><button name="start-multi">Multiplayer</button></li>
+				</ul>
+			</section>
+
+			<section id="game"></section>
+
+			<section id="outro">
+				<h2>Game over</h2>
+				<ul>
+					<li><button name="again"><strong>Play again</strong></button></li>
+					<li><button name="download">Download an image of the game</button></li>
+				</ul>
+			</section>
+
+			<section id="score"></section>
+		</main>
+		<footer>
+			<ul>
+				<li><a target="_blank" href="https://www.horribleguild.com/railroad-ink-deep-blue/">Railroad Ink</a> &copy; Horrible Games</li>
+				<li><a target="_blank" href="https://github.com/ondras/rri/">Instructions &amp; Source</a></li>
+				<li><a target="_blank" href="https://cdn.1j1ju.com/medias/9c/f7/6c-railroad-ink-deep-blue-edition-rulebook.pdf">Official rules</a></li>
+			</ul>
+		</footer>
+
+		<template>
+			<div id="multi-setup">
+				<table>
+					<tr>
+						<td>Your name: </td><td><input name="player-name" value="player" /></td>
+					</tr>
+					<tr>
+						<td>Game name: </td><td><input name="game-name" value="game" /></td>
+					</tr>
+				</table>
+				<ul>
+					<li><button name="create-normal">Create normal game</button></li>
+					<li><button name="join">Join game</button></li>
+					<li><button name="continue">Continue game</button></li>
+				</ul>
+
+				<ul>
+					<li><button name="create-lake">Create game with lakes</button></li>
+					<li><button name="create-river">Create game with rivers</button></li>
+					<li><button name="create-forest">Create game with forests</button></li>
+				</ul>
+			</div>
+			<div id="multi-lobby">
+				<h2>Players</h2>
+				<ul></ul>
+				<button name="start"></button>
+			</div>
+		</template>
+
+		<script type="module" src="client/client.js"></script>
+		<script>navigator.serviceWorker.register("sw.js");</script>
+	<script src="../__i18n.js"></script></body>
+</html>

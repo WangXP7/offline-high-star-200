@@ -1,0 +1,166 @@
+html, body{
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  touch-action: manipulation;
+}
+
+body {
+  background: url("ui/bg.png");
+  text-align: center;
+  font: 12px sans-serif;
+}
+
+.centered {
+  text-align: center !important;
+}
+
+.maple-window {
+  margin: 5px;
+  vertical-align: top;
+	display: inline-block;
+	border-width: 26px 12px 20px 12px;
+	border-style: solid;
+	border-image: url("ui/mac-frame.png") 30 40 22 22 fill repeat;
+	border-image-width: 30px 40px 22px 22px;
+	color: #000;
+	position: relative;
+	text-align: left;
+	font-size: 12px;
+	font-family: geneva, sans-serif;
+	min-width: 200px;
+	box-sizing: border-box;
+}
+
+.maple-window a {
+  color: #9999cc;
+  text-shadow: none;
+}
+.maple-window a:hover {
+  color: #ccccff;
+}
+
+.maple-window-title {
+  position: absolute;
+  top: -23px;
+  text-align: center;
+  width: 100%;
+  left: 0;
+}
+
+.maple-window-title > span {
+  background: #ccc;
+  padding: 1px 5px 1px 5px;
+	font-size: 12px;
+	font-weight: bold;
+  font-family: chicago, sans-serif;
+  /*vertical-align: middle;*/
+  margin-right: 20px;
+  white-space: nowrap;
+}
+
+/*#camera {
+	position: fixed;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+}*/
+
+#app-view {
+	height: 100%;
+	width: 100%;
+	/*image-rendering: -moz-crisp-edges;
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: -o-crisp-edges;
+	image-rendering: crisp-edges;*/
+}
+
+#camera-stream, #camera-output, #camera-view, .hidden {
+	display: none;
+}
+
+.button {
+	width: 200px;
+	background-color: black;
+	color: white;
+	font-size: 16px;
+	border-radius: 30px;
+	border: none;
+	padding: 15px 20px;
+	text-align: center;
+	box-shadow: 0 5px 10px 0 rgba(0,0,0,0.2);
+	/*position: fixed;
+	bottom: 30px;
+	left: calc(50% - 100px);*/
+}
+.right {
+	float: right;
+}
+
+.modal {
+	position: absolute;
+	top: 0;
+	left: 0;
+	max-width: 80%;
+	max-height: 80%;
+	transform: translate(calc(50vw - 50%),calc(50vh - 50%));
+}
+
+#gif-img {
+	object-fit: scale-down;
+	max-width:100%;
+	display: block;
+	margin: auto;
+}
+#gif-buttons {
+	margin: .5em;
+}
+
+.blink {
+	color: #f00;
+	text-align: center;
+	animation: blink-animation 1s steps(5, start) 4;
+	-webkit-animation: blink-animation 1s steps(5, start) 4;
+}
+@keyframes blink-animation {
+	to {
+		visibility: hidden;
+	}
+}
+@-webkit-keyframes blink-animation {
+	to {
+		visibility: hidden;
+	}
+}
+
+ul {
+	margin-top: -1em;
+	padding: 0;
+	list-style: none;
+}
+
+#main-app-window {
+	width: 98%;
+	top: 48%;
+  transform: translateY(-50%);
+}
+
+#camera {
+	display: inline-block;
+	width: 100%;
+}
+
+@media (orientation:landscape)  {
+	#main-app-window {
+		width: unset;
+		height: 98%;
+		top: unset;
+		transform: unset;
+	}
+
+	#camera {
+		width: unset;
+		height: calc(100% - 2rem);
+	}
+}

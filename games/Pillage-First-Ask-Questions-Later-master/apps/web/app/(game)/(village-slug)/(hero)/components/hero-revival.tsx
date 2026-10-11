@@ -1,0 +1,111 @@
+import { use } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  calculateHeroLevel,
+  calculateHeroRevivalCost,
+  calculateHeroRevivalTime,
+} from '@pillage-first/game-assets/utils/hero';
+import { useReviveHero } from 'app/(game)/(village-slug)/(hero)/hooks/use-revive-hero';
+import { SectionContent } from 'app/(game)/(village-slug)/components/building-layout';
+import { Countdown } from 'app/(game)/(village-slug)/components/countdown';
+import { ErrorBag } from 'app/(game)/(village-slug)/components/error-bag';
+import { Resources } from 'app/(game)/(village-slug)/components/resources';
+import { useCurrentVillage } from 'app/(game)/(village-slug)/hooks/current-village/use-current-village';
+import { useResourceAvailability } from 'app/(game)/(village-slug)/hooks/current-village/use-has-enough-resources';
+import { useHasEnoughStorageCapacity } from 'app/(game)/(village-slug)/hooks/current-village/use-has-enough-storage-capacity';
+import { useDeveloperSettings } from 'app/(game)/(village-slug)/hooks/use-developer-settings';
+import { useEventsByType } from 'app/(game)/(village-slug)/hooks/use-events-by-type';
+import { useHero } from 'app/(game)/(village-slug)/hooks/use-hero';
+import { useServer } from 'app/(game)/(village-slug)/hooks/use-server';
+import { CurrentVillageLiveResourcesSnapshotContext } from 'app/(game)/(village-slug)/providers/current-village-live-resources-context';
+import { InformationPopover } from 'app/(game)/components/information-popover';
+import { Icon } from 'app/components/icon';
+import { Text } from 'app/components/text';
+import { Button } from 'app/components/ui/button';
+import { formatTime } from 'app/utils/time';
+
+export const HeroRevival = () => {
+  const { t } = useTranslation();
+  const { developerSettings } = useDeveloperSettings();
+  const { hero } = useHero();
+  const { reviveHero } = useReviveHero();
+  const { server } = useServer();
+  const { currentVillage } = useCurrentVillage();
+  const currentResources = use(CurrentVillageLiveResourcesSnapshotContext);
+  const { eventsByType: heroRevivalEvents } = useEventsByType('heroRevival');
+
+  const { isInstantHeroReviveEnabled, isFreeHeroReviveEnabled } =
+    developerSettings;
+
+  const isReviving = heroRevivalEvents.length > 0;
+  const { experience } = hero.stats;
+  const { level } = calculateHeroLevel(experience);
+
+  const revivalCost = isFreeHeroReviveEnabled
+    ? [0, 0, 0, 0]
+    : calculateHeroRevivalCost(server.playerConfiguration.tribe, level);
+
+  const revivalTime = isInstantHeroReviveEnabled
+    ? 0
+    : calculateHeroRevivalTime(level) / server.configuration.speed;
+
+  const { errorBag: hasEnoughResourcesErrorBag } =
+    useResourceAvailability(revivalCost);
+  const { errorBag: hasEnoughWarehouseCapacityErrorBag } =
+    useHasEnoughStorageCapacity('warehouseCapacity', revivalCost);
+  const { errorBag: hasEnoughGranaryCapacityErrorBag } =
+    useHasEnoughStorageCapacity('granaryCapacity', revivalCost);
+
+  const errorBag = [
+    ...hasEnoughResourcesErrorBag,
+    ...hasEnoughWarehouseCapacityErrorBag,
+    ...hasEnoughGranaryCapacityErrorBag,
+  ];
+
+  if (currentVillage.id !== hero.villageId) {
+    errorBag.push('Hero can only be revived in its home village.');
+  }
+
+  const canRevive = errorBag.length === 0 && !isReviving;
+
+  return (
+    <SectionContent>
+      <InformationPopover ariaLabel={t('Revive hero')}>
+        <Text>
+          {t(
+            "Your hero is dead. While the hero is dead, it can not produce resources, give bonuses or start adventures. Revival cost and duration increases with your hero's level. Hero can only be revived in its home village.",
+          )}
+        </Text>
+      </InformationPopover>
+      <Text as="h2">{t('Revive hero')}</Text>
+      {isReviving && (
+        <Text className="font-medium">
+          {t('Your hero is currently being healed and will be ready in ')}
+          <Countdown endsAt={heroRevivalEvents[0].resolvesAt} />
+        </Text>
+      )}
+      {!isReviving && (
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <Resources
+              availableResources={currentResources}
+              resources={revivalCost}
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <Icon type="heroRevivalDuration" />
+            <Text>{formatTime(revivalTime)}</Text>
+          </div>
+          <ErrorBag errorBag={errorBag} />
+          <Button
+            size="fit"
+            onClick={() => reviveHero()}
+            disabled={!canRevive}
+          >
+            {t('Revive')}
+          </Button>
+        </div>
+      )}
+    </SectionContent>
+  );
+};

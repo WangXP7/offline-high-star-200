@@ -1,0 +1,157 @@
+# combat_strength is Civ 5's melee Combat Strength: what the unit attacks with in melee and
+# defends with against any attack. Units without it (civilians) can't fight at all.
+# ranged_strength and range make a unit ranged (Civ 5's Ranged Combat Strength and Range): it shoots
+# at enemies up to `range` tiles away that it has line of sight to, and takes no damage doing so.
+# combat_strength is still what it defends with, and it can't melee attack.
+# captured_as is what a civilian becomes when an enemy melee unit takes its tile (Civ 5 turns a
+# captured Settler into a Worker, which is our Builder). Civilians without it are destroyed instead.
+# unique_to makes a unit one civilization's unique unit, built by that civ in place of the unit named
+# in replaces and by nobody else.
+# domain: sea marks a ship: it only moves on water (and into its owner's coastal cities), and only
+# coastal cities can build it. coast_only keeps a ship off deep ocean, like Civ 5's Trireme.
+# obsolete_tech is Civ 5's ObsoleteTech: once it's researched, cities stop offering the unit and drop it
+# from their production queues (units already on the map stay). Each is the tech that unlocks the unit it
+# upgrades to.
+# A city training a Settler stops growing: its spare food goes into production instead, as in Civ 5.
+units:
+  - name: Warrior
+    combat_strength: 8
+    attack_type: melee
+    cost: 30
+    obsolete_tech: Iron Working
+  - name: Scout
+    combat_strength: 5
+    attack_type: melee
+    cost: 20
+    default_move_distance: 3
+    sight_range: 3
+    ignores_terrain_cost: true
+  - name: Settler
+    is_utility: true
+    cost: 106
+    captured_as: Builder
+  - name: Archer
+    combat_strength: 5
+    ranged_strength: 7
+    range: 2
+    attack_type: ranged
+    cost: 40
+    required_tech: Archery
+    obsolete_tech: Construction
+  - name: Builder
+    is_utility: true
+    captured_as: Builder
+    cost: 50
+  - name: Caravan
+    is_utility: true
+    cost: 75
+    required_tech: Animal Husbandry
+  - name: Cargo Ship
+    is_utility: true
+    domain: sea
+    cost: 100
+    required_tech: Sailing
+  - name: Work Boat
+    is_utility: true
+    domain: sea
+    cost: 30
+    required_tech: Sailing
+  - name: Galley
+    combat_strength: 10
+    attack_type: naval
+    domain: sea
+    coast_only: true
+    cost: 45
+    required_tech: Sailing
+    obsolete_tech: Compass
+  - name: Spearman
+    combat_strength: 11
+    attack_type: melee
+    cost: 56
+    required_tech: Bronze Working
+    obsolete_tech: Civil Service
+  - name: Chariot Archer
+    combat_strength: 6
+    ranged_strength: 10
+    range: 2
+    attack_type: ranged
+    cost: 56
+    required_tech: The Wheel
+    obsolete_tech: Chivalry
+  - name: Horseman
+    combat_strength: 12
+    attack_type: melee
+    cost: 75
+    default_move_distance: 3
+    required_tech: Horseback Riding
+    obsolete_tech: Chivalry
+  - name: Swordsman
+    combat_strength: 14
+    attack_type: melee
+    cost: 75
+    required_tech: Iron Working
+    obsolete_tech: Steel
+  - name: Legion
+    unique_to: Rome
+    replaces: Swordsman
+    combat_strength: 17
+    attack_type: melee
+    cost: 75
+    required_tech: Iron Working
+    obsolete_tech: Steel
+  - name: Composite Bowman
+    combat_strength: 7
+    ranged_strength: 11
+    range: 2
+    attack_type: ranged
+    cost: 75
+    required_tech: Construction
+    obsolete_tech: Machinery
+  - name: Catapult
+    combat_strength: 7
+    ranged_strength: 8
+    range: 2
+    attack_type: siege
+    cost: 75
+    required_tech: Mathematics
+    obsolete_tech: Physics
+  - name: Pikeman
+    combat_strength: 16
+    attack_type: melee
+    cost: 90
+    required_tech: Civil Service
+  - name: Crossbowman
+    combat_strength: 13
+    ranged_strength: 18
+    range: 2
+    attack_type: ranged
+    cost: 120
+    required_tech: Machinery
+  - name: Galleass
+    combat_strength: 16
+    ranged_strength: 17
+    range: 2
+    attack_type: naval
+    domain: sea
+    coast_only: true
+    cost: 100
+    default_move_distance: 3
+    required_tech: Compass
+  - name: Knight
+    combat_strength: 20
+    attack_type: melee
+    cost: 120
+    default_move_distance: 4
+    required_tech: Chivalry
+  - name: Trebuchet
+    combat_strength: 12
+    ranged_strength: 14
+    range: 2
+    attack_type: siege
+    cost: 120
+    required_tech: Physics
+  - name: Longswordsman
+    combat_strength: 21
+    attack_type: melee
+    cost: 120
+    required_tech: Steel

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#061015">
+<meta name="color-scheme" content="dark">
+<style>html,body{margin:0;min-height:100%;background:#061015;color-scheme:dark}</style>
+<meta name="description" content="使用 WebGL 硬件加速的星团大作战网页版游戏">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<title>星团大作战</title>
+<link rel="stylesheet" href="./css/game.css">
+<link rel="stylesheet" href="./css/match-guide.css">
+</head>
+<body>
+  <canvas id="gpuCanvas" aria-hidden="true"></canvas>
+  <canvas id="gameCanvas" aria-label="星团大作战游戏画面"></canvas>
+  <div class="event-banner" id="eventBanner"></div>
+  <div class="lobby-toast" id="lobbyToast"></div>
+
+  <div class="hud">
+    <section class="brand panel" aria-label="玩家状态">
+      <div class="brand-head">
+        <h1>星团大作战</h1>
+        <span class="render-badge" id="renderBadge" role="status">检测显卡…</span>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="label">质量</div>
+          <div class="value" id="massValue">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">排名</div>
+          <div class="value" id="rankValue">1</div>
+        </div>
+        <div class="stat">
+          <div class="label">分身</div>
+          <div class="value" id="cellValue">1</div>
+        </div>
+        <div class="stat">
+          <div class="label">淘汰</div>
+          <div class="value" id="killValue">0</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="leaderboard panel" aria-label="排行榜">
+      <h2>排行榜</h2>
+      <div class="rank-list" id="rankList"></div>
+    </section>
+
+    <section class="status panel" aria-label="状态">
+      <h2>战况</h2>
+      <div class="tag-list" id="tagList"></div>
+    </section>
+
+    <section class="minimap panel" aria-label="小地图">
+      <canvas id="miniCanvas" width="134" height="134"></canvas>
+    </section>
+
+    <div class="joystick" id="joystick" aria-label="移动摇杆">
+      <div class="joystick-base"></div>
+      <div class="joystick-stick" id="joystickStick"></div>
+    </div>
+
+    <nav class="controls" aria-label="游戏控制">
+      <button class="icon-btn primary" id="splitBtn" title="分裂 空格" aria-label="分裂">分</button>
+      <button class="icon-btn warn" id="ejectBtn" title="按住吐球 W" aria-label="按住吐球">吐</button>
+      <button class="icon-btn" id="pauseBtn" title="暂停或继续 P" aria-label="暂停或继续">停</button>
+      <button class="icon-btn" id="musicBtn" title="BGM 开关" aria-label="BGM 开关">音</button>
+      <button class="icon-btn" id="menuBtn" title="返回主界面" aria-label="返回主界面">厅</button>
+      <button class="icon-btn" id="restartBtn" title="打开暂停菜单，确认重新开始 R" aria-label="暂停与重新开始">新</button>
+    </nav>
+  </div>
+
+  <main class="title-screen" id="titleScreen" aria-label="游戏主菜单">
+    <div class="title-shell">
+      <aside class="title-rail">
+        <div class="title-brand">
+          <span class="title-kicker">STAR CLUSTER ARENA</span>
+          <h1>星团<br>大作战</h1>
+          <p>吞噬 · 分裂 · 制霸星域</p>
+        </div>
+        <nav class="title-nav" aria-label="主菜单">
+          <button class="title-action primary" id="titleSingleBtn" type="button"><span>单人游戏</span><small>10 种完整模式</small></button>
+          <button class="title-action online" id="titleOnlineBtn" type="button"><span>联机游戏</span><small>局域网 / 互联网房间</small></button>
+          <button class="title-action" id="titleProfileBtn" type="button"><span>个人中心</span><small>外观、成长、商店与锻造</small></button>
+          <button class="title-action" type="button" data-title-open="settings"><span>设置</span><small>画面与网络</small></button>
+          <button class="title-action" type="button" data-title-open="controls"><span>操作方式</span><small>键鼠与触屏</small></button>
+          <button class="title-action" type="button" data-title-open="about"><span>关于</span><small>开源与反馈</small></button>
+          <button class="title-action desktop-only" id="titleQuitBtn" type="button"><span>退出游戏</span><small>关闭桌面版</small></button>
+        </nav>
+      </aside>
+
+      <section class="title-content">
+        <div class="title-panel active" data-title-panel="home">
+          <div class="hero-orbit" aria-hidden="true"><i></i><i></i><i></i></div>
+          <span class="hero-label">1.0 · STAR CLUSTER ARENA</span>
+          <h2>吞下万千星光<br>成为星域之王</h2>
+          <p>从一颗小星团开始，吞噬星尘、分裂追击，与朋友一起争夺星域。十种战场，十种制胜方式。</p>
+          <div class="hero-chips" aria-label="版本特性">
+            <span>240 FPS 可选</span><span>百人 AI 战场</span><span>好友联机</span><span>硬件加速</span>
+          </div>
+          <button class="hero-start" id="heroStartBtn" type="button">进入单人大厅 <b>→</b></button>
+        </div>
+
+        <div class="title-panel" data-title-panel="settings" hidden>
+          <header class="title-panel-head"><div><span>OPTIONS</span><h2>游戏设置</h2></div><button type="button" data-title-back>返回</button></header>
+          <form class="settings-grid" id="gameSettingsForm">
+            <label><span>显示模式<small>桌面版支持窗口化与无边框全屏</small></span><select name="displayMode"><option value="windowed">窗口化</option><option value="borderless-fullscreen">无边框全屏</option></select></label>
+            <label><span>窗口大小<small>仅改变窗口占用空间，不代表清晰度</small></span><select name="windowSize"><option value="current">保持当前大小</option><option value="1280x720">1280 × 720</option><option value="1440x900">1440 × 900</option><option value="1600x900">1600 × 900</option><option value="1920x1080">1920 × 1080</option></select></label>
+            <label><span>图形帧率<small>自动会匹配桌面显示器刷新率</small></span><select name="frameRate"><option value="auto">自动</option><option value="60">60 FPS</option><option value="90">90 FPS</option><option value="120">120 FPS</option><option value="144">144 FPS</option><option value="165">165 FPS</option><option value="240">240 FPS</option></select></label>
+            <label><span>渲染清晰度<small>控制内部渲染比例，不改变窗口或显示器分辨率</small></span><select name="quality"><option value="auto">自动（最高 1.25×）</option><option value="performance">性能（最高 1.0×）</option><option value="balanced">清晰（最高 1.25×）</option><option value="high">超清（最高 1.5×）</option></select></label>
+            <label><span>联机缓冲<small>低延迟更灵敏，稳定档更抗抖动</small></span><select name="networkBuffer"><option value="low">低延迟</option><option value="balanced">均衡</option><option value="stable">稳定</option></select></label>
+            <label class="toggle-row"><span>显示性能信息<small>显示图形 FPS、渲染器和权威 Hz</small></span><input type="checkbox" name="showPerformance"></label>
+            <label class="toggle-row"><span>屏幕震动<small>关闭后仍保留击中反馈</small></span><input type="checkbox" name="screenShake"></label>
+            <label><span>主音量<small>0 代表静音；所有声音均为原创合成音</small></span><input type="range" name="masterVolume" min="0" max="1" step="0.05"></label>
+            <label><span>背景音乐<small>大厅 / 对局的 BGM 按钮独立开关</small></span><input type="range" name="musicVolume" min="0" max="1" step="0.05"></label>
+            <label><span>音效音量<small>吞噬、分裂、吐球和技能反馈</small></span><input type="range" name="effectsVolume" min="0" max="1" step="0.05"></label>
+            <div class="settings-note" id="displayRefreshNote">正在检测显示器刷新率…</div>
+            <div class="settings-actions"><button type="button" data-title-back>取消</button><button class="save" type="submit">保存并应用</button></div>
+          </form>
+        </div>
+
+        <div class="title-panel" data-title-panel="controls" hidden>
+          <header class="title-panel-head"><div><span>HOW TO PLAY</span><h2>操作方式</h2></div><button type="button" data-title-back>返回</button></header>
+          <div class="control-guide">
+            <article><kbd>鼠标</kbd><div><strong>移动</strong><p>指针相对屏幕中心的方向决定移动方向。</p></div></article>
+            <article><kbd>Space</kbd><div><strong>分裂</strong><p>向指针方向弹射分身，可追击或逃生。</p></div></article>
+            <article><kbd>W</kbd><div><strong>吐球</strong><p>按住连续吐出孢子，为队友补给或推动刺球。</p></div></article>
+            <article><kbd>A</kbd><div><strong>快速合体</strong><p>在支持的模式中触发快速合球。</p></div></article>
+            <article><kbd>D</kbd><div><strong>模式技能</strong><p>在霸屏等模式中释放专属技能。</p></div></article>
+            <article><kbd>P / Esc</kbd><div><strong>暂停 / 对局菜单</strong><p>单人对局暂停并保留进度；联机只打开菜单，其他玩家继续比赛。</p></div></article>
+          </div>
+        </div>
+
+        <div class="title-panel" data-title-panel="about" hidden>
+          <header class="title-panel-head"><div><span>ABOUT</span><h2>关于游戏</h2></div><button type="button" data-title-back>返回</button></header>
+          <div class="about-card">
+            <strong>星团大作战 1.0</strong>
+            <p>这是一个开源的浏览器与 Windows 桌面吞噬竞技游戏。前后端源码、桌面封装配置和测试脚本放在同一个工程中，单 HTML 版保持独立。</p>
+            <div class="about-links">
+              <a data-external href="https://github.com/wangzifan396-wzf/mini-browser-games" target="_blank" rel="noreferrer">GitHub 开源项目 <span>↗</span></a>
+              <a data-external href="https://github.com/wangzifan396-wzf" target="_blank" rel="noreferrer">GitHub 作者主页 <span>↗</span></a>
+              <a data-external href="https://github.com/wangzifan396-wzf/mini-browser-games/issues" target="_blank" rel="noreferrer">GitHub 问题反馈 <span>↗</span></a>
+              <button type="button" data-copy-text="530142376">QQ：530142376 <span>复制</span></button>
+              <a data-external href="https://blog.csdn.net/m0_74023007" target="_blank" rel="noreferrer">CSDN <span>↗</span></a>
+              <button type="button" data-copy-text="45509815">小黑盒 ID：45509815 <span>复制</span></button>
+              <a data-external href="https://space.bilibili.com/319363325" target="_blank" rel="noreferrer">哔哩哔哩 <span>↗</span></a>
+            </div>
+            <small>MIT License · 点击链接会使用系统默认浏览器打开</small>
+          </div>
+        </div>
+      </section>
+    </div>
+    <footer class="title-footer"><span id="titleRuntimeStatus">正在准备游戏内核…</span><button id="titleFullscreenBtn" type="button">全屏</button></footer>
+  </main>
+
+  <div class="overlay" id="overlay">
+    <div class="dialog">
+      <button class="lobby-back" id="lobbyBackBtn" type="button">← 返回主菜单</button>
+      <h2 id="resultTitle">本轮结束</h2>
+      <div class="final-mass" id="finalMass">0</div>
+      <p id="resultText">再来一局。</p>
+      <div class="meta-strip" id="metaStrip"></div>
+      <div class="lobby-tabs" id="lobbyTabs" aria-label="大厅入口">
+        <button class="lobby-tab active" type="button" data-lobby="play">开始</button>
+        <button class="lobby-tab" type="button" data-lobby="outfit">外观</button>
+        <button class="lobby-tab" type="button" data-lobby="shop">商店</button>
+        <button class="lobby-tab" type="button" data-lobby="forge">铁匠铺</button>
+        <button class="lobby-tab" type="button" data-lobby="growth">成长</button>
+      </div>
+      <div class="lobby-tools">
+        <button type="button" id="musicLobbyBtn">BGM 关</button>
+        <button type="button" id="randomLookBtn">随机已拥有外观</button>
+        <a class="online-entry" href="./multiplayer.html">
+          <strong>好友联机</strong>
+          <span>创建房间并选择 10 种模式</span>
+        </a>
+      </div>
+      <section class="lobby-panel active" data-lobby-panel="play">
+        <div class="mode-grid" id="modeGrid" aria-label="选择模式">
+          <button class="mode-card" type="button" data-mode="solo">
+            <strong>自由模式</strong>
+            <span>12 分钟限时，反复复活，按个人质量结算排名。</span>
+          </button>
+          <button class="mode-card" type="button" data-mode="team">
+            <strong>团队战</strong>
+            <span>10 队 4 人，队友可接分身，按队伍总质量结算。</span>
+          </button>
+          <button class="mode-card" type="button" data-mode="survival">
+            <strong>生存模式</strong>
+            <span>64 人生命制，吞噬加命，生命耗尽出局。</span>
+          </button>
+          <button class="mode-card active" type="button" data-mode="battle">
+            <strong>大逃杀</strong>
+            <span>100 人开局，安全区收缩，圈外掉质量，活到最后。</span>
+          </button>
+          <button class="mode-card" type="button" data-mode="blitz">
+            <strong>闪电乱斗</strong>
+            <span>高密度食点和密集事件，节奏更快，3 分钟左右结算。</span>
+          </button>
+          <button class="mode-card" type="button" data-mode="spore">
+            <strong>孢子风暴</strong>
+            <span>48 人孢子刺战场，所有刺都会炸出一圈可争夺孢子。</span>
+          </button>
+          <button class="mode-card" type="button" data-mode="screen">
+            <strong>霸屏模式</strong>
+            <span>22 人方形战场，A 快合、D 冲刺种刺，88% 区域占领获胜。</span>
+          </button>
+          <button class="mode-card" type="button" data-mode="control">
+            <strong>据点战</strong>
+            <span>4 队 7 人争夺 3 个星核据点，先到目标分获胜。</span>
+          </button>
+          <button class="mode-card" type="button" data-mode="giant">
+            <strong>巨行星霸屏</strong>
+            <span>36 人巨球开局，88% 固定区域占领并维持 6 秒决定胜负。</span>
+          </button>
+          <button class="mode-card" type="button" data-mode="demon">
+            <strong>魔王模式</strong>
+            <span>勇者阵营围攻魔王和魔兵，限时吞掉魔王获胜。</span>
+          </button>
+        </div>
+      </section>
+      <section class="lobby-panel" data-lobby-panel="outfit">
+        <div class="lobby-loadout" id="lobbyLoadout">
+          <div class="loadout-group">
+            <strong>球体皮肤</strong>
+            <div class="cosmetic-grid" id="skinGrid"></div>
+          </div>
+          <div class="loadout-group">
+            <strong>孢子样式</strong>
+            <div class="cosmetic-grid" id="sporeGrid"></div>
+          </div>
+          <div class="loadout-group">
+            <strong>球体光环</strong>
+            <div class="cosmetic-grid" id="haloGrid"></div>
+          </div>
+          <div class="loadout-group">
+            <strong>移动拖尾</strong>
+            <div class="cosmetic-grid" id="trailGrid"></div>
+          </div>
+        </div>
+      </section>
+      <section class="lobby-panel" data-lobby-panel="shop">
+        <div class="shop-panel" id="shopPanel"></div>
+      </section>
+      <section class="lobby-panel" data-lobby-panel="forge">
+        <div class="forge-panel" id="forgePanel"></div>
+      </section>
+      <section class="lobby-panel" data-lobby-panel="growth">
+        <div class="progress-panel" id="progressPanel"></div>
+      </section>
+      <div class="lobby-start-bar"><span id="selectedModeHint">选择战场，开始对局</span><button id="playAgainBtn">再来一局</button></div>
+    </div>
+  </div>
+
+  <div class="single-session-menu" id="singleSessionMenu" hidden role="dialog" aria-modal="true" aria-labelledby="singleSessionTitle">
+    <section class="single-session-card">
+      <small>星团大作战</small><h2 id="singleSessionTitle">已暂停</h2>
+      <p id="singleSessionDescription">对局时间已冻结，休息一下再继续。</p>
+      <div class="session-controls"><span>鼠标移动</span><span>Space 分裂</span><span>W 吐球 / 喂刺</span><span>A / D 模式技能</span></div>
+      <button id="singleResumeBtn" class="primary" type="button">继续游戏</button>
+      <button id="singleRestartBtn" type="button">重新开始本模式</button>
+      <button id="singleLeaveBtn" type="button">结束本局，返回主菜单</button>
+    </section>
+  </div>
+
+<script src="./js/safe-storage.js" defer></script>
+<script src="./js/game-settings.js" defer></script>
+<script src="./js/audio.js" defer></script>
+<script src="./js/page-transition.js" defer></script>
+<script src="./js/cosmetic-catalog.js" defer></script>
+<script src="./js/cosmetic-renderer.js" defer></script>
+<script src="./js/game-mode-catalog.js" defer></script>
+<script src="./js/match-guide.js" defer></script>
+<script src="./js/progression.js" defer></script>
+<script src="./js/canonical-game-content.js" defer></script>
+<script src="./js/gameplay-core.js" defer></script>
+<script src="./js/gpu-renderer.js" defer></script>
+<script src="./js/game.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+.history/
+.sass-cache/
+node_modules/
+*.map
+Thumbs.db
+.DS_Store
+*.pyc

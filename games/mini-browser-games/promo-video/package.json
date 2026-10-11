@@ -1,0 +1,30 @@
+{
+  "name": "mini-browser-games-promo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reproducible gameplay capture and promotional-video pipeline for Mini Browser Games.",
+  "scripts": {
+    "capture": "node scripts/capture.mjs",
+    "music": "node scripts/generate-music.mjs",
+    "render": "node scripts/render.mjs",
+    "render:v2": "node scripts/render-v2.mjs",
+    "render:vertical": "node scripts/render-vertical.mjs",
+    "cover": "python scripts/create-cover.py",
+    "cover:quality-audit": "python scripts/create-quality-audit-cover.py",
+    "article:performance:capture": "node scripts/capture-performance-article.mjs",
+    "article:performance:images": "python scripts/create-browser-performance-article-images.py",
+    "article:retrospective:capture": "node scripts/capture-vibe-coding-retrospective.mjs",
+    "article:retrospective:images": "python scripts/create-vibe-coding-retrospective-images.py",
+    "article:source-corpus:analyze": "node scripts/analyze-game-source-corpus.mjs",
+    "article:source-corpus:images": "python scripts/create-source-corpus-article-images.py",
+    "verify": "node scripts/verify.mjs",
+    "check:slingstorm": "node scripts/check-slingstorm.mjs",
+    "check:shan-hai": "node scripts/check-shan-hai.mjs",
+    "check:moba-frontier": "node scripts/check-moba-frontier.mjs"
+  },
+  "dependencies": {
+    "ffprobe-static": "3.1.0",
+    "playwright": "1.61.1"
+  }
+}

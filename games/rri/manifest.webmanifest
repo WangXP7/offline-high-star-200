@@ -1,0 +1,17 @@
+{
+	"name": "Railroad Ink",
+	"short_name": "Railroad Ink",
+	"start_url": ".",
+	"display": "standalone",
+	"theme_color": "#def",
+	"background_color": "#def",
+	"icons": [
+		{
+			"src": "img/icon-192.png",
+			"sizes": "192x192"
+		}, {
+			"src": "img/icon-512.png",
+			"sizes": "512x512"
+		}
+	]
+}

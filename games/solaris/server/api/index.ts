@@ -1,0 +1,73 @@
+import http from "http";
+import { Server } from "socket.io";
+import config from "../config";
+import mongooseLoader from "../db";
+import containerLoader from "../services";
+import SessionService from "../services/session";
+import { logger, setupLogging } from "../utils/logging";
+import expressLoader from "./express";
+import express from "express";
+
+let mongo;
+Error.stackTraceLimit = 1000;
+
+setupLogging();
+
+const log = logger();
+
+log.info(`Node ${process.version}`);
+
+async function startServer() {
+    mongo = await mongooseLoader(config, {});
+
+    const app = express();
+    const server: http.Server = http.createServer(app);
+
+    const socketServer = new Server(server, {
+        cors: {
+            origin: config.corsUrls,
+            methods: ["POST", "PUT", "PATCH", "GET", "DELETE", "OPTIONS"],
+            credentials: true,
+        },
+        transports: ["websocket", "polling"],
+    });
+
+    log.info("Sockets initialized.");
+
+    const container = containerLoader(config, socketServer, log);
+
+    const sessionStore = SessionService.createSessionStore(config);
+
+    container.sessionService.setSessionStorage(sessionStore);
+    container.socketService.setSessionStorage(sessionStore);
+
+    await expressLoader(config, app, container, sessionStore);
+
+    server.on("error", (err) => {
+        if (err) {
+            log.error(err);
+        }
+    });
+
+    server.listen(config.port, () => {
+        log.info(`Server is running on port ${config.port}.`);
+    });
+
+    await container.discordService.initialize();
+}
+
+process.on("SIGINT", async () => {
+    log.info("Shutting down...");
+
+    log.info("Disconnecting from MongoDB...");
+    await mongo.disconnect();
+    log.info("MongoDB disconnected.");
+
+    log.info("Shutdown complete.");
+
+    process.exit(0);
+});
+
+startServer();
+
+export {};

@@ -1,0 +1,1 @@
+export { generateSVG } from "./svg";

@@ -1,0 +1,174 @@
+# Hand-drawn patches of map for scenarios, chosen with the mapPreset game option (the client scenario
+# sends it from the lobby; `npm start -- --mapPreset=<name>` works too). The patch is stamped over the
+# generated map around the first player's spawn, so the rest of the world stays random.
+#
+#   legend - one letter per hex, mapped to its tile types in order: terrain, then any feature or resource.
+#   units  - extra starting units for the first player, placed on every hex with that letter.
+#   rows   - the patch as it lies on the hex grid. One space between hexes, and every other row starts
+#            with a space because it sits half a hex to the right. "S" is where the Settler starts.
+presets:
+  coastal_resources:
+    description: A coastal city with one of each sea resource in its first ring, and a Work Boat beside each.
+    legend:
+      "g": [grass]
+      "~": [shallow_ocean]
+      "O": [ocean]
+      "f": [shallow_ocean, fish]
+      "c": [shallow_ocean, crab]
+      "w": [shallow_ocean, whales]
+      "t": [shallow_ocean, turtles]
+      "e": [shallow_ocean, pearls]
+      "S": [grass]
+      "B": [shallow_ocean]
+    units:
+      "B": Work Boat
+    rows:
+      - "O O ~ ~ ~ B ~ O O"
+      - " ~ ~ B f c ~ ~ O O"
+      - "g g g g S w B ~ O"
+      - " g g g t e ~ ~ ~ O"
+      - "g g g B ~ B ~ O O"
+      - " g g ~ ~ ~ ~ O O O"
+
+  aquatic_sandbox:
+    description: A coastal city with sea resources in its first two rings, a few Work Boats, and a Galley that can't leave the coast.
+    legend:
+      "g": [grass]
+      "p": [plains]
+      "h": [grass_hill]
+      "F": [grass, forest]
+      "~": [shallow_ocean]
+      "O": [ocean]
+      "f": [shallow_ocean, fish]
+      "c": [shallow_ocean, crab]
+      "w": [shallow_ocean, whales]
+      "t": [shallow_ocean, turtles]
+      "e": [shallow_ocean, pearls]
+      "S": [grass]
+      "B": [shallow_ocean]
+      "G": [shallow_ocean]
+    units:
+      "B": Work Boat
+      "G": Galley
+    rows:
+      - "O O O ~ ~ ~ ~ ~ O O O"
+      - " O ~ ~ B ~ ~ ~ ~ ~ O O"
+      - "O ~ ~ ~ t ~ e B ~ ~ O"
+      - " ~ ~ ~ ~ f c ~ ~ G ~ O"
+      - "g g p g g S w B ~ ~ O"
+      - " g h g g g g ~ ~ ~ O O"
+      - "g F g g h g g ~ ~ O O"
+      - " g g F g g g ~ ~ O O O"
+      - "g g F g g ~ ~ O O O O"
+
+  ancient_ruins:
+    description: Open grassland with ancient ruins beside the Settler and a second one a couple of tiles away.
+    legend:
+      "g": [grass]
+      "S": [grass]
+      "R": [grass, ancient_ruins]
+    rows:
+      - "g g g R g g"
+      - " g g g g g g"
+      - "g g R S g g"
+      - " g g g g g g"
+      - "g g g g g g"
+
+  natural_wonders:
+    description: Every natural wonder within sight of the Settler, so each one is discovered on the first turn.
+    legend:
+      "g": [grass]
+      "p": [plains]
+      "d": [desert]
+      "~": [shallow_ocean]
+      "O": [ocean]
+      "F": [grass, mt_fuji]
+      "K": [plains, mt_kilimanjaro]
+      "P": [plains, cerro_de_potosi]
+      "M": [desert, grand_mesa]
+      "C": [desert, barringer_crater]
+      "R": [shallow_ocean, great_barrier_reef]
+      "V": [shallow_ocean, krakatoa]
+      "S": [grass]
+    rows:
+      - "g g d d d ~ ~ O"
+      - " g g F M C ~ ~ O"
+      - "p g K g S R ~ O"
+      - " g g P g g V ~ O"
+      - "g g g p ~ ~ ~ O"
+
+  forests:
+    description: Woods of every look around the Settler - temperate forest, jungle, and autumn-colored tundra forest.
+    legend:
+      "g": [grass]
+      "G": [grass, forest]
+      "P": [plains, forest]
+      "J": [grass, jungle]
+      "T": [tundra, forest]
+      "H": [tundra_hill, forest]
+      "S": [grass]
+    rows:
+      - "G G P J J J T T H"
+      - " G G P J J g T H T"
+      - "G P G J S J T T H"
+      - " G G P J J g T H T"
+      - "G G P J J J T T H"
+
+  terrain_mix:
+    description: Patches of grassland, plains, desert, tundra and snow meeting each other, with a few hills and a mountain, to show the blended borders between them.
+    legend:
+      "g": [grass]
+      "p": [plains]
+      "d": [desert]
+      "t": [tundra]
+      "n": [snow]
+      "G": [grass_hill]
+      "P": [plains_hill]
+      "D": [desert_hill]
+      "m": [mountain]
+      "S": [plains]
+    rows:
+      - "g g g p p p d d d"
+      - " g g p p p d d D d"
+      - "g G g p S p d d d"
+      - " g g p p P p d m d"
+      - "t t t g g p d d d"
+      - " t t t t n n n d d"
+      - "n n t t t n n n n"
+
+  tech_effects:
+    description: Horses and Iron beside the Settler (hidden until their techs), and two Farms, one beside a lake, for Civil Service's fresh-water bonus.
+    legend:
+      "g": [grass]
+      "l": [freshwater]
+      "m": [grass, farm]
+      "d": [plains, farm]
+      "P": [plains, horses]
+      "h": [grass_hill, iron]
+      "S": [grass]
+    rows:
+      - "g g g g g g g"
+      - " g l m g g g g"
+      - "g g g S P h g"
+      - " g g g d g g g"
+      - "g g g g g g g"
+
+  happiness:
+    description: Two Citrus and a Cotton beside the Settler, each with a Builder on it, to plantation for luxury happiness.
+    legend:
+      "g": [grass]
+      "p": [plains]
+      "h": [grass_hill]
+      "F": [grass, forest]
+      "C": [grass, jungle, citrus]
+      "T": [grass, cotton]
+      "S": [grass]
+    units:
+      "C": Builder
+      "T": Builder
+    rows:
+      - "g g p g g h g"
+      - " g F C C g g g"
+      - "g p g S T g g"
+      - " g g g g g F g"
+      - "g h g g p g g"

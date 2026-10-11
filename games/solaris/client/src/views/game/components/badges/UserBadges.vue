@@ -1,0 +1,85 @@
+<template>
+  <div>
+    <loading-spinner :loading="isLoading" />
+
+    <div class="pt-3 pb-3 badges" v-if="!isLoading && badges.length">
+      <badge-with-history
+        v-for="badge in badges"
+        :key="badge.badge"
+        :badge="badge"
+        :allBadges="allBadges"
+      />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useGameStore } from "@/stores/game";
+import { ref, onMounted, type Ref, inject, watch } from "vue";
+import type { Axios } from "axios";
+import LoadingSpinner from "../../../components/LoadingSpinner.vue";
+import type { AwardedBadge, Badge as TBadge } from "@solaris/common";
+import { getBadgesForUser } from "../../../../services/typedapi/badge";
+import { httpInjectionKey, isOk } from "../../../../services/typedapi";
+import BadgeWithHistory from "@/views/game/components/badges/BadgeWithHistory.vue";
+import { useBadgeStore } from "../../../../stores/badge";
+
+const props = defineProps<{ userId: string }>();
+
+const isLoading = ref(true);
+
+const allBadges: Ref<TBadge[]> = ref([]);
+
+const badges: Ref<AwardedBadge<string>[]> = ref([]);
+
+const store = useGameStore();
+const badgeStore = useBadgeStore();
+
+const httpClient: Axios = inject(httpInjectionKey)!;
+
+const loadBadges = async () => {
+  const response = await getBadgesForUser(httpClient)(props.userId);
+
+  if (isOk(response)) {
+    badges.value = response.data.sort((a, b) => {
+      if (!a.time) {
+        return 1;
+      } else if (!b.time) {
+        return -1;
+      } else {
+        return a.time.getTime() - b.time.getTime();
+      }
+    });
+  } else {
+    badges.value = [];
+    console.error(response.cause);
+  }
+};
+
+watch(
+  () => props.userId,
+  (_newId, _oldId) => {
+    loadBadges();
+  },
+);
+
+onMounted(async () => {
+  isLoading.value = true;
+
+  await badgeStore.loadBadges(httpClient);
+  allBadges.value = [...badgeStore.badges];
+
+  await loadBadges();
+
+  isLoading.value = false;
+});
+</script>
+
+<style scoped>
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+</style>
